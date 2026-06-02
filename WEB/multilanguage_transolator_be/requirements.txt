@@ -1,0 +1,61 @@
+# ─── Core Django ──────────────────────────────────────────────────
+Django==6.0
+asgiref==3.11.0
+django-cors-headers==4.9.0
+djangorestframework==3.16.1
+djangorestframework-simplejwt==5.5.1
+sqlparse==0.5.5
+pytz==2025.2
+
+# ─── Authentication / JWT ─────────────────────────────────────────
+PyJWT==2.10.1
+python-jose[cryptography]==3.5.0
+
+# ─── Database ─────────────────────────────────────────────────────
+psycopg2-binary==2.9.11
+
+# ─── Google Cloud ─────────────────────────────────────────────────
+google-cloud-translate==3.24.0
+google-cloud-storage==3.9.0
+
+# ─── AWS ──────────────────────────────────────────────────────────
+boto3==1.42.42
+
+# ─── Environment ──────────────────────────────────────────────────
+python-dotenv==1.1.1
+
+# ─── PDF Processing ───────────────────────────────────────────────
+pypdf==5.5.0
+PyMuPDF==1.26.7
+pdf2image==1.17.0
+pdf2docx==0.5.8
+reportlab==4.4.10
+
+# ─── Office Document Processing ───────────────────────────────────
+# lxml: XML parsing engine cho python-docx và python-pptx — ghim để kết quả dịch nhất quán
+lxml==6.0.2
+python-docx==1.2.0
+openpyxl==3.1.5
+python-pptx==1.0.2
+mammoth==1.11.0
+docx2pdf==0.1.8
+
+# ─── Image / Computer Vision ──────────────────────────────────────
+# opencv-python-headless: không cần GUI trên server (thay opencv-python)
+opencv-python-headless==4.13.0.92
+Pillow==12.0.0
+numpy==2.4.0
+
+# ─── HTTP / API ───────────────────────────────────────────────────
+requests==2.32.4
+fastapi==0.116.1
+
+# ─── Data ─────────────────────────────────────────────────────────
+pandas==2.3.1
+
+# ─── File Conversion (external service) ───────────────────────────
+convertapi==1.6.0
+
+# ─── Azure AI ─────────────────────────────────────────────────────
+azure-ai-documentintelligence==1.0.2
+azure-core==1.35.0

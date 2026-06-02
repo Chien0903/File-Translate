@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* Global layout styles for fixed sidebar layout */
+@layer base {
+  html, body {
+    @apply h-full overflow-hidden;
+  }
+  
+  #root {
+    @apply h-full;
+  }
+}
+
+/* Custom scrollbar styles for main content */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #9ca3af #f3f4f6;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 4px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 4px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+
+  .scrollbar-thumb-gray-400::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+  }
+
+  .scrollbar-track-gray-100::-webkit-scrollbar-track {
+    background: #f3f4f6;
+  }
+}

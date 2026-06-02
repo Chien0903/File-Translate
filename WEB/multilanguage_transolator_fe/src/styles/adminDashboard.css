@@ -1,0 +1,276 @@
+/* Admin Dashboard Custom Styles */
+
+/* Smooth scrollbar for table */
+.custom-table .ant-table-body::-webkit-scrollbar {
+  height: 8px;
+}
+
+.custom-table .ant-table-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.custom-table .ant-table-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.custom-table .ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Ant Design Table Customization */
+.custom-table .ant-table-thead > tr > th {
+  background: linear-gradient(to bottom, #f8fafc, #f1f5f9) !important;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  transition: background 0.3s;
+}
+
+.custom-table .ant-table-thead > tr > th:hover {
+  background: linear-gradient(to bottom, #f1f5f9, #e2e8f0) !important;
+}
+
+.custom-table .ant-table-tbody > tr {
+  transition: all 0.2s;
+}
+
+.custom-table .ant-table-tbody > tr:hover > td {
+  background: #f8fafc !important;
+}
+
+.custom-table .ant-table-tbody > tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+/* Ant Design Pagination */
+.custom-table .ant-pagination {
+  padding: 16px 0;
+}
+
+.custom-table .ant-pagination-item-active {
+  border-color: #2563eb;
+  background: #2563eb;
+}
+
+.custom-table .ant-pagination-item-active a {
+  color: white;
+}
+
+/* Date Picker Custom Styles */
+.ant-picker-large {
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s;
+}
+
+.ant-picker-large:hover {
+  border-color: #3b82f6;
+}
+
+.ant-picker-large:focus,
+.ant-picker-focused {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Button animations */
+.button-hover-effect {
+  transition: all 0.2s ease-in-out;
+}
+
+.button-hover-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.button-hover-effect:active {
+  transform: translateY(0);
+}
+
+/* Card animations */
+.card-enter {
+  animation: cardEnter 0.3s ease-out;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Tooltip styling */
+.recharts-tooltip-wrapper {
+  z-index: 1000;
+}
+
+.recharts-default-tooltip {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Chart responsive container */
+.recharts-responsive-container {
+  min-height: 300px;
+}
+
+/* Summary card hover effect */
+.summary-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.summary-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Search input focus */
+.ant-input-search-large .ant-input-group-addon .ant-btn {
+  background: #2563eb;
+  border-color: #2563eb;
+  height: 40px;
+}
+
+.ant-input-search-large .ant-input {
+  border-radius: 8px 0 0 8px;
+  height: 40px;
+}
+
+/* Select dropdown */
+.ant-select-large .ant-select-selector {
+  border-radius: 8px !important;
+  border: 2px solid #e2e8f0 !important;
+  height: 40px !important;
+  align-items: center;
+}
+
+.ant-select-large:hover .ant-select-selector {
+  border-color: #3b82f6 !important;
+}
+
+/* Table cell number highlighting */
+.table-number-highlight {
+  font-weight: 600;
+  font-size: 1.125rem;
+  transition: all 0.2s;
+}
+
+.table-number-highlight:hover {
+  transform: scale(1.1);
+}
+
+/* Empty state illustration */
+.empty-state-icon {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Gradient text effect */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Badge for approval rate */
+.approval-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.approval-badge-high {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.approval-badge-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.approval-badge-low {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Info box styling */
+.info-box {
+  position: relative;
+  overflow: hidden;
+}
+
+.info-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #3b82f6, #2563eb);
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .recharts-responsive-container {
+    min-height: 250px;
+  }
+  
+  .custom-table .ant-table {
+    font-size: 0.875rem;
+  }
+  
+  .summary-card {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-full-width {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  /* Add dark mode styles here if needed */
+}
+

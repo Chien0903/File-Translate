@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .container {
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        padding: 20px;
+        border: 1px solid #ddd;
+      }
+      .header {
+        color: #2c5282;
+        font-size: 24px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+      .info-item {
+        margin-bottom: 10px;
+      }
+      .info-label {
+        font-weight: bold;
+        color: #4a5568;
+      }
+      .footer {
+        text-align: center;
+        color: #718096;
+        font-size: 14px;
+        margin-top: 20px;
+      }
+      .warning {
+        color: #c53030;
+        font-size: 14px;
+        margin-top: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="header">Thông Tin Tài Khoản Mới</h1>
+
+      <div class="content">
+        <p>Xin chào {{ first_name }} {{ last_name }},</p>
+
+        <p>
+          Tài khoản của bạn đã được tạo thành công. Dưới đây là thông tin đăng
+          nhập của bạn:
+        </p>
+
+        <div class="info-item">
+          <span class="info-label">Email:</span> {{ email }}
+        </div>
+
+        <div class="info-item">
+          <span class="info-label">Mật khẩu:</span> {{ password }}
+        </div>
+
+        <p class="warning">
+          Vui lòng đổi mật khẩu ngay sau khi đăng nhập lần đầu tiên để đảm bảo
+          an toàn cho tài khoản của bạn.
+        </p>
+      </div>
+
+      <div class="footer">
+        <p>Đây là email tự động, vui lòng không trả lời email này.</p>
+        <p>© 2024 Multilanguage Translator. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>
