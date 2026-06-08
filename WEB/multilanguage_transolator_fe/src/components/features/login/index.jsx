@@ -17,25 +17,9 @@ function LoginForm({ route, method }) {
     setShowPassword(!showPassword);
   };
 
-  // Email validation function
   const validateEmail = (email) => {
-    if (!email) {
-      return "Email address is required";
-    }
-
-    if (!email.includes("@")) {
-      return "Please enter a valid email address";
-    }
-
-    if (!email.endsWith("@mail.toray")) {
-      return "Email must end with @mail.toray domain";
-    }
-
-    const localPart = email.split("@")[0];
-    if (!localPart || localPart.length === 0) {
-      return "Please enter a valid email address before @mail.toray";
-    }
-
+    if (!email) return "Email address is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Please enter a valid email address";
     return "";
   };
 
@@ -143,7 +127,7 @@ function LoginForm({ route, method }) {
             className={`w-full pl-10 pr-4 py-2 border ${
               emailError || generalError ? "border-red-500" : "border-gray-300"
             } rounded-md focus:outline-none focus:ring-1 focus:ring-[#004098CC]`}
-            placeholder="nguyenthia@mail.toray"
+            placeholder="your.email@example.com"
           />
         </div>
         {emailError && (

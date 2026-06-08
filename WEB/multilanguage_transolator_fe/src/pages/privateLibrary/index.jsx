@@ -1150,7 +1150,7 @@ const PrivateLibrary = () => {
             <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm">
               <p className="text-yellow-700">
                 <strong>Please review the keywords below before importing.</strong>{" "}
-                These will be added as suggestions and require Library Keeper approval before being added to THK Library.
+                These will be added as suggestions and require Library Keeper approval before being added to Common Library.
               </p>
             </div>
             <div className="overflow-auto max-h-[55vh] mb-6 border border-gray-200 rounded-lg">

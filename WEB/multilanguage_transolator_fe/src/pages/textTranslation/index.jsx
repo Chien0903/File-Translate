@@ -361,7 +361,7 @@ const TextTranslation = () => {
             </span>
             {[
               { value: "private", label: "Private Library" },
-              { value: "common", label: "THK Library" },
+              { value: "common", label: "Common Library" },
               { value: "none", label: "No Library" },
             ].map(({ value, label }) => (
               <label

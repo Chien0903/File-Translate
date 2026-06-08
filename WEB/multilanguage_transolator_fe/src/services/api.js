@@ -4,32 +4,91 @@ const apiBase =
   (import.meta.env.VITE_API_URL || window.location.origin) +
   (/(\/api)$/.test(import.meta.env.VITE_API_URL || "") ? "" : "/api");
 
-// const api = axios.create({
-//   baseURL: import.meta.env.VITE_API_URL || "http://127.0.0.1:8000",
-//   withCredentials: true,
-// });
+const api = axios.create({ baseURL: apiBase });
 
-const api = axios.create({
-  // Use same-origin (or configured) base URL ending with /api
-  baseURL: apiBase,
-  withCredentials: true,
-});
-
-// Normalize URL to avoid double path issues
+// ── Request: normalize URL + attach JWT ──────────────────────────────────────
 api.interceptors.request.use((config) => {
   try {
-    // If baseURL already has /api and url also begins with /api, drop the duplicate prefix
-    const endsWithApi = (config.baseURL || "")
-      .replace(/\/$/, "")
-      .endsWith("/api");
+    const endsWithApi = (config.baseURL || "").replace(/\/$/, "").endsWith("/api");
     if (endsWithApi && typeof config.url === "string") {
       config.url = config.url.replace(/^\/api\//, "/");
     }
-  } catch (error) {
-    // Ignore URL normalization errors
-    console.debug("URL normalization failed:", error.message);
+  } catch (e) {
+    console.debug("URL normalization failed:", e.message);
   }
+
+  const token = localStorage.getItem("access");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+// ── Response: auto-refresh on 401, then retry ────────────────────────────────
+let isRefreshing = false;
+let failedQueue = [];
+
+function processQueue(error, token = null) {
+  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)));
+  failedQueue = [];
+}
+
+function clearAndRedirect() {
+  ["access", "refresh", "fullName", "role", "email", "auth_provider", "translationHistory"].forEach(
+    (k) => localStorage.removeItem(k),
+  );
+  if (window.location.pathname !== "/login") {
+    window.location.href = "/login";
+  }
+}
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const orig = error.config;
+
+    if (error.response?.status !== 401 || orig._retry) {
+      return Promise.reject(error);
+    }
+
+    // Avoid retry loop on auth endpoints themselves
+    if (orig.url?.includes("/auth/")) {
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => failedQueue.push({ resolve, reject })).then(
+        (token) => {
+          orig.headers.Authorization = `Bearer ${token}`;
+          return api(orig);
+        },
+      );
+    }
+
+    orig._retry = true;
+    isRefreshing = true;
+
+    const refreshToken = localStorage.getItem("refresh");
+    if (!refreshToken) {
+      clearAndRedirect();
+      isRefreshing = false;
+      return Promise.reject(error);
+    }
+
+    try {
+      // Use plain axios to avoid recursive interceptor
+      const { data } = await axios.post(`${apiBase}/auth/refresh/`, { refresh: refreshToken });
+      localStorage.setItem("access", data.access);
+      localStorage.setItem("refresh", data.refresh);
+      orig.headers.Authorization = `Bearer ${data.access}`;
+      processQueue(null, data.access);
+      return api(orig);
+    } catch (refreshError) {
+      processQueue(refreshError, null);
+      clearAndRedirect();
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
+  },
+);
 
 export default api;

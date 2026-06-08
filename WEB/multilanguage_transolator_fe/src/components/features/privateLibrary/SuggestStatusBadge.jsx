@@ -11,7 +11,7 @@ const config = {
     label: "In Library",
     icon: <MdCheckCircle size={13} />,
     className: "bg-green-100 text-green-700 border-green-300",
-    tooltip: "Approved into THK Library",
+    tooltip: "Approved into Common Library",
   },
   rejected: {
     label: "Rejected",

@@ -274,7 +274,7 @@ const SideBar = ({ onExpandChange, isMobile = false, onMobileClose }) => {
               transitionDelay: expanded ? "160ms" : "0ms",
             }}
           >
-            THK Library
+            Common Library
           </span>
         </div>
 

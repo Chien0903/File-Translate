@@ -28,7 +28,7 @@ const StatusLegend = ({ onClose }) => (
         <MdCheckCircle className="text-green-600 mt-0.5 shrink-0" size={15} />
         <div>
           <span className="font-medium text-green-700">In Library</span>
-          <p>Approved and added to THK Library. This keyword is now in the shared library.</p>
+          <p>Approved and added to Common Library. This keyword is now in the shared library.</p>
         </div>
       </div>
       <div className="flex items-start gap-2">

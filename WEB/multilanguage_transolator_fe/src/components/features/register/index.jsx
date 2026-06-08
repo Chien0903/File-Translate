@@ -34,25 +34,9 @@ function RegisterForm({ route }) {
       draggable: true,
     });
 
-  const validateEmail = (email) => /^[\w.-]+@mail\.toray$/.test(email);
-
   const validateEmailRealTime = (emailValue) => {
-    if (!emailValue) {
-      return "Please enter your email address";
-    }
-    
-    if (!emailValue.includes("@")) {
-      return "Email must contain @ character";
-    }
-    
-    if (!emailValue.endsWith("@mail.toray")) {
-      return "Email must have @mail.toray format (example: yourname@mail.toray)";
-    }
-    
-    if (!validateEmail(emailValue)) {
-      return "Invalid email format. Please use format: name@mail.toray";
-    }
-    
+    if (!emailValue) return "Please enter your email address";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) return "Please enter a valid email address";
     return "";
   };
 
@@ -189,7 +173,7 @@ function RegisterForm({ route }) {
             onChange={handleEmailChange}
             onBlur={handleEmailBlur}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#004098CC]"
-            placeholder="example@mail.toray"
+            placeholder="example@email.com"
             required
           />
         </div>

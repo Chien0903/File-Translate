@@ -1,141 +1,138 @@
 import logging
-from django.http import JsonResponse
+from django.conf import settings
+from django.utils import timezone
+from django.contrib.auth import authenticate, get_user_model
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from django.conf import settings
+from rest_framework_simplejwt.tokens import RefreshToken as JWTRefreshToken
+
+from ..models.refresh_token import RefreshToken
 from ..serializers.user import CustomUserSerializer
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
-class ALBAuthStatusView(APIView):
-    """
-    Check ALB authentication status
-    """
-    permission_classes = [AllowAny]
-    
-    def get(self, request):
-        """
-        Check if user is authenticated via ALB or DevAuthentication
-        """
-        try:
-            # Check if request has ALB authentication
-            is_alb_authenticated = getattr(request, 'alb_authenticated', False)
-            
-            # Trong DEBUG mode, DevAuthentication sẽ tự động login user
-            # Không cần check alb_authenticated flag
-            is_dev_authenticated = settings.DEBUG and request.user.is_authenticated
-            
-            if (is_alb_authenticated or is_dev_authenticated) and request.user.is_authenticated:
-                user_data = CustomUserSerializer(request.user).data
-                
-                # Xác định provider
-                provider = 'dev_auth' if (settings.DEBUG and not is_alb_authenticated) else 'alb_cognito'
-                
-                return Response({
-                    'authenticated': True,
-                    'provider': provider,
-                    'user': user_data,
-                    'permissions': {
-                        'is_admin': request.user.role == 'Admin',
-                        'is_translator': request.user.role == 'Library Keeper',
-                        'is_user': request.user.role == 'User',
-                    }
-                }, status=status.HTTP_200_OK)
-            else:
-                return Response({
-                    'authenticated': False,
-                    'provider': None
-                }, status=status.HTTP_200_OK)
-                
-        except Exception as e:
-            logger.error(f"ALB auth status check error: {str(e)}")
-            return Response({
-                'error': 'Failed to check authentication status'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class ALBLogoutView(APIView):
-    """
-    Handle ALB/Cognito logout
-    """
+class LoginView(APIView):
     permission_classes = [AllowAny]
-    
+
     def post(self, request):
-        """
-        Generate proper logout URL for ALB/Cognito
-        """
-        try:
-            # Cognito logout URL - lấy từ settings (đã config từ .env)
-            cognito_domain = getattr(settings, 'COGNITO_DOMAIN_URL')
-            app_client_id = getattr(settings, 'COGNITO_APP_CLIENT_ID')
-            
-            # Determine logout URI based on current domain
-            origin = request.META.get('HTTP_ORIGIN', request.build_absolute_uri('/'))
-            
-            # Map domains to logout URIs - get from settings
-            production_url = getattr(settings, 'COGNITO_REDIRECT_URI', 'https://aitranslate.torayhk.com')
-            dev_url = getattr(settings, 'FRONTEND_URL', 'https://fhk-dev.quant-nexus.com')
-            
-            domain_mapping = {
-                production_url.rstrip('/'): f"{production_url}/",
-                dev_url.rstrip('/'): f"{dev_url}/",
-                'http://localhost:5173': 'http://localhost:5173/',
-            }
-            
-            logout_uri = domain_mapping.get(origin.rstrip('/'), f"{origin}/")
-            
-            # Construct Cognito logout URL
-            logout_url = (
-                f"{cognito_domain}/logout?"
-                f"client_id={app_client_id}&"
-                f"logout_uri={logout_uri}"
-            )
-            
-            return Response({
-                'logout_url': logout_url,
-                'logout_uri': logout_uri
-            }, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            logger.error(f"ALB logout error: {str(e)}")
-            return Response({
-                'error': 'Failed to generate logout URL'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        email = (request.data.get('email') or '').strip().lower()
+        password = request.data.get('password') or ''
 
-class UserPermissionsView(APIView):
-    """
-    Get user permissions based on Cognito groups
-    """
-    def get(self, request):
-        """
-        Return user permissions for RBAC
-        """
+        if not email or not password:
+            return Response(
+                {'detail': 'Email and password are required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = authenticate(request, username=email, password=password)
+        if user is None:
+            return Response(
+                {'detail': 'Invalid email or password.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not user.is_active:
+            return Response(
+                {'detail': 'Account is disabled.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        refresh = JWTRefreshToken.for_user(user)
+        refresh_str = str(refresh)
+        access_str = str(refresh.access_token)
+
+        RefreshToken.objects.create(
+            user=user,
+            token_hash=RefreshToken.hash_token(refresh_str),
+            expires_at=timezone.now() + settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+        )
+        RefreshToken.purge_expired()
+
+        logger.info("LOGIN | user=%s | role=%s", user.email, user.role)
+        return Response({
+            'access': access_str,
+            'refresh': refresh_str,
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': user.role,
+            },
+        }, status=status.HTTP_200_OK)
+
+
+class RefreshView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        refresh_str = (request.data.get('refresh') or '').strip()
+        if not refresh_str:
+            return Response(
+                {'detail': 'Refresh token is required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        token_hash = RefreshToken.hash_token(refresh_str)
         try:
-            if not request.user.is_authenticated:
-                return Response({
-                    'error': 'User not authenticated'
-                }, status=status.HTTP_401_UNAUTHORIZED)
-            
-            permissions = {
-                'user_id': request.user.id,
-                'email': request.user.email,
-                'role': request.user.role,
-                'permissions': {
-                    'is_admin': request.user.role == 'Admin',
-                    'is_translator': request.user.role == 'Library Keeper',
-                    'is_user': request.user.role == 'User',
-                    'can_manage_users': request.user.role == 'Admin',
-                    'can_manage_keywords': request.user.role in ['Admin', 'Library Keeper'],
-                    'can_translate': True,  # All authenticated users can translate
-                    'can_view_history': True,  # All users can view their history
-                }
-            }
-            
-            return Response(permissions, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            logger.error(f"User permissions error: {str(e)}")
-            return Response({
-                'error': 'Failed to get user permissions'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            db_token = RefreshToken.objects.select_related('user').get(token_hash=token_hash)
+        except RefreshToken.DoesNotExist:
+            return Response(
+                {'detail': 'Invalid or revoked refresh token.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if db_token.is_expired():
+            db_token.delete()
+            return Response(
+                {'detail': 'Refresh token has expired. Please log in again.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        user = db_token.user
+        if not user.is_active:
+            return Response(
+                {'detail': 'Account is disabled.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Rotate: delete old, issue new
+        db_token.delete()
+
+        new_refresh = JWTRefreshToken.for_user(user)
+        new_refresh_str = str(new_refresh)
+        new_access_str = str(new_refresh.access_token)
+
+        RefreshToken.objects.create(
+            user=user,
+            token_hash=RefreshToken.hash_token(new_refresh_str),
+            expires_at=timezone.now() + settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+        )
+
+        return Response({
+            'access': new_access_str,
+            'refresh': new_refresh_str,
+        }, status=status.HTTP_200_OK)
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_str = (request.data.get('refresh') or '').strip()
+        if refresh_str:
+            token_hash = RefreshToken.hash_token(refresh_str)
+            RefreshToken.objects.filter(user=request.user, token_hash=token_hash).delete()
+        logger.info("LOGOUT | user=%s", request.user.email)
+        return Response({'detail': 'Logged out successfully.'}, status=status.HTTP_200_OK)
+
+
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(CustomUserSerializer(request.user).data, status=status.HTTP_200_OK)

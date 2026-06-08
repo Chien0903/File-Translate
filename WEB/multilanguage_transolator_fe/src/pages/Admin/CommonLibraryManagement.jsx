@@ -89,7 +89,7 @@ const CommonLibraryManagement = () => {
   const [gcsStatus, setGcsStatus] = useState(null);
   const [showGcsInfo, setShowGcsInfo] = useState(false);
 
-  // Suggestion search (THK Library — Admin / Library Keeper)
+  // Suggestion search (Common Library — Admin / Library Keeper)
   const [showQueueModal, setShowQueueModal] = useState(false);
   const [showThresholdModal, setShowThresholdModal] = useState(false);
   const [queueItems, setQueueItems] = useState([]);

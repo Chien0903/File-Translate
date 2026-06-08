@@ -288,7 +288,7 @@ def _check_full_duplicate_for_auto_approve(suggestion):
 def _try_auto_approve_on_threshold():
     """
     Kiểm tra tất cả pending suggestions: nếu có cặp ngôn ngữ nào đạt ngưỡng
-    (min_n distinct users), tự động approve (thêm thẳng vào THK Library).
+    (min_n distinct users), tự động approve (thêm thẳng vào Common Library).
     Nếu trùng hoàn toàn với từ đã approved → tạo notification cho admin/keeper.
     Returns list of auto-approved suggestion IDs.
     """
@@ -550,7 +550,7 @@ class UpdateKeywordView(APIView):
                     {
                         "detail": (
                             "Duplicate detected: at least one language pair already exists "
-                            f"in THK Library (approved id={conflict_id})."
+                            f"in Common Library (approved id={conflict_id})."
                         )
                     },
                     status=status.HTTP_400_BAD_REQUEST,

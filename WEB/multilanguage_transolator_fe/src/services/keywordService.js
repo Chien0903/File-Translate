@@ -15,7 +15,7 @@ const keywordService = {
   suggestPrivateKeywords: (ids) =>
     api.post("/api/keywords/private/suggest/", { ids }),
 
-  // ─── THK Library / Suggestions ──────────────────────────────────────────
+  // ─── Common Library / Suggestions ──────────────────────────────────────────
 
   getSuggestions: (params) => api.get("/api/keywords/suggestions/", { params: params || {} }),
 

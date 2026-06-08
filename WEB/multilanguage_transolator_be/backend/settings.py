@@ -14,68 +14,41 @@ DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
-if DEBUG:
-    REST_FRAMEWORK = { 
-        'DEFAULT_AUTHENTICATION_CLASSES': (
-            'api.authentication.dev_auth.DevAuthentication',  # Auto-login khi local dev
-        ),
-        'DEFAULT_PERMISSION_CLASSES': (
-            'rest_framework.permissions.IsAuthenticated',
-        ),
-        'DEFAULT_RENDERER_CLASSES': [
-            'rest_framework.renderers.JSONRenderer',
-        ],
-    }
-else:
-    REST_FRAMEWORK = { 
-        'DEFAULT_AUTHENTICATION_CLASSES': ( 
-            'api.authentication.alb_authentication.ALBAuthentication',  # ALB + Cognito (primary)
-            'rest_framework_simplejwt.authentication.JWTAuthentication',  # JWT fallback
-        ), 
-        'DEFAULT_PERMISSION_CLASSES': ( 
-            'rest_framework.permissions.IsAuthenticated', 
-        ),
-        'DEFAULT_RENDERER_CLASSES': [
-            'rest_framework.renderers.JSONRenderer',
-        ],
-    }
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+}
 
 # Authentication Backends
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Keep only Django default for local fallback
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
-SIMPLE_JWT = { 
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=90),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv('JWT_ACCESS_TTL_MINUTES', 15))),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('JWT_REFRESH_TTL_DAYS', 7))),
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY', SECRET_KEY),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
 }
 
 # CORS configuration
-PRODUCTION_URL = os.getenv("COGNITO_REDIRECT_URI", "https://aitranslate.torayhk.com")
-DEV_URL = os.getenv("FRONTEND_URL", "https://fhk-dev.quant-nexus.com")
-
-CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL', 'False').lower() in ('true', '1', 'yes')  # Only True in dev
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL', 'False').lower() in ('true', '1', 'yes')
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    PRODUCTION_URL,
-    DEV_URL,
-    "http://localhost:5173",  # Development
-]
-
-# Cognito Settings
-COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
-COGNITO_APP_CLIENT_ID = os.getenv("COGNITO_APP_CLIENT_ID")
-COGNITO_REGION = os.getenv("COGNITO_REGION", "ap-southeast-1")
-COGNITO_DOMAIN_URL = os.getenv("COGNITO_DOMAIN_URL")
-COGNITO_REDIRECT_URI = os.getenv("COGNITO_REDIRECT_URI")
-COGNITO_LOGOUT_URI = os.getenv("COGNITO_LOGOUT_URI")
-FRONTEND_URL = os.getenv("FRONTEND_URL")
-
-
-ALB_ALLOWED_SIGNERS = [
-    # ARN của ALB hợp lệ (ví dụ)
-    "arn:aws:elasticloadbalancing:ap-southeast-1:815896272548:loadbalancer/app/fhk-HUST-lb/7bbfbec1c1835749",
+    os.getenv("PRODUCTION_URL", "https://aitranslate.torayhk.com"),
+    os.getenv("FRONTEND_URL", "https://fhk-dev.quant-nexus.com"),
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 # Application definition
@@ -130,16 +103,26 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+_USE_SQLITE = os.getenv('USE_SQLITE', 'True' if DEBUG else 'False').lower() in ('true', '1', 'yes')
+
+if _USE_SQLITE:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+        }
+    }
 
 
 # S3 Configuration

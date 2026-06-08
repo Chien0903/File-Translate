@@ -11,5 +11,5 @@ class HealthCheckView(APIView):
     def get(self, request):
         return JsonResponse({
             'status': 'healthy',
-            'service': 'toray-translator-api'
+            'service': 'multilanguage-translator-api'
         })

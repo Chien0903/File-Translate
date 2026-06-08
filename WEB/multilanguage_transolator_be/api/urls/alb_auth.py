@@ -1,8 +1,9 @@
 from django.urls import path
-from api.views.alb_auth import ALBAuthStatusView, ALBLogoutView, UserPermissionsView
+from api.views.alb_auth import LoginView, RefreshView, LogoutView, MeView
 
 urlpatterns = [
-    path('alb/status/', ALBAuthStatusView.as_view(), name='alb_auth_status'),
-    path('alb/logout/', ALBLogoutView.as_view(), name='alb_logout'),
-    path('alb/permissions/', UserPermissionsView.as_view(), name='user_permissions'),
+    path('login/', LoginView.as_view(), name='auth_login'),
+    path('refresh/', RefreshView.as_view(), name='auth_refresh'),
+    path('logout/', LogoutView.as_view(), name='auth_logout'),
+    path('me/', MeView.as_view(), name='auth_me'),
 ]

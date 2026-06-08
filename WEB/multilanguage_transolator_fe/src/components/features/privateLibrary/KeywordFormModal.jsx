@@ -11,7 +11,7 @@ const WARNING_CONFIG = {
     icon: <MdHourglassEmpty className="text-yellow-600 shrink-0 mt-0.5" size={16} />,
   },
   approved: {
-    text: "This keyword has been approved into THK Library. Editing the content will reset the 'In Library' status — the existing entry in THK Library will remain unchanged.",
+    text: "This keyword has been approved into Common Library. Editing the content will reset the 'In Library' status — the existing entry in Common Library will remain unchanged.",
     color: "bg-green-50 border-green-300 text-green-800",
     icon: <MdCheckCircle className="text-green-600 shrink-0 mt-0.5" size={16} />,
   },

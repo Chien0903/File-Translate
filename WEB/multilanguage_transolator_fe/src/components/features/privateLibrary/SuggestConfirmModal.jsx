@@ -95,7 +95,7 @@ const SuggestConfirmModal = ({ keywords, onConfirm, onCancel, isSubmitting }) =>
             <FiInfo size={14} className="shrink-0 mt-0.5" />
             <span>
               These keywords will be submitted with status <strong>Pending</strong>.
-              Admin or Library Keeper will review and decide whether to add them to THK Library.
+              Admin or Library Keeper will review and decide whether to add them to Common Library.
             </span>
           </div>
         </div>

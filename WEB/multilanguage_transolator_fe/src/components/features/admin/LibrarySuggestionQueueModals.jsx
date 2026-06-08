@@ -535,7 +535,7 @@ export function DuplicateLibraryCompareModal({
               Duplicate in library
             </h3>
             <p className="text-sm text-white/90 mt-1 leading-relaxed">
-              This suggestion overlaps an approved keyword in THK Library.
+              This suggestion overlaps an approved keyword in Common Library.
               Keep the current library entry or replace it with the suggested
               content.
             </p>

@@ -32,7 +32,7 @@ const Layout = () => {
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
             Initializing Authentication...
           </h2>
-          <p className="text-gray-600">Checking ALB authentication status</p>
+          <p className="text-gray-600">Verifying your session...</p>
         </div>
       </div>
     );

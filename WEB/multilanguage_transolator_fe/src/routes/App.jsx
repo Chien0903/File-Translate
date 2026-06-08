@@ -1,5 +1,10 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import { AuthProvider } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
+
+import LoginPage from "../pages/login";
 import HomePage from "../pages/home";
 import NotFound from "../pages/error/notFound";
 import MyProfile from "../pages/profile/index";
@@ -14,12 +19,21 @@ import ConversionResults from "../pages/conversionResults";
 import PrivateLibrary from "../pages/privateLibrary/index";
 import TextTranslation from "../pages/textTranslation";
 import KeywordStatsAdmin from "../pages/Admin/KeywordStatsAdmin";
-import albAuthService from "../services/albAuthService";
-import { AuthProvider } from "../context/AuthContext";
 
+/** Redirect unauthenticated users to /login */
+function ProtectedRoute({ children }) {
+  const { authenticated, loading } = useAuth();
+  if (loading) return null;
+  if (!authenticated) return <Navigate to="/login" replace />;
+  return children;
+}
+
+/** Calls authService logout then redirects */
 function Logout() {
-  // Always perform SSO logout via backend
-  albAuthService.logout();
+  const { logout } = useAuth();
+  useEffect(() => {
+    logout();
+  }, [logout]);
   return null;
 }
 
@@ -28,7 +42,18 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Layout />}>
+          {/* Public */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Protected — everything under Layout */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<HomePage />} />
             <Route path="/text-translation" element={<TextTranslation />} />
             <Route path="/logout" element={<Logout />} />
@@ -36,28 +61,20 @@ function App() {
             <Route path="/admin/edit-user/:id" element={<EditUserRole />} />
             <Route path="/admin" element={<AccountManagement />} />
             <Route path="/admin/keyword-stats" element={<KeywordStatsAdmin />} />
-            <Route
-              path="/translation-results"
-              element={<TranslationResults />}
-            />
-            <Route
-              path="/file-format-conversion"
-              element={<FormatConversionPage />}
-            />
+            <Route path="/translation-results" element={<TranslationResults />} />
+            <Route path="/file-format-conversion" element={<FormatConversionPage />} />
             <Route path="/conversion-results" element={<ConversionResults />} />
-            <Route path="*" element={<NotFound />} />
-            <Route
-              path="/common-library"
-              element={<CommonLibraryManagement />}
-            />
+            <Route path="/common-library" element={<CommonLibraryManagement />} />
             <Route path="/file-history" element={<FileHistory />} />
             <Route path="/private-library" element={<PrivateLibrary />} />
             <Route
               path="/suggestion-review"
               element={<Navigate to="/common-library" replace />}
             />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
+
         <ToastContainer
           position="top-right"
           autoClose={3000}

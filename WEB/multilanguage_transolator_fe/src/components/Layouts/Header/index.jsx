@@ -39,14 +39,9 @@ const Header = ({ onMobileMenuClick }) => {
         </button>
       </div>
 
-      {/* Logo */}
-      <div className="z-10">
-        <img
-          src="/assets/toraylogo.webp"
-          alt="Toray Logo"
-          className="h-10 cursor-pointer"
-          onClick={() => navigate("/")}
-        />
+      {/* App title */}
+      <div className="z-10 cursor-pointer font-semibold text-blue-900 text-lg" onClick={() => navigate("/")}>
+        Multi-Language Translator
       </div>
 
       {/* User menu and notifications on right */}

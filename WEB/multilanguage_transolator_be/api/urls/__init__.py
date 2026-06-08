@@ -17,7 +17,7 @@ urlpatterns = [
     # Admin statistics
     path('', include('api.urls.keyword_stats')),
 
-    # ALB + Cognito SSO authentication (primary)
+    # JWT authentication
     path('auth/', include('api.urls.alb_auth')),
     path('health/', HealthCheckView.as_view(), name='health_check'),
 ]
