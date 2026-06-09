@@ -64,20 +64,4 @@ Frontend sẽ chạy tại địa chỉ: http://localhost:5173/
 
 Cả frontend và backend đều sử dụng file .env để cấu hình.
 
-### File .env cho Backend
 
-Tạo file .env trong thư mục WEB/multilanguage_transolator_be với nội dung:
-
-DB_HOST="toray-database1.croy20i26wfv.ap-southeast-2.rds.amazonaws.com"
-DB_PORT="5432"
-DB_USER="postgres"
-DB_NAME="torayinitial"
-DB_PASSWORD="locvuong01"
-
-### File .env cho Frontend
-
-Tạo file .env trong thư mục WEB/multilanguage_transolator_fe với nội dung:
-
-```
-VITE_API_URL=http://localhost:8000
-```
