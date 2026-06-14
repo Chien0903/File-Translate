@@ -34,11 +34,21 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
-    
-    # Cognito integration fields
-    cognito_sub = models.CharField(max_length=255, blank=True, null=True, unique=True, help_text="Cognito User Pool Subject ID")
-    auth_provider = models.CharField(max_length=20, choices=[('local', 'Local'), ('cognito', 'Cognito')], default='local')
-    
+    company = models.ForeignKey(
+        'api.Company',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+    )
+    preferred_language = models.ForeignKey(
+        'api.Language',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='preferred_by_users',
+    )
+
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'           

@@ -1,0 +1,371 @@
+\chapter{KHẢO SÁT VÀ PHÂN TÍCH YÊU CẦU}
+
+\section{Khảo sát hiện trạng}
+
+\subsection{Các công cụ dịch thuật hiện có}
+
+Thị trường hiện có nhiều công cụ hỗ trợ dịch thuật, song chưa có giải pháp nào đáp ứng đầy
+đủ nhu cầu doanh nghiệp sản xuất đa ngôn ngữ. Bảng~\ref{tab:survey} so sánh các công cụ phổ
+biến nhất với yêu cầu của hệ thống đề xuất.
+
+\begin{table}[H]
+\centering
+\caption{So sánh các công cụ dịch thuật hiện có}
+\label{tab:survey}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|X|X|X|X|X|}
+\hline
+\textbf{Tiêu chí}
+  & \textbf{Google\newline Translate}
+  & \textbf{DeepL}
+  & \textbf{SDL\newline Trados}
+  & \textbf{Matecat}
+  & \textbf{Hệ thống\newline đề xuất} \\
+\hline
+Hỗ trợ DOCX          & Có  & Có  & Có  & Có  & \textbf{Có}  \\
+\hline
+Hỗ trợ XLSX          & Không & Không & Có  & Hạn chế & \textbf{Có}  \\
+\hline
+Hỗ trợ PPTX          & Không & Không & Có  & Có  & \textbf{Có}  \\
+\hline
+Hỗ trợ PDF scan (OCR)& Không & Không & Hạn chế & Không & \textbf{Có}  \\
+\hline
+Từ điển thuật ngữ    & Không & Có   & Có  & Có  & \textbf{Có (3 cấp)} \\
+\hline
+Đề xuất thuật ngữ\newline cộng đồng
+                     & Không & Không & Không & Không & \textbf{Có}  \\
+\hline
+Hỗ trợ 10+ ngôn ngữ\newline châu Á
+                     & Có   & Hạn chế & Có & Hạn chế & \textbf{Có}  \\
+\hline
+Giao diện web\newline nội bộ doanh nghiệp
+                     & Không & Không & Không & Có & \textbf{Có}  \\
+\hline
+SSO doanh nghiệp     & Không & Không & Có  & Có  & \textbf{Có (Cognito)} \\
+\hline
+Chi phí              & Miễn phí/ API & Freemium & Cao  & Trả phí & Tự triển khai \\
+\hline
+\end{tabularx}
+\end{table}
+
+Từ kết quả khảo sát, có thể thấy rằng không công cụ nào đáp ứng đồng thời bốn yêu cầu cốt lõi:
+(1)~hỗ trợ đầy đủ các định dạng tài liệu doanh nghiệp bao gồm PDF scan, (2)~hệ thống thuật ngữ
+theo ngữ cảnh doanh nghiệp với quy trình duyệt cộng đồng, (3)~tích hợp SSO doanh nghiệp, và
+(4)~giao diện web triển khai nội bộ. Đây là cơ sở để đồ án xây dựng hệ thống riêng.
+
+\subsection{Quy trình dịch tài liệu thủ công tại doanh nghiệp}
+
+Quy trình dịch tài liệu thông thường tại các doanh nghiệp đa ngôn ngữ vẫn diễn ra thủ công:
+nhân viên sao chép nội dung từ tài liệu gốc vào Google~Translate hoặc DeepL, sau đó sao chép
+lại kết quả vào tài liệu đích và chỉnh sửa thủ công. Quy trình này có các nhược điểm rõ ràng:
+
+\begin{itemize}
+  \item Tốn thời gian, đặc biệt với tài liệu nhiều trang.
+  \item Mất định dạng (bảng, bảng tính, hình ảnh nhúng).
+  \item Thiếu nhất quán thuật ngữ giữa các tài liệu và giữa các nhân viên.
+  \item Không có lịch sử lưu trữ tài liệu đã dịch.
+\end{itemize}
+
+\section{Tổng quan chức năng}
+
+\subsection{Biểu đồ use case tổng quát}
+
+Hệ thống phục vụ ba nhóm tác nhân chính:
+
+\begin{itemize}
+  \item \textbf{Người dùng (User):} Nhân viên trong tổ chức sử dụng hệ thống để dịch tài liệu và quản
+    lý thuật ngữ cá nhân.
+  \item \textbf{Library Keeper:} Nhân viên phụ trách quản lý thư viện thuật ngữ chung của công
+    ty, có quyền duyệt/từ chối đề xuất thuật ngữ.
+  \item \textbf{Admin:} Quản trị viên hệ thống, có toàn quyền quản lý người dùng, cấu hình hệ
+    thống và xem thống kê.
+\end{itemize}
+
+Agent:
+
+\begin{figure}[H]
+\centering
+% Mermaid/PlantUML source cho use case tổng quan:
+%
+% @startuml
+% left to right direction
+% actor "Người dùng" as User
+% actor "Library Keeper" as LK
+% actor "Admin" as Admin
+%
+% rectangle "Hệ thống dịch tài liệu đa ngôn ngữ" {
+%   usecase "Đăng nhập" as UC01
+%   usecase "Dịch tài liệu" as UC02
+%   usecase "Dịch văn bản" as UC03
+%   usecase "Xem lịch sử dịch" as UC04
+%   usecase "Quản lý thư viện cá nhân" as UC05
+%   usecase "Đề xuất thuật ngữ" as UC06
+%   usecase "Quản lý thư viện chung" as UC07
+%   usecase "Duyệt đề xuất thuật ngữ" as UC08
+%   usecase "Quản lý người dùng" as UC09
+%   usecase "Xem thống kê từ khóa" as UC10
+%   usecase "Chuyển đổi định dạng" as UC11
+% }
+%
+% User --> UC01
+% User --> UC02
+% User --> UC03
+% User --> UC04
+% User --> UC05
+% User --> UC06
+% User --> UC11
+%
+% LK --> UC01
+% LK --> UC07
+% LK --> UC08
+% LK --|> User
+%
+% Admin --> UC01
+% Admin --> UC09
+% Admin --> UC10
+% Admin --|> LK
+% @enduml
+%
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{1cm}
+\textit{[Hình: Biểu đồ use case tổng quát]}\\[0.5cm]
+\textbf{Image Description:} Biểu đồ use case với ba tác nhân: Người dùng (User), Library Keeper
+và Admin. Hệ thống có 11 use case chính: đăng nhập, dịch tài liệu, dịch văn bản, xem lịch sử
+dịch, quản lý thư viện cá nhân, đề xuất thuật ngữ, quản lý thư viện chung, duyệt đề xuất, quản
+lý người dùng, xem thống kê từ khóa, chuyển đổi định dạng. Admin kế thừa toàn bộ quyền của
+Library Keeper; Library Keeper kế thừa toàn bộ quyền của User.
+\vspace{0.5cm}}}
+\caption{Biểu đồ use case tổng quát}
+\label{fig:usecase_overview}
+\end{figure}
+
+\subsection{Biểu đồ use case phân rã: Dịch tài liệu}
+
+Agent:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{1cm}
+\textit{[Hình: Biểu đồ use case phân rã Dịch tài liệu]}\\[0.5cm]
+\textbf{Image Description:} Phân rã use case ``Dịch tài liệu'' gồm các bước: tải tệp lên S3,
+chọn ngôn ngữ nguồn (tùy chọn, có auto-detect), chọn một hoặc nhiều ngôn ngữ đích, chọn chế
+độ thư viện (Không dùng / Thư viện chung / Thư viện cá nhân), kích hoạt dịch, tải kết quả
+về. Có extension ``Kiểm tra PDF'' khi tệp là PDF: nếu là native-text thì ConvertAPI→DOCX;
+nếu là scan thì OCR pipeline.
+\vspace{0.5cm}}}
+\caption{Biểu đồ use case phân rã -- Dịch tài liệu}
+\label{fig:usecase_translate}
+\end{figure}
+
+\subsection{Biểu đồ use case phân rã: Quản lý thuật ngữ}
+
+Agent:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{1cm}
+\textit{[Hình: Biểu đồ use case phân rã Quản lý thuật ngữ]}\\[0.5cm]
+\textbf{Image Description:} Phân rã use case ``Quản lý thuật ngữ'' gồm hai nhánh: (1)~Thư viện
+cá nhân (User): thêm, sửa, xóa từ khóa cá nhân; đề xuất từ khóa vào thư viện chung.
+(2)~Thư viện chung (Library Keeper/Admin): xem danh sách đề xuất đang chờ, duyệt hoặc từ chối
+từng đề xuất, quản lý từ khóa đã được duyệt, cấu hình ngưỡng số người đề xuất tối thiểu.
+\vspace{0.5cm}}}
+\caption{Biểu đồ use case phân rã -- Quản lý thuật ngữ}
+\label{fig:usecase_library}
+\end{figure}
+
+\subsection{Quy trình nghiệp vụ: Đề xuất thuật ngữ vào thư viện chung}
+
+Agent:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{1cm}
+\textit{[Hình: Quy trình đề xuất thuật ngữ]}\\[0.5cm]
+\textbf{Image Description:} Quy trình nghiệp vụ dạng BPMN/Flowchart: Người dùng thêm từ khóa
+vào Thư viện cá nhân → Người dùng nhấn ``Đề xuất lên thư viện chung'' → Hệ thống lưu vào
+KeywordQueue → Hệ thống đếm số lượt đề xuất duy nhất; nếu chưa đủ ngưỡng thì chờ; nếu đủ
+ngưỡng thì tạo KeywordSuggestion với status=pending và gửi thông báo cho Library Keeper →
+Library Keeper duyệt hoặc từ chối → Nếu duyệt: status=approved, cập nhật GCS và Google
+Translation glossary theo 44 cặp ngôn ngữ.
+\vspace{0.5cm}}}
+\caption{Quy trình nghiệp vụ đề xuất thuật ngữ vào thư viện chung}
+\label{fig:bpmn_suggest}
+\end{figure}
+
+\section{Đặc tả chức năng}
+
+\subsection{Đặc tả use case: UC-01 -- Dịch tài liệu}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả use case UC-01: Dịch tài liệu}
+\label{tab:uc01}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Tên use case}     & UC-01: Dịch tài liệu \\
+\hline
+\textbf{Tác nhân}         & Người dùng đã đăng nhập \\
+\hline
+\textbf{Điều kiện trước}  & Người dùng đã đăng nhập hệ thống \\
+\hline
+\textbf{Điều kiện sau}    & Tệp dịch được lưu trên S3 và bản ghi TranslatedFile được tạo trong DB \\
+\hline
+\textbf{Mô tả}            & Người dùng tải tệp lên (DOCX/XLSX/PPTX/PDF/CSV/XLS), chọn ngôn ngữ và
+                            chế độ thư viện, hệ thống dịch và trả về liên kết tải về \\
+\hline
+\textbf{Luồng chính}      &
+\begin{enumerate}[leftmargin=*,nosep]
+  \item Người dùng truy cập trang chủ.
+  \item Người dùng tải tệp lên AWS~S3 qua widget.
+  \item Người dùng chọn ngôn ngữ nguồn (hoặc để auto-detect).
+  \item Người dùng chọn một hoặc nhiều ngôn ngữ đích.
+  \item Người dùng chọn chế độ thư viện (Không dùng / Chung / Cá nhân).
+  \item Người dùng nhấn ``Dịch''.
+  \item Hệ thống tải tệp từ S3 về server tạm.
+  \item Hệ thống thiết lập ngữ cảnh dịch (library\_mode + user\_id) qua thread-local.
+  \item Hệ thống dịch từng ngôn ngữ đích, upload kết quả lên S3.
+  \item Hệ thống lưu bản ghi TranslatedFile, trả về danh sách URL.
+  \item Người dùng tải tệp về.
+\end{enumerate} \\
+\hline
+\textbf{Luồng thay thế}  & 3a. Tệp là PDF: hệ thống gọi \texttt{is\_pdf\_truly\_editable()} để
+                            phân loại, chuyển hướng sang pipeline phù hợp.
+                            \newline
+                            4a. Ngôn ngữ nguồn không xác định: hệ thống auto-detect từ nội dung
+                            tệp. \\
+\hline
+\textbf{Ngoại lệ}        & ConvertAPI thất bại → trả lỗi 500; Upload S3 thất bại → trả lỗi 500 \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Đặc tả use case: UC-02 -- Dịch văn bản}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả use case UC-02: Dịch văn bản thuần}
+\label{tab:uc02}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Tên use case}    & UC-02: Dịch văn bản \\
+\hline
+\textbf{Tác nhân}        & Người dùng đã đăng nhập \\
+\hline
+\textbf{Điều kiện trước} & Người dùng đã đăng nhập \\
+\hline
+\textbf{Điều kiện sau}   & Văn bản dịch được hiển thị trên giao diện \\
+\hline
+\textbf{Mô tả}           & Người dùng nhập văn bản, chọn ngôn ngữ nguồn và đích, hệ thống trả
+                           về văn bản đã dịch kèm thông tin ngôn ngữ \\
+\hline
+\textbf{Luồng chính}     &
+\begin{enumerate}[leftmargin=*,nosep]
+  \item Người dùng truy cập trang ``Dịch văn bản''.
+  \item Người dùng nhập văn bản nguồn.
+  \item Người dùng chọn ngôn ngữ nguồn (hoặc auto-detect).
+  \item Người dùng chọn ngôn ngữ đích và chế độ thư viện.
+  \item Hệ thống gọi \texttt{translate\_text\_with\_glossary()} với glossary\_id tương ứng.
+  \item Hệ thống trả về văn bản dịch, ngôn ngữ nguồn phát hiện được.
+\end{enumerate} \\
+\hline
+\textbf{Ngoại lệ}       & Ngôn ngữ đích không được hỗ trợ → lỗi 400; Lỗi API → lỗi 500 \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Đặc tả use case: UC-03 -- Quản lý thư viện cá nhân}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả use case UC-03: Quản lý thư viện cá nhân}
+\label{tab:uc03}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Tên use case}    & UC-03: Quản lý thư viện cá nhân \\
+\hline
+\textbf{Tác nhân}        & Người dùng \\
+\hline
+\textbf{Điều kiện trước} & Người dùng đã đăng nhập \\
+\hline
+\textbf{Điều kiện sau}   & Bản ghi PrivateKeyword được tạo/cập nhật/xóa trong DB; nếu cập nhật
+                           từ có trong đề xuất thì GCS được đồng bộ bất đồng bộ \\
+\hline
+\textbf{Mô tả}           & Người dùng thêm, sửa hoặc xóa các cặp từ khóa cá nhân (PrivateKeyword)
+                           theo 10 ngôn ngữ, có thể thêm ghi chú \\
+\hline
+\textbf{Luồng chính}     & Người dùng vào trang ``Thư viện cá nhân'' → thêm hàng mới hoặc chỉnh
+                           sửa hàng hiện có → nhập giá trị từng ngôn ngữ → lưu.
+                           Sau khi lưu, nếu người dùng có đề xuất đang chờ liên quan đến từ
+                           khóa này, hệ thống trigger cập nhật glossary GCS qua background thread. \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Đặc tả use case: UC-04 -- Quản lý thư viện chung}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả use case UC-04: Quản lý thư viện chung (Library Keeper / Admin)}
+\label{tab:uc04}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Tên use case}    & UC-04: Quản lý thư viện chung \\
+\hline
+\textbf{Tác nhân}        & Library Keeper, Admin \\
+\hline
+\textbf{Điều kiện trước} & Người dùng có vai trò Library Keeper hoặc Admin \\
+\hline
+\textbf{Điều kiện sau}   & KeywordSuggestion được cập nhật status; GCS và Google Translation
+                           glossary được đồng bộ bất đồng bộ qua background thread \\
+\hline
+\textbf{Mô tả}           & Xem danh sách đề xuất chờ duyệt (status=pending), duyệt hoặc từ chối
+                           từng đề xuất, quản lý từ khóa đã phê duyệt (CRUD), cấu hình ngưỡng
+                           \texttt{min\_suggesters\_for\_queue} \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Yêu cầu phi chức năng}
+
+\begin{table}[H]
+\centering
+\caption{Yêu cầu phi chức năng}
+\label{tab:nonfunc}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Loại}       & \textbf{Tên}          & \textbf{Mô tả / Tiêu chuẩn} \\
+\hline
+Hiệu năng           & Thời gian phản hồi    & Dịch tài liệu DOCX 10~trang $\leq 30$~giây; dịch văn bản
+                                              $\leq 5$~giây \\
+\hline
+Hiệu năng           & Xử lý song song       & Hỗ trợ nhiều ngôn ngữ đích trong một yêu cầu (sequential loop
+                                              trên server) \\
+\hline
+Bảo mật             & Xác thực              & JWT với TTL 15~phút (access) / 7~ngày (refresh); AWS Cognito
+                                              OIDC cho môi trường production \\
+\hline
+Bảo mật             & Phân quyền            & Ba vai trò (User / Library Keeper / Admin) với kiểm tra
+                                              \texttt{IsAuthenticated} trên mọi endpoint \\
+\hline
+Bảo mật             & Lưu trữ tệp           & Tệp lưu trên AWS~S3 với tên UUID ngẫu nhiên; không expose
+                                              tên tệp gốc qua URL \\
+\hline
+Tin cậy             & Xử lý lỗi            & Pipeline dịch bắt ngoại lệ theo từng ngôn ngữ đích; kết quả
+                                              thành công vẫn trả về dù một ngôn ngữ thất bại \\
+\hline
+Khả năng sử dụng    & Giao diện             & SPA trực quan với Ant Design; thông báo toast khi thành công/
+                                              lỗi; hiển thị trạng thái đang dịch \\
+\hline
+Khả năng bảo trì    & Container hóa         & Toàn bộ backend và frontend Docker hóa; cấu hình qua biến
+                                              môi trường \texttt{.env} \\
+\hline
+Khả năng mở rộng    & Ngôn ngữ              & Thêm ngôn ngữ mới chỉ cần bổ sung cặp glossary và cập nhật
+                                              hằng số \texttt{language\_pair} \\
+\hline
+\end{tabularx}
+\end{table}

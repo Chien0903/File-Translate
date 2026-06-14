@@ -1,0 +1,80 @@
+\chapter{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
+
+\section{Kết luận}
+
+\subsection{Kết quả đạt được}
+
+Đồ án đã hoàn thành việc nghiên cứu, thiết kế và triển khai thực tế hệ thống dịch tài liệu đa
+ngôn ngữ cho môi trường doanh nghiệp. Các kết quả cụ thể đạt được bao gồm:
+
+\begin{itemize}
+  \item \textbf{Hệ thống dịch thuật đa định dạng:} Hỗ trợ dịch sáu định dạng tài liệu
+    (DOCX, XLSX, PPTX, PDF native-text, PDF scan, CSV/XLS) sang tối đa 10 ngôn ngữ
+    đồng thời trong một yêu cầu. Định dạng và bố cục tài liệu được bảo toàn sau dịch.
+
+  \item \textbf{Pipeline PDF thông minh:} Thuật toán phân loại PDF ba tiêu chí
+    (\texttt{is\_pdf\_truly\_editable}) hoạt động chính xác, tự động định tuyến tài liệu đến
+    pipeline ConvertAPI→DOCX hoặc Azure OCR phù hợp mà không cần can thiệp của người dùng.
+
+  \item \textbf{Hệ thống quản lý thuật ngữ:} Ba cấp (Private Library, Suggestion Queue,
+    Common Library) với 44 cặp glossary Google Translation API hoạt động tự động, cho phép
+    doanh nghiệp duy trì bộ từ điển kỹ thuật nhất quán qua cơ chế đề xuất cộng đồng.
+
+  \item \textbf{Kiến trúc sạch:} Cơ chế thread-local context injection cho phép tích hợp chế
+    độ thư viện vào tất cả module dịch mà không thay đổi chữ ký hàm hiện có, đảm bảo tính
+    module hóa của codebase.
+
+  \item \textbf{Triển khai production:} Hệ thống đã được triển khai tại
+    AWS với Cognito SSO, AWS~S3, Application Load Balancer và container Docker, phục vụ
+    nhu cầu dịch thuật tài liệu kỹ thuật đa ngôn ngữ trong môi trường sản xuất thực tiễn.
+\end{itemize}
+
+\subsection{Hạn chế}
+
+\begin{itemize}
+  \item \textbf{Thời gian xử lý tài liệu lớn:} Tài liệu nhiều trang (>~50 trang) có thể mất
+    vài phút do tính chất tuần tự của các lần gọi Google Translation~API và pipeline OCR.
+    Hiện chưa có cơ chế ước lượng tiến độ (progress bar) trên giao diện.
+
+  \item \textbf{Bảo toàn định dạng PPTX phức tạp:} Một số slide PPTX có bố cục phức tạp
+    (SmartArt, grouping) có thể bị mất định dạng sau dịch do giới hạn của python-pptx khi
+    xử lý các đối tượng đặc biệt.
+
+  \item \textbf{Cập nhật glossary bất đồng bộ:} Sau khi duyệt thuật ngữ, glossary Google
+    Translation được cập nhật trong background thread (30--180~giây/pair × 44 pairs). Trong
+    khoảng thời gian này, các yêu cầu dịch vẫn sử dụng glossary cũ.
+
+  \item \textbf{Phát hiện ngôn ngữ nguồn:} Một số tài liệu hỗn hợp nhiều ngôn ngữ trong cùng
+    một tệp có thể bị phát hiện sai ngôn ngữ nguồn, ảnh hưởng đến việc chọn glossary phù hợp.
+\end{itemize}
+
+\section{Hướng phát triển}
+
+Dựa trên kết quả đạt được và các hạn chế còn tồn tại, đồ án đề xuất các hướng phát triển trong
+tương lai:
+
+\begin{enumerate}
+  \item \textbf{Xử lý bất đồng bộ với Celery/Redis:} Chuyển pipeline dịch tài liệu sang hệ
+    thống hàng chờ tác vụ (Celery + Redis/RabbitMQ) để hỗ trợ giao diện theo dõi tiến độ
+    thời gian thực (WebSocket) và cải thiện khả năng mở rộng.
+
+  \item \textbf{Gợi ý thuật ngữ bằng ML:} Áp dụng mô hình NLP để tự động gợi ý các cặp
+    thuật ngữ chưa có trong thư viện dựa trên nội dung tài liệu đã dịch, hỗ trợ người dùng
+    xây dựng thư viện cá nhân nhanh hơn.
+
+  \item \textbf{Ứng dụng di động:} Phát triển ứng dụng mobile (React Native hoặc Flutter) cho
+    phép nhân viên nhà máy chụp ảnh tài liệu và dịch ngay trên thiết bị di động, tích hợp
+    với OCR pipeline hiện có.
+
+  \item \textbf{Dashboard phân tích nâng cao:} Mở rộng trang thống kê Admin với biểu đồ xu
+    hướng sử dụng theo thời gian, top ngôn ngữ dịch, tài liệu dịch nhiều nhất, giúp quản lý
+    đưa ra quyết định về ưu tiên mở rộng ngôn ngữ.
+
+  \item \textbf{Cache kết quả dịch:} Triển khai Redis cache cho các đoạn văn bản lặp lại
+    (đặc biệt trong tài liệu kỹ thuật có nhiều đầu mục cố định), giảm số lần gọi API và
+    chi phí vận hành.
+
+  \item \textbf{Hỗ trợ dịch ngoại tuyến:} Tích hợp mô hình dịch máy cục bộ (ví dụ:
+    Helsinki-NLP/Opus-MT qua HuggingFace) cho các tài liệu nội bộ nhạy cảm không muốn
+    gửi ra dịch vụ đám mây bên ngoài.
+\end{enumerate}

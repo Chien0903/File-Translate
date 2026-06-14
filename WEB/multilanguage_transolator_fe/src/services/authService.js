@@ -7,7 +7,7 @@ const apiBase =
 
 const authAxios = axios.create({ baseURL: apiBase });
 
-const AUTH_KEYS = ["access", "refresh", "fullName", "role", "email", "auth_provider", "translationHistory"];
+const AUTH_KEYS = ["access", "refresh", "fullName", "role", "email", "translationHistory"];
 
 const authService = {
   async login(email, password) {

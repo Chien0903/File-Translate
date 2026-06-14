@@ -1,0 +1,276 @@
+\chapter{CÁC GIẢI PHÁP VÀ ĐÓNG GÓP NỔI BẬT}
+
+Chương này trình bày ba đóng góp kỹ thuật nổi bật của hệ thống, mỗi đóng góp được trình bày
+theo cấu trúc: (1)~đặt vấn đề, (2)~giải pháp được đề xuất, (3)~kết quả đạt được.
+
+% =========================================================
+\section{Pipeline dịch tài liệu đa định dạng với phân loại PDF thông minh}
+
+\subsection{Đặt vấn đề}
+
+PDF là định dạng tài liệu phổ biến nhất trong môi trường doanh nghiệp, song đây cũng là định
+dạng phức tạp nhất để dịch thuật vì PDF tồn tại dưới hai dạng hoàn toàn khác nhau:
+
+\begin{itemize}
+  \item \textbf{PDF native-text (có thể chỉnh sửa):} PDF được tạo trực tiếp từ phần mềm văn
+    phòng (Word, Excel) hoặc in ra PDF từ ứng dụng. Loại này chứa các đối tượng văn bản
+    (\texttt{stream}) có thể trích xuất trực tiếp.
+  \item \textbf{PDF scan (dạng ảnh):} PDF được tạo bằng cách scan tài liệu giấy hoặc chụp ảnh.
+    Toàn bộ nội dung trang là ảnh bitmap, không chứa đối tượng văn bản có thể trích xuất.
+  \item \textbf{PDF OCR overlay:} PDF scan đã được chạy qua phần mềm OCR và nhúng thêm một lớp
+    văn bản không hiển thị phía trên ảnh. Đây là trường hợp gây nhầm lẫn nhất vì có văn bản
+    nhưng không phải native.
+\end{itemize}
+
+Nếu áp dụng sai pipeline (ví dụ: cố gắng trích xuất văn bản từ PDF scan), kết quả sẽ trống hoặc
+sai hoàn toàn. Ngược lại, nếu dùng OCR cho PDF native-text, sẽ tốn thời gian và giảm chất lượng
+không cần thiết.
+
+\subsection{Giải pháp: Thuật toán phân loại PDF đa tiêu chí}
+
+Đồ án đề xuất hàm \texttt{is\_pdf\_truly\_editable(pdf\_path)} phân tích từng trang PDF theo
+ba tiêu chí kết hợp để phân loại chính xác:
+
+\begin{enumerate}
+  \item \textbf{Tiêu chí 1 -- Văn bản native:} Trích xuất văn bản từ trang bằng
+    \texttt{pypdf.PdfReader.extract\_text()}. Nếu có $\geq 20$ ký tự, trang được coi là có
+    nội dung văn bản.
+  \item \textbf{Tiêu chí 2 -- Phát hiện ảnh toàn trang:} Kiểm tra \texttt{/XObject} trong
+    \texttt{/Resources} của trang. Nếu có ảnh (\texttt{/Subtype = /Image}) có kích thước pixel
+    lớn hơn ngưỡng tỉ lệ so với kích thước trang (tỉ lệ $\geq 2.0$), trang được phân loại là
+    ảnh toàn trang (scan).
+  \item \textbf{Tiêu chí 3 -- Metadata OCR:} Kiểm tra \texttt{/Producer}, \texttt{/Creator}
+    trong metadata PDF; nếu chứa các từ khóa OCR (``tesseract'', ``adobe pdf output intent''),
+    trang được đánh dấu là OCR overlay.
+\end{enumerate}
+
+Kết quả phân loại từng trang được tổng hợp theo logic:
+
+\begin{lstlisting}[language=Python, caption={Logic phân loại PDF (translate.py)}]
+# Phan loai moi trang:
+if has_text and not has_full_image:
+    native_text_pages += 1       # van ban nguyen ban
+elif has_text and has_full_image:
+    ocr_overlay_pages += 1       # scan + OCR overlay
+elif (not has_text) and has_full_image:
+    image_only_pages += 1        # scan khong co OCR
+
+# Quyet dinh cuoi cung:
+if native_text_pages > 0:
+    return True   # PDF co the chinh sua -> pipeline ConvertAPI->DOCX
+# Khong co trang native text:
+if ocr_overlay_pages > 0 or image_only_pages > 0:
+    return False  # PDF scan -> pipeline OCR Azure
+return False      # Khong xac dinh -> chuyen ve OCR de an toan
+\end{lstlisting}
+
+Sau khi phân loại, hệ thống định tuyến đến pipeline phù hợp:
+
+Agent:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{0.5cm}
+\textit{[Hình: Sơ đồ quyết định pipeline PDF]}\\[0.3cm]
+\textbf{Image Description:} Flowchart: Input PDF → \texttt{is\_pdf\_truly\_editable()} →
+\newline
+Nhánh TRUE: ConvertAPI (PDF→DOCX) → \texttt{translate\_docx()} → Output DOCX dịch.
+\newline
+Nhánh FALSE: Azure Document Intelligence OCR (PDF→text+layout) →
+\texttt{translate\_text\_with\_glossary()} → Vẽ lại PDF với text dịch → Output PDF dịch.
+\vspace{0.5cm}}}
+\caption{Sơ đồ quyết định pipeline dịch PDF}
+\label{fig:pdf_pipeline}
+\end{figure}
+
+\subsection{Kết quả đạt được}
+
+\begin{itemize}
+  \item Hệ thống phân loại chính xác PDF native-text, PDF scan và PDF OCR overlay trong thử
+    nghiệm với bộ tài liệu kỹ thuật thực tế (báo cáo chất lượng, hướng dẫn vận hành).
+  \item PDF native-text được xử lý qua ConvertAPI→DOCX, giữ nguyên bố cục trang, bảng biểu và
+    định dạng chữ sau khi dịch.
+  \item PDF scan được xử lý qua Azure Document Intelligence, nhận diện đúng bố cục bảng và
+    văn bản nhiều cột với độ chính xác OCR cao hơn so với Tesseract trong thử nghiệm với
+    tài liệu tiếng Nhật và tiếng Trung.
+  \item Pipeline xử lý lỗi theo từng ngôn ngữ đích độc lập: nếu một ngôn ngữ thất bại, các
+    ngôn ngữ còn lại vẫn trả kết quả.
+\end{itemize}
+
+% =========================================================
+\section{Hệ thống quản lý thuật ngữ ba cấp với quy trình đề xuất cộng đồng}
+
+\subsection{Đặt vấn đề}
+
+Thuật ngữ kỹ thuật chuyên ngành trong môi trường doanh nghiệp (tên sản phẩm, tên quy trình
+sản xuất, ký hiệu tiêu chuẩn nội bộ) thường không có trong từ điển mặc định của Google Translation API. Nếu không có cơ chế quản lý thuật
+ngữ, cùng một khái niệm kỹ thuật sẽ được dịch khác nhau ở mỗi lần dịch, gây nhầm lẫn trong
+vận hành.
+
+Yêu cầu đặt ra:
+\begin{itemize}
+  \item Cần có kho từ điển thuật ngữ dùng chung toàn công ty (Common Library).
+  \item Thuật ngữ phải do người dùng thực tế đóng góp (crowdsourced), không do admin nhập thủ
+    công hoàn toàn.
+  \item Cần cơ chế kiểm soát chất lượng: thuật ngữ phải được duyệt trước khi áp dụng toàn hệ
+    thống.
+  \item Người dùng cũng cần có thư viện cá nhân để lưu thuật ngữ riêng chưa chia sẻ.
+\end{itemize}
+
+\subsection{Giải pháp: Kiến trúc thuật ngữ ba cấp}
+
+Đồ án thiết kế hệ thống quản lý thuật ngữ theo ba cấp độ:
+
+\textbf{Cấp 1 -- Thư viện cá nhân (Private Library):} Mỗi người dùng có bảng
+\texttt{PrivateKeyword} riêng với 10 trường ngôn ngữ và trường ghi chú. Chỉ người dùng đó
+nhìn thấy và có thể sử dụng khi dịch với \texttt{library\_mode=private}.
+
+\textbf{Cấp 2 -- Hàng chờ đề xuất (Suggestion Queue):} Khi người dùng muốn chia sẻ thuật
+ngữ lên thư viện chung, hệ thống lưu vào \texttt{KeywordQueue}. Hệ thống đếm số người dùng
+khác nhau đề xuất cùng thuật ngữ; khi đạt ngưỡng \texttt{min\_suggesters\_for\_queue} (mặc
+định~2), hệ thống tự động tạo \texttt{KeywordSuggestion} với \texttt{status=pending} và gửi
+thông báo đến Library Keeper.
+
+\textbf{Cấp 3 -- Thư viện chung (Common Library):} Library Keeper/Admin duyệt các đề xuất.
+Khi duyệt (\texttt{status=approved}), hệ thống trigger background thread:
+\begin{enumerate}
+  \item Tạo tệp CSV từ tất cả \texttt{KeywordSuggestion} đã duyệt.
+  \item Upload CSV lên Google Cloud Storage.
+  \item Gọi \texttt{manage\_glossary(mode=1)} để cập nhật 44 glossary trên Google Translation
+    API.
+\end{enumerate}
+
+Agent:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{0.5cm}
+\textit{[Hình: Sơ đồ hệ thống thuật ngữ ba cấp]}\\[0.3cm]
+\textbf{Image Description:} Sơ đồ ba cấp:
+\newline
+Cấp 1 (Private Library): PrivateKeyword table ←→ User (CRUD). Khi dịch với mode=private:
+thread-local context → inject private glossary vào Translation API.
+\newline
+Cấp 2 (Suggestion Queue): User nhấn ``Đề xuất'' → KeywordQueue → Hệ thống đếm unique
+users → Nếu $\geq$ ngưỡng → tạo KeywordSuggestion(pending) → notify Library Keeper.
+\newline
+Cấp 3 (Common Library): Library Keeper duyệt → status=approved → background thread →
+CSV → GCS upload → Google Translation API update 44 glossaries. Khi dịch với mode=common:
+thread-local context → inject common glossary vào Translation API.
+\vspace{0.5cm}}}
+\caption{Kiến trúc hệ thống quản lý thuật ngữ ba cấp}
+\label{fig:library_arch}
+\end{figure}
+
+Cơ chế ngưỡng đề xuất giúp lọc các thuật ngữ được ít người quan tâm và đảm bảo chỉ những thuật
+ngữ được nhiều người dùng xác nhận mới vào hàng chờ duyệt, giảm tải cho Library Keeper.
+
+\subsection{Kết quả đạt được}
+
+\begin{itemize}
+  \item Hệ thống thuật ngữ hoạt động tự động từ đầu đến cuối: từ đề xuất của người dùng đến
+    áp dụng vào Translation API mà không cần thao tác thủ công trên Google Console.
+  \item 44 cặp glossary được đồng bộ tự động sau mỗi lần duyệt thuật ngữ, bao phủ toàn bộ
+    10 ngôn ngữ hỗ trợ.
+  \item Cơ chế cập nhật bất đồng bộ (background thread) đảm bảo API dịch thuật không bị chờ
+    đợi trong quá trình cập nhật glossary (có thể mất 30--180~giây cho mỗi glossary).
+  \item Người dùng nhận thông báo in-app khi đề xuất được duyệt hoặc từ chối.
+\end{itemize}
+
+% =========================================================
+\section{Cơ chế inject ngữ cảnh glossary qua Thread-Local Storage}
+
+\subsection{Đặt vấn đề}
+
+Module dịch thuật (\texttt{translate\_docx}, \texttt{translate\_xlsx}, \texttt{translate\_pptx},
+v.v.) được thiết kế độc lập, với chữ ký hàm nhận vào \texttt{(file\_path, target\_lang,
+source\_lang)}. Chúng không có thông tin về ngữ cảnh HTTP request: user là ai, chế độ thư viện
+được chọn là gì.
+
+Khi thêm tính năng chọn chế độ thư viện (\texttt{library\_mode=none/common/private}), nảy
+sinh thách thức: làm thế nào để truyền thông tin \texttt{(library\_mode, user\_id)} qua nhiều
+lớp hàm mà không phải thay đổi chữ ký hàm của tất cả các module dịch?
+
+Thay đổi chữ ký hàm sẽ dẫn đến: phải sửa tất cả module, phá vỡ tính độc lập của từng module,
+và tạo sự phụ thuộc giữa các module dịch thuật với tầng API.
+
+\subsection{Giải pháp: Thread-Local Storage}
+
+Đồ án sử dụng \textbf{thread-local storage} (biến cục bộ theo luồng) để inject ngữ cảnh
+glossary mà không cần thay đổi chữ ký hàm của bất kỳ module nào.
+
+\begin{lstlisting}[language=Python, caption={Thread-local context trong translate\_text.py}]
+import threading
+_translation_context = threading.local()
+
+def set_translation_context(library_mode: str, user_id: int):
+    _translation_context.library_mode = library_mode
+    _translation_context.user_id = user_id
+
+def clear_translation_context():
+    _translation_context.library_mode = None
+    _translation_context.user_id = None
+
+def translate_text_with_glossary(text, glossary_id,
+                                  source_lang_code, target_lang_code):
+    # Doc nguon context tu thread-local
+    library_mode = getattr(_translation_context,
+                           'library_mode', 'common')
+    user_id = getattr(_translation_context, 'user_id', None)
+
+    # Chon glossary_id dua tren mode va user
+    if library_mode == 'none':
+        effective_glossary_id = None
+    elif library_mode == 'private' and user_id:
+        effective_glossary_id = (
+            f"{glossary_id}_{user_id}"  # private glossary
+        )
+    else:  # 'common'
+        effective_glossary_id = glossary_id
+
+    # Goi Google Translation API voi glossary_id da xac dinh
+    return _call_translation_api(text, effective_glossary_id,
+                                  source_lang_code, target_lang_code)
+\end{lstlisting}
+
+Trong \texttt{TranslateFileView.post()}:
+
+\begin{lstlisting}[language=Python, caption={Thiết lập và xóa context (translate.py -- TranslateFileView)}]
+# Truoc khi dich:
+set_translation_context(
+    library_mode=library_mode,  # 'none'/'common'/'private'
+    user_id=request.user.id
+)
+# Toan bo cac module dich (translate_docx, translate_xlsx...)
+# tu dong doc context tu thread-local, khong can truyen tham so
+for lang in target_languages:
+    result = translate_document(temp_path, lang, ...)
+
+# Sau khi dich (trong finally):
+clear_translation_context()
+\end{lstlisting}
+
+\textbf{Tại sao thread-local là giải pháp phù hợp?}
+
+Mỗi HTTP request trong Django được xử lý trong một luồng riêng. Thread-local đảm bảo ngữ cảnh
+của request này không can thiệp vào request khác đang chạy đồng thời, điều mà biến toàn cục
+không thể đảm bảo. Đây cũng chính xác là trường hợp sử dụng lý tưởng của thread-local: truyền
+thông tin ngữ cảnh trong phạm vi một luồng xử lý mà không cần truyền tường minh qua từng hàm.
+
+Một điểm quan trọng được ghi chú trong source code: module \texttt{translate\_text} phải được
+import theo tên trực tiếp (\texttt{import translate\_text}), không phải qua
+\texttt{Translate\_v2.translate\_text}, để đảm bảo cả \texttt{TranslateFileView} và các module
+dịch chia sẻ \textbf{cùng một instance module} và do đó cùng một đối tượng
+\texttt{\_translation\_context}.
+
+\subsection{Kết quả đạt được}
+
+\begin{itemize}
+  \item Toàn bộ các module dịch thuật (DOCX, XLSX, PPTX, PDF, text) đều sử dụng ngữ cảnh
+    glossary đúng mà không cần thay đổi chữ ký hàm.
+  \item Chế độ thư viện được áp dụng nhất quán qua tất cả các định dạng tài liệu.
+  \item Hệ thống an toàn với nhiều request đồng thời: thread-local ngăn xung đột ngữ cảnh
+    giữa các request.
+  \item Dễ mở rộng: để thêm thông tin ngữ cảnh mới (ví dụ: ngôn ngữ ưu tiên của user), chỉ
+    cần thêm field vào \texttt{\_translation\_context} mà không ảnh hưởng module nào khác.
+\end{itemize}

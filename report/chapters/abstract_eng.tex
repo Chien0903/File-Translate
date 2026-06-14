@@ -1,0 +1,34 @@
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Agent:
+
+This thesis presents the design and implementation of a multilingual document translation system
+built for multinational enterprise environments. In organizations operating across multiple Asian
+countries, technical documents must be translated accurately and consistently across many
+languages, posing challenges in specialized terminology management, multi-format document
+support, and scanned-document processing.
+
+The system adopts a three-tier architecture: a Single-Page Application (SPA) frontend built with
+React~18 and Vite~6, a REST~API layer powered by Django REST Framework~3.16, and a data layer
+comprising PostgreSQL, AWS~S3, and Google Cloud Storage. The translation core integrates
+Google Cloud Translation~API~v3 with 44 custom glossary pairs spanning 10~languages: Vietnamese,
+Japanese, Simplified Chinese, Traditional Chinese, English, Thai, Bengali, Hindi, Indonesian,
+and Oriya. Five document formats are supported: DOCX, XLSX, PPTX, PDF (including scanned
+documents), and CSV/XLS.
+
+Three key technical contributions are reported: (1)~a multi-format translation pipeline with
+intelligent PDF classification, automatically routing native-text PDFs through a
+ConvertAPI→DOCX path and scanned PDFs through an Azure Document Intelligence OCR pipeline;
+(2)~a three-tier crowdsourced terminology management system with a threshold-based suggestion
+queue, allowing users to contribute terms to the shared library through a voting mechanism;
+(3)~a thread-local context injection mechanism that transparently supplies the selected glossary
+mode (none / common / private) to all translation sub-modules without modifying their signatures.
+
+The completed system is deployed on AWS infrastructure, leveraging Amazon Cognito SSO for
+enterprise authentication and AWS Application Load Balancer for traffic distribution, serving
+real-world multilingual technical-document translation needs in a production environment.
+
+\bigskip
+\noindent\textbf{Keywords:} machine translation, multilingual, terminology management, document
+processing, OCR, Google Cloud Translation, Django REST Framework, React.

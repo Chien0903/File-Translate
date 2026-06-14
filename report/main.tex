@@ -1,0 +1,198 @@
+\documentclass[12pt, a4paper]{report}
+
+% =========================================================
+% ENCODING & LANGUAGE
+% =========================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese,english]{babel}
+
+% =========================================================
+% PAGE GEOMETRY (HUST standard)
+% =========================================================
+\usepackage[
+  top=2cm, bottom=2cm,
+  left=3cm, right=2cm
+]{geometry}
+
+% =========================================================
+% TYPOGRAPHY
+% =========================================================
+\usepackage{times}        % Times New Roman
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{indentfirst}
+\setlength{\parindent}{1cm}
+\setlength{\parskip}{6pt}
+
+% =========================================================
+% HEADERS & FOOTERS
+% =========================================================
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\leftmark}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{%
+  \fancyhf{}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+% =========================================================
+% CHAPTER / SECTION TITLES
+% =========================================================
+\usepackage{titlesec}
+\titleformat{\chapter}[block]
+  {\normalfont\Large\bfseries\centering}
+  {CHƯƠNG \thechapter.}{0.5em}{}
+\titlespacing*{\chapter}{0pt}{*2}{*1.5}
+
+\titleformat{\section}
+  {\normalfont\large\bfseries}
+  {\thesection}{0.5em}{}
+
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries}
+  {\thesubsection}{0.5em}{}
+
+% =========================================================
+% TABLE OF CONTENTS
+% =========================================================
+\usepackage{tocloft}
+\renewcommand{\cftchapfont}{\bfseries}
+\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
+\setlength{\cftbeforesecskip}{2pt}
+
+% =========================================================
+% GRAPHICS & FIGURES
+% =========================================================
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\graphicspath{{figures/}}
+
+% =========================================================
+% TABLES
+% =========================================================
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{makecell}
+\renewcommand\theadfont{\bfseries}
+
+% =========================================================
+% CODE LISTINGS
+% =========================================================
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.97,0.97,0.97}
+\lstdefinestyle{mystyle}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{blue},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  frame=single,
+  frameround=tttt
+}
+\lstset{style=mystyle}
+
+% =========================================================
+% MATH
+% =========================================================
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% =========================================================
+% HYPERLINKS
+% =========================================================
+\usepackage[
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue,
+  bookmarks=true,
+  pdftitle={Hệ thống dịch tài liệu đa ngôn ngữ cho doanh nghiệp},
+  pdfauthor={[TÊN SINH VIÊN]}
+]{hyperref}
+
+% =========================================================
+% MISCELLANEOUS
+% =========================================================
+\usepackage{enumitem}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{rotating}
+\usepackage{pdfpages}
+
+% =========================================================
+% CUSTOM COMMANDS
+% =========================================================
+\newcommand{\projectname}{Hệ thống dịch tài liệu đa ngôn ngữ cho doanh nghiệp}
+\newcommand{\studentname}{[TÊN SINH VIÊN]}          % <<< ĐIỀN TÊN
+\newcommand{\studentid}{[MSSV]}                      % <<< ĐIỀN MSSV
+\newcommand{\studentemail}{[email@sis.hust.edu.vn]}  % <<< ĐIỀN EMAIL
+\newcommand{\supervisor}{[HỌC VỊ. TÊN GVHD]}        % <<< ĐIỀN GVHD
+\newcommand{\department}{Khoa học máy tính}
+\newcommand{\school}{Trường Công nghệ Thông tin và Truyền thông}
+\newcommand{\university}{Trường Đại học Bách khoa Hà Nội}
+\newcommand{\thesisyear}{2025--2026}
+
+% =========================================================
+\begin{document}
+
+% ------- BÌA -------
+\input{chapters/cover}
+
+% ------- FRONT MATTER -------
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\input{chapters/acknowledgement}
+\input{chapters/abstract_vie}
+\input{chapters/abstract_eng}
+
+\tableofcontents
+\listoffigures
+\listoftables
+\input{chapters/acronyms}
+
+% ------- MAIN MATTER -------
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{chapters/chapter1}
+\input{chapters/chapter2}
+\input{chapters/chapter3}
+\input{chapters/chapter4}
+\input{chapters/chapter5}
+\input{chapters/chapter6}
+
+% ------- REFERENCES -------
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+% ------- APPENDIX -------
+\appendix
+\input{chapters/appendix}
+
+\end{document}

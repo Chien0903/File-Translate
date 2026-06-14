@@ -1,0 +1,36 @@
+\chapter*{Tóm tắt nội dung đồ án}
+\addcontentsline{toc}{chapter}{Tóm tắt nội dung đồ án}
+
+Sinh viên viết tóm tắt ĐATN của mình trong mục này, khoảng 200--350 từ.
+
+Agent:
+
+Đồ án trình bày quá trình nghiên cứu, thiết kế và xây dựng hệ thống dịch tài liệu đa ngôn ngữ
+dành cho môi trường doanh nghiệp đa quốc gia. Trong bối cảnh các tổ chức vận hành song song tại
+nhiều quốc gia châu Á, tài liệu kỹ thuật cần được dịch thuật chính xác và nhất quán qua nhiều
+ngôn ngữ, đặt ra thách thức về quản lý thuật ngữ chuyên ngành, hỗ trợ đa định dạng tài liệu và
+xử lý tài liệu dạng scan.
+
+Hệ thống được xây dựng theo kiến trúc ba tầng: giao diện web đơn trang (SPA) sử dụng React~18
+và Vite~6, tầng API sử dụng Django REST Framework~3.16, và tầng dữ liệu bao gồm PostgreSQL,
+AWS~S3 và Google Cloud Storage. Lõi dịch thuật tích hợp Google Cloud Translation~API~v3 với hỗ
+trợ 44 cặp bảng thuật ngữ tùy chỉnh (glossary) trên 10 ngôn ngữ: Tiếng Việt, Tiếng Nhật,
+Tiếng Trung giản thể, Tiếng Trung phồn thể, Tiếng Anh, Tiếng Thái, Tiếng Bengali, Tiếng Hindi,
+Tiếng Indonesia và Tiếng Oriya. Hệ thống hỗ trợ dịch 5 định dạng tài liệu: DOCX, XLSX, PPTX,
+PDF (bao gồm cả tài liệu scan) và CSV/XLS.
+
+Ba đóng góp kỹ thuật nổi bật của đồ án gồm: (1)~pipeline dịch đa định dạng với thuật toán phân
+loại PDF thông minh, tự động nhận diện PDF native-text để chuyển đổi sang DOCX trước khi dịch,
+và chuyển sang OCR pipeline dùng Azure Document Intelligence với PDF scan;
+(2)~hệ thống quản lý thuật ngữ ba cấp với quy trình đề xuất cộng đồng theo ngưỡng, cho phép
+người dùng đóng góp thuật ngữ vào thư viện chung thông qua cơ chế bỏ phiếu;
+(3)~cơ chế inject ngữ cảnh bảng thuật ngữ qua thread-local storage, giữ cho các module dịch
+thuật hoàn toàn trong suốt với chế độ thư viện được chọn.
+
+Hệ thống sau khi xây dựng được triển khai thực tế trên hạ tầng AWS, sử dụng Amazon Cognito
+SSO cho xác thực doanh nghiệp và AWS Application Load Balancer cho cân bằng tải, phục vụ
+nhu cầu dịch thuật tài liệu kỹ thuật đa ngôn ngữ trong môi trường sản xuất thực tiễn.
+
+\bigskip
+\noindent\textbf{Từ khóa:} dịch máy, đa ngôn ngữ, quản lý thuật ngữ, xử lý tài liệu, OCR,
+Google Cloud Translation, Django REST Framework, React.

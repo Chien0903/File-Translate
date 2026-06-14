@@ -1,0 +1,120 @@
+\chapter{GIỚI THIỆU ĐỀ TÀI}
+
+\section{Đặt vấn đề}
+
+Trong bối cảnh toàn cầu hóa, ngày càng nhiều tổ chức doanh nghiệp vận hành đồng thời tại
+nhiều quốc gia với ngôn ngữ khác nhau. Các doanh nghiệp hoạt động tại khu vực châu Á --- nơi
+hội tụ nhiều ngôn ngữ như Tiếng Nhật, Tiếng Trung, Tiếng Việt, Tiếng Thái, Tiếng Bengali,
+Tiếng Hindi và Tiếng Indonesia --- phải xử lý khối lượng lớn tài liệu kỹ thuật cần được dịch
+nhất quán và chính xác: báo cáo kiểm tra chất lượng, hướng dẫn vận hành, thông số kỹ thuật,
+biên bản xác nhận.
+
+Thực trạng cho thấy bốn thách thức cốt lõi:
+
+\begin{enumerate}
+  \item \textbf{Thiếu nhất quán thuật ngữ chuyên ngành.} Các công cụ dịch phổ thông như
+    Google~Translate hay DeepL không hỗ trợ bộ từ điển thuật ngữ riêng của tổ chức. Cùng
+    một thuật ngữ kỹ thuật (tên sản phẩm, tên quy trình, ký hiệu tiêu chuẩn) có thể được
+    dịch khác nhau giữa các tài liệu, gây nhầm lẫn trong vận hành và giao tiếp nội bộ.
+
+  \item \textbf{Hỗ trợ định dạng tài liệu hạn chế.} Tài liệu doanh nghiệp tồn tại dưới nhiều
+    định dạng: văn bản DOCX, bảng tính XLSX, thuyết trình PPTX, và tệp PDF --- bao gồm cả
+    PDF có thể chỉnh sửa (native text) và PDF dạng scan (ảnh). Phần lớn các công cụ hiện có
+    không giữ nguyên định dạng, bố cục và kiểu chữ sau khi dịch.
+
+  \item \textbf{Thiếu quy trình quản lý thuật ngữ tập trung.} Không có hệ thống lưu trữ và
+    quản lý từ điển thuật ngữ dùng chung, dẫn đến mỗi bộ phận hoặc cá nhân tự duy trì
+    danh sách thuật ngữ riêng, không đồng bộ và khó kiểm soát chất lượng.
+
+  \item \textbf{Không xử lý được PDF scan.} Nhiều tài liệu kỹ thuật lịch sử tồn tại dưới
+    dạng PDF scan (ảnh chụp hoặc scan từ bản in), không thể trích xuất nội dung văn bản để
+    dịch bằng các công cụ thông thường.
+\end{enumerate}
+
+Những thách thức trên đặt ra nhu cầu về một hệ thống dịch tài liệu được thiết kế cho môi
+trường doanh nghiệp đa ngôn ngữ, tích hợp quản lý thuật ngữ chuyên ngành và hỗ trợ nhiều
+định dạng tài liệu.
+
+\section{Mục tiêu và phạm vi đề tài}
+
+\subsection*{Mục tiêu}
+
+Đồ án đặt mục tiêu xây dựng hệ thống web dịch tài liệu đa ngôn ngữ dành cho doanh nghiệp với
+các tính năng cốt lõi sau:
+
+\begin{itemize}
+  \item Hỗ trợ dịch sang \textbf{10 ngôn ngữ}: Tiếng Việt (vi), Tiếng Nhật (ja), Tiếng Trung
+    giản thể (zh-CN), Tiếng Trung phồn thể (zh-TW), Tiếng Anh (en), Tiếng Thái (th), Tiếng
+    Bengali (bn), Tiếng Hindi (hi), Tiếng Indonesia (id) và Tiếng Oriya (or).
+
+  \item Hỗ trợ \textbf{6 định dạng tài liệu}: DOCX, XLSX, PPTX, PDF native-text, PDF scan,
+    CSV/XLS --- với bảo toàn định dạng sau khi dịch.
+
+  \item Xây dựng \textbf{hệ thống quản lý thuật ngữ ba cấp}: Thư viện chung (Common Library)
+    quản lý bởi Admin/Library Keeper, Thư viện cá nhân (Private Library) cho từng người dùng,
+    và hàng chờ đề xuất (Suggestion Queue) với cơ chế duyệt cộng đồng.
+
+  \item Giao diện web đơn trang (SPA) trực quan, hỗ trợ dịch nhiều ngôn ngữ đích đồng thời
+    trong một yêu cầu.
+
+  \item Hệ thống quản trị toàn diện: quản lý tài khoản người dùng theo vai trò, thống kê sử
+    dụng thuật ngữ, theo dõi lịch sử dịch.
+
+  \item Xác thực người dùng qua AWS Cognito SSO, triển khai trên hạ tầng đám mây AWS.
+\end{itemize}
+
+\subsection*{Phạm vi đề tài}
+
+\begin{itemize}
+  \item \textbf{Trong phạm vi:} Người dùng trong tổ chức doanh nghiệp đa ngôn ngữ; dịch tài
+    liệu từ các định dạng trên sang bất kỳ ngôn ngữ nào trong 10 ngôn ngữ hỗ trợ; quản lý
+    từ điển thuật ngữ chuyên ngành theo cơ chế đóng góp cộng đồng.
+
+  \item \textbf{Ngoài phạm vi:} Dịch thời gian thực (real-time streaming), ứng dụng di động
+    (mobile app), tổng hợp giọng nói (text-to-speech), dịch nội dung website hay hệ thống
+    quản trị nội dung (CMS).
+\end{itemize}
+
+\section{Định hướng giải pháp}
+
+Hệ thống được thiết kế theo kiến trúc ba tầng với các thành phần sau:
+
+\begin{itemize}
+  \item \textbf{Tầng giao diện (Frontend):} Ứng dụng web đơn trang React~18 + Vite~6 phục vụ
+    qua Nginx, sử dụng Tailwind CSS v4 và Ant Design v5 cho giao diện người dùng.
+
+  \item \textbf{Tầng logic nghiệp vụ (Backend):} Django~6.0 với Django REST Framework~3.16
+    cung cấp REST~API; PostgreSQL lưu trữ dữ liệu người dùng, lịch sử dịch và từ điển thuật
+    ngữ; AWS~S3 lưu trữ tệp gốc và tệp đã dịch.
+
+  \item \textbf{Dịch vụ dịch thuật:} Google Cloud Translation~API~v3 với 44~cặp glossary tùy
+    chỉnh lưu trên Google Cloud Storage; Azure Document Intelligence cho OCR tài liệu scan;
+    ConvertAPI cho chuyển đổi định dạng (PDF→DOCX, XLS→XLSX).
+
+  \item \textbf{Xác thực:} Amazon Cognito OIDC (SSO môi trường production) + JWT
+    (djangorestframework-simplejwt) cho môi trường phát triển.
+\end{itemize}
+
+\section{Bố cục đồ án}
+
+Đồ án được tổ chức thành sáu chương:
+
+\begin{itemize}
+  \item \textbf{Chương 1:} Trình bày bối cảnh, đặt vấn đề, mục tiêu và định hướng giải pháp của
+    đồ án.
+
+  \item \textbf{Chương 2:} Khảo sát hiện trạng các công cụ dịch thuật hiện có; phân tích và
+    đặc tả yêu cầu chức năng và phi chức năng thông qua biểu đồ use case và bảng đặc tả.
+
+  \item \textbf{Chương 3:} Trình bày nền tảng lý thuyết về dịch máy thần kinh, glossary, OCR,
+    và các công nghệ, thư viện được lựa chọn cùng lý do lựa chọn.
+
+  \item \textbf{Chương 4:} Trình bày thiết kế kiến trúc, thiết kế chi tiết (giao diện, lớp,
+    cơ sở dữ liệu), kết quả xây dựng, kiểm thử và triển khai hệ thống.
+
+  \item \textbf{Chương 5:} Trình bày ba giải pháp và đóng góp kỹ thuật nổi bật: pipeline phân
+    loại PDF, hệ thống thuật ngữ ba cấp và cơ chế inject context qua thread-local.
+
+  \item \textbf{Chương 6:} Kết luận về kết quả đạt được, hạn chế còn tồn tại và định hướng
+    phát triển trong tương lai.
+\end{itemize}

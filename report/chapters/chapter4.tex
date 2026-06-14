@@ -1,0 +1,547 @@
+\chapter{PHÂN TÍCH THIẾT KẾ, TRIỂN KHAI VÀ ĐÁNH GIÁ HỆ THỐNG}
+
+\section{Thiết kế kiến trúc}
+
+\subsection{Lựa chọn kiến trúc phần mềm}
+
+Hệ thống áp dụng kiến trúc \textbf{ba tầng} (3-Tier Architecture) kết hợp với mô hình
+\textbf{REST API / SPA}:
+
+\begin{itemize}
+  \item \textbf{Tầng trình bày (Presentation Tier):} Ứng dụng web đơn trang (SPA) React, chạy
+    hoàn toàn trên trình duyệt, giao tiếp với backend qua HTTP REST~API.
+  \item \textbf{Tầng logic nghiệp vụ (Business Logic Tier):} Django REST Framework xử lý toàn
+    bộ logic dịch thuật, quản lý người dùng, glossary và lưu trữ.
+  \item \textbf{Tầng dữ liệu (Data Tier):} PostgreSQL lưu dữ liệu có cấu trúc; AWS~S3 lưu
+    tệp nhị phân; Google Cloud Storage lưu tệp CSV glossary.
+\end{itemize}
+
+Kiến trúc này được lựa chọn vì: (1)~tách biệt rõ ràng frontend và backend, dễ scale độc lập;
+(2)~frontend SPA không cần server-side rendering nên phù hợp với giao diện nặng tương tác;
+(3)~backend stateless (trừ DB) phù hợp triển khai sau Load Balancer.
+
+\subsection{Thiết kế tổng quan}
+
+Agent:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{1cm}
+\textit{[Hình: Biểu đồ kiến trúc tổng quan]}\\[0.5cm]
+% Mermaid source:
+% flowchart TB
+%     Browser["Trình duyệt\n(React SPA)"]
+%     ALB["AWS ALB\n+ Cognito OIDC"]
+%     BE["Django REST Framework\n(Backend API)"]
+%     PG["PostgreSQL\n(Database)"]
+%     S3["AWS S3\n(File Storage)"]
+%     GCS["Google Cloud Storage\n(Glossary CSV)"]
+%     GCTA["Google Cloud\nTranslation API v3"]
+%     AZR["Azure Document\nIntelligence (OCR)"]
+%     CVAPI["ConvertAPI\n(Format Conversion)"]
+%
+%     Browser -->|"HTTPS REST"| ALB
+%     ALB -->|"x-amzn-oidc-data"| BE
+%     BE -->|"ORM"| PG
+%     BE -->|"boto3"| S3
+%     BE -->|"translate_v3"| GCTA
+%     GCTA -->|"glossary CSV"| GCS
+%     BE -->|"OCR request"| AZR
+%     BE -->|"convert request"| CVAPI
+\textbf{Image Description:} Kiến trúc hệ thống gồm: Trình duyệt (React SPA) → AWS ALB (cân
+bằng tải + Cognito OIDC) → Django REST Framework Backend. Backend kết nối PostgreSQL (ORM),
+AWS S3 (boto3), Google Cloud Translation API v3, Google Cloud Storage (glossary CSV), Azure
+Document Intelligence (OCR), ConvertAPI (chuyển đổi định dạng).
+\vspace{0.5cm}}}
+\caption{Biểu đồ kiến trúc tổng quan hệ thống}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Thiết kế chi tiết các gói}
+
+Agent:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{1cm}
+\textit{[Hình: Biểu đồ UML Package]}\\[0.5cm]
+\textbf{Image Description:} Biểu đồ package UML gồm 3 package chính:
+\newline
+(1) \textbf{Frontend} (React SPA): pages (HomePage, TextTranslation, TranslationResults,
+FileHistory, CommonLibraryManagement, PrivateLibrary, MyProfile, AccountManagement,
+KeywordStatsAdmin), components (UploadFileNew, LanguageSelector, KeywordDetailModal,
+KeywordFormModal), contexts (AuthContext).
+\newline
+(2) \textbf{Backend} (Django REST): views (TranslateFileView, TranslateTextView, alb\_auth,
+keyword, translated\_file, notification, keyword\_stats, convert, user, health), models
+(CustomUser, TranslatedFile, PrivateKeyword, KeywordSuggestion, KeywordQueue,
+LibraryQueueSettings, Notification), services (glossary\_service, upload\_to\_s3, convert\_api),
+authentication (alb\_authentication), Translate\_v2 (translate\_docx, translate\_xlsx,
+translate\_pptx, translate\_pdf\_ocr, translate\_text).
+\newline
+(3) \textbf{Data Layer}: PostgreSQL, AWS S3, Google Cloud Storage.
+\vspace{0.5cm}}}
+\caption{Biểu đồ UML Package}
+\label{fig:package}
+\end{figure}
+
+\section{Thiết kế chi tiết}
+
+\subsection{Thiết kế giao diện}
+
+Hệ thống giao diện web bao gồm các trang chính sau:
+
+\begin{enumerate}
+  \item \textbf{Trang chủ / Upload tài liệu:} Widget tải tệp lên S3, chọn ngôn ngữ nguồn/đích
+    (dropdown 10 ngôn ngữ), chọn chế độ thư viện, nút dịch và danh sách kết quả.
+  \item \textbf{Trang dịch văn bản:} Textarea nhập văn bản, chọn ngôn ngữ, hiển thị kết quả
+    dịch.
+  \item \textbf{Trang lịch sử dịch:} Bảng danh sách TranslatedFile với phân trang, tìm kiếm,
+    lọc theo ngôn ngữ.
+  \item \textbf{Trang thư viện cá nhân:} Bảng PrivateKeyword với 10 cột ngôn ngữ, CRUD modal.
+  \item \textbf{Trang thư viện chung (Library Keeper/Admin):} Quản lý KeywordSuggestion, duyệt
+    đề xuất, tab phân loại (đang chờ / đã duyệt / đã từ chối).
+  \item \textbf{Trang quản lý người dùng (Admin):} Bảng danh sách CustomUser, thay đổi vai trò.
+  \item \textbf{Trang thống kê từ khóa (Admin):} Biểu đồ recharts thống kê tần suất sử dụng
+    từ khóa.
+\end{enumerate}
+
+Agent:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{2cm}
+\textit{[Hình: Wireframe trang chủ Upload]}\\[0.5cm]
+\textbf{Image Description:} Màn hình trang chủ gồm: thanh điều hướng trên cùng (logo, menu),
+khu vực chính gồm widget kéo-thả tệp, dropdown chọn ngôn ngữ nguồn (auto-detect hoặc một
+trong 10 ngôn ngữ), danh sách checkbox chọn nhiều ngôn ngữ đích, radio chọn chế độ thư viện
+(Không dùng / Thư viện chung / Thư viện cá nhân), nút ``Dịch tài liệu''. Phía dưới là khu vực
+kết quả hiển thị danh sách các tệp đã dịch với nút tải về.
+\vspace{1cm}}}
+\caption{Wireframe trang Upload và dịch tài liệu}
+\label{fig:ui_upload}
+\end{figure}
+
+\subsection{Thiết kế lớp}
+
+\subsubsection{Lớp TranslateFileView}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{0.5cm}
+\textit{[Hình: Class Diagram TranslateFileView]}\\[0.3cm]
+\textbf{Image Description:} Class diagram PlantUML:
+\newline
+\texttt{TranslateFileView} kế thừa \texttt{APIView} (DRF), có thuộc tính
+\texttt{permission\_classes = [IsAuthenticated]}. Phương thức: \texttt{post(request)} →
+gọi \texttt{set\_translation\_context()}, vòng lặp qua \texttt{target\_languages}, gọi
+\texttt{translate\_document()}, tạo \texttt{TranslatedFile}, gọi
+\texttt{clear\_translation\_context()}.
+\newline
+\texttt{translate\_document(file\_path, target\_language, ...)} → \texttt{is\_pdf\_truly\_editable()}
+→ phân nhánh: editable → \texttt{convertapi\_pdf\_to\_docx()} + \texttt{translate\_docx()};
+scan → \texttt{translate\_pdf\_ocr()}; docx → \texttt{translate\_docx()}; xlsx →
+\texttt{translate\_xlsx()}; pptx → \texttt{translate\_pptx()}.
+\vspace{0.5cm}}}
+\caption{Class diagram -- TranslateFileView và translate\_document}
+\label{fig:class_translate}
+\end{figure}
+
+\subsubsection{Lớp dữ liệu Model}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{0.5cm}
+\textit{[Hình: Class Diagram các Model]}\\[0.3cm]
+\textbf{Image Description:} Class diagram các Django Model:
+\newline
+\textbf{CustomUser}: email (PK logic), first\_name, last\_name, department, role
+(User/Admin/Library Keeper), is\_active, cognito\_sub, auth\_provider.
+\newline
+\textbf{TranslatedFile}: FK(CustomUser), original\_file\_url, original\_file\_name,
+translated\_file\_url, original\_language, target\_language, file\_type, created\_at.
+\newline
+\textbf{PrivateKeyword}: FK(CustomUser), japanese, english, vietnamese, chinese\_traditional,
+chinese\_simplified, thai, bengali, hindi, indonesian, oriya, note, FK(KeywordSuggestion null).
+\newline
+\textbf{KeywordSuggestion}: FK(CustomUser), [10 language fields], suggestion\_count,
+frequency\_percentage, status (pending/approved/rejected), FK(approved\_by User null).
+\newline
+\textbf{KeywordQueue}: FK(CustomUser), [10 language fields], is\_processed.
+\newline
+\textbf{Notification}: FK(CustomUser), title, message, read, details, keyword\_details (JSON).
+\vspace{0.5cm}}}
+\caption{Class diagram -- Django Models}
+\label{fig:class_models}
+\end{figure}
+
+\subsubsection{Lớp GlossaryService}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{0.5cm}
+\textit{[Hình: Class Diagram GlossaryService]}\\[0.3cm]
+\textbf{Image Description:} Class diagram:
+\newline
+\texttt{GlossaryService (module)} gồm các hàm:
+\texttt{create\_pair\_csv\_file(user, source\_lang, target\_lang)} → truy vấn
+\texttt{KeywordSuggestion(approved)} + \texttt{PrivateKeyword(user)} → build pair rows →
+ghi CSV tạm.
+\texttt{upload\_csv\_to\_gcs(csv\_path)} → \texttt{storage.Client().bucket().blob().upload()}.
+\texttt{manage\_glossary(glossary\_id, src, tgt, mode)} → gọi
+\texttt{translate.TranslationServiceClient().create\_glossary()} hoặc
+\texttt{update\_glossary()}.
+\texttt{async\_manage\_common\_glossaries()} → background thread.
+\texttt{async\_manage\_user\_glossaries(user)} → background thread cho private glossary.
+\vspace{0.5cm}}}
+\caption{Class diagram -- GlossaryService}
+\label{fig:class_glossary}
+\end{figure}
+
+\subsection{Thiết kế cơ sở dữ liệu}
+
+Hệ thống sử dụng sáu bảng chính trong PostgreSQL:
+
+Agent:
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{0.5cm}
+\textit{[Hình: Biểu đồ ERD]}\\[0.3cm]
+% Mermaid ERD source:
+% erDiagram
+%     CUSTOM_USER {
+%         int id PK
+%         varchar email UK
+%         varchar first_name
+%         varchar last_name
+%         varchar department
+%         varchar role
+%         bool is_active
+%         varchar cognito_sub UK
+%         varchar auth_provider
+%         datetime date_joined
+%     }
+%     TRANSLATED_FILE {
+%         int id PK
+%         int user_id FK
+%         varchar original_file_url
+%         varchar original_file_name
+%         varchar translated_file_url
+%         varchar original_language
+%         varchar target_language
+%         varchar file_type
+%         datetime created_at
+%     }
+%     PRIVATE_KEYWORD {
+%         int id PK
+%         int user_id FK
+%         int suggestion_id FK
+%         text japanese
+%         text english
+%         text vietnamese
+%         text chinese_traditional
+%         text chinese_simplified
+%         text thai
+%         text bengali
+%         text hindi
+%         text indonesian
+%         text oriya
+%         text note
+%     }
+%     KEYWORD_SUGGESTION {
+%         int id PK
+%         int user_id FK
+%         int approved_by_id FK
+%         text japanese
+%         text english
+%         text vietnamese
+%         text chinese_traditional
+%         text chinese_simplified
+%         text thai
+%         text bengali
+%         text hindi
+%         text indonesian
+%         text oriya
+%         int suggestion_count
+%         float frequency_percentage
+%         varchar status
+%     }
+%     KEYWORD_QUEUE {
+%         int id PK
+%         int user_id FK
+%         [10 language fields]
+%         bool is_processed
+%         datetime processed_at
+%         datetime created_at
+%     }
+%     NOTIFICATION {
+%         int id PK
+%         int user_id FK
+%         varchar title
+%         text message
+%         bool read
+%         text details
+%         json keyword_details
+%         datetime created_at
+%     }
+%     LIBRARY_QUEUE_SETTINGS {
+%         int id PK
+%         int min_suggesters_for_queue
+%         datetime updated_at
+%     }
+%
+%     CUSTOM_USER ||--o{ TRANSLATED_FILE : "dịch"
+%     CUSTOM_USER ||--o{ PRIVATE_KEYWORD : "sở hữu"
+%     CUSTOM_USER ||--o{ KEYWORD_QUEUE : "đề xuất"
+%     CUSTOM_USER ||--o{ KEYWORD_SUGGESTION : "tạo"
+%     CUSTOM_USER ||--o{ NOTIFICATION : "nhận"
+%     KEYWORD_SUGGESTION ||--o{ PRIVATE_KEYWORD : "liên kết"
+%     CUSTOM_USER ||--o{ KEYWORD_SUGGESTION : "duyệt (approved_by)"
+\textbf{Image Description:} Biểu đồ ERD Mermaid với 7 thực thể: CUSTOM\_USER (id, email unique,
+first\_name, last\_name, department, role, cognito\_sub, auth\_provider), TRANSLATED\_FILE
+(FK user, original/translated url, language pair, file\_type), PRIVATE\_KEYWORD (FK user,
+FK suggestion null, 10 language text fields, note), KEYWORD\_SUGGESTION (FK user, FK
+approved\_by null, 10 language fields, suggestion\_count, status), KEYWORD\_QUEUE (FK user,
+10 language fields, is\_processed), NOTIFICATION (FK user, title, message, read, JSON
+keyword\_details), LIBRARY\_QUEUE\_SETTINGS (singleton pk=1, min\_suggesters\_for\_queue).
+Quan hệ: CUSTOM\_USER 1-N TRANSLATED\_FILE; CUSTOM\_USER 1-N PRIVATE\_KEYWORD; CUSTOM\_USER
+1-N KEYWORD\_QUEUE; CUSTOM\_USER 1-N KEYWORD\_SUGGESTION; KEYWORD\_SUGGESTION 1-N
+PRIVATE\_KEYWORD.
+\vspace{0.5cm}}}
+\caption{Biểu đồ ERD cơ sở dữ liệu}
+\label{fig:erd}
+\end{figure}
+
+\section{Xây dựng ứng dụng}
+
+\subsection{Thư viện và công cụ sử dụng}
+
+\begin{table}[H]
+\centering
+\caption{Thư viện và công cụ chính được sử dụng}
+\label{tab:tools}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Công cụ / Thư viện} & \textbf{Phiên bản} & \textbf{Mục đích} \\
+\hline
+Visual Studio Code     & --    & IDE phát triển \\
+\hline
+Git                    & --    & Quản lý phiên bản \\
+\hline
+Docker                 & --    & Container hóa ứng dụng \\
+\hline
+React + Vite           & 18/6  & Frontend SPA \\
+\hline
+Django + DRF           & 6/3.16& REST API backend \\
+\hline
+PostgreSQL             & 12+   & Cơ sở dữ liệu production \\
+\hline
+google-cloud-translate & v3    & Dịch thuật với glossary \\
+\hline
+azure-ai-documentintelligence & -- & OCR tài liệu scan \\
+\hline
+convertapi             & --    & Chuyển đổi PDF→DOCX, XLS→XLSX \\
+\hline
+python-docx / lxml     & --    & Xử lý DOCX trực tiếp XML \\
+\hline
+openpyxl               & --    & Xử lý XLSX cell-by-cell \\
+\hline
+python-pptx            & --    & Xử lý PPTX shapes \\
+\hline
+pypdf                  & --    & Phân tích cấu trúc PDF \\
+\hline
+boto3                  & --    & Upload/download S3 \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Kết quả đạt được}
+
+\begin{table}[H]
+\centering
+\caption{Thống kê mã nguồn}
+\label{tab:codestats}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Thành phần}     & \textbf{Số lượng} \\
+\hline
+Backend views           & 12 view files \\
+\hline
+Backend models          & 6 model files (7 Django model class) \\
+\hline
+Backend services        & 3 service modules (glossary, S3, ConvertAPI) \\
+\hline
+Backend migrations      & 21 migration files \\
+\hline
+Frontend pages (routes) & 14 routes \\
+\hline
+Frontend components     & 20+ component files \\
+\hline
+Translation modules     & 6 format modules (docx, xlsx, pptx, pdf, pdf\_ocr, text) \\
+\hline
+Glossary pairs          & 44 cặp ngôn ngữ (language\_pair) \\
+\hline
+Ngôn ngữ hỗ trợ         & 10 ngôn ngữ \\
+\hline
+Định dạng tài liệu      & 6 (DOCX, XLSX, PPTX, PDF, XLS/XLSM/XLSB, CSV) \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Minh họa các chức năng chính}
+
+\subsubsection{Luồng dịch tài liệu DOCX}
+
+Dưới đây là đoạn mã minh họa hàm \texttt{translate\_all\_xml\_in\_folder} trong module
+\texttt{translate\_docx\_traditional.py} --- thực hiện dịch batch toàn bộ chuỗi văn bản trong
+tệp DOCX bằng cách parse XML trực tiếp:
+
+\begin{lstlisting}[language=Python, caption={Batch translation trong DOCX (translate\_docx\_traditional.py)}]
+def translate_all_xml_in_folder(folder_path, glossary_id,
+                                 source_lang, target_lang):
+    all_xml_tasks = []
+    texts_to_translate = set()
+
+    for root_dir, dirs, files in os.walk(folder_path):
+        for file in files:
+            if not file.endswith(".xml"):
+                continue
+            xml_file_path = os.path.join(root_dir, file)
+            if not _is_docx_content_xml(folder_path, xml_file_path):
+                continue
+            clean_and_merge_runs(xml_file_path)  # merge runs cung format
+            # Thu thap text elements
+            tree = ET.parse(xml_file_path, ET.XMLParser(...))
+            for elem in tree.getroot().iter():
+                if elem.tag.endswith("}t") and elem.text.strip():
+                    texts_to_translate.add(elem.text.strip())
+
+    # Dich BATCH toan bo chuoi duy nhat
+    unique_texts = list(texts_to_translate)
+    translated_list = translate_texts_batch(
+        unique_texts, glossary_id, source_lang, target_lang)
+    translation_map = dict(zip(unique_texts, translated_list))
+
+    # Cap nhat va luu lai cac file XML
+    for xml_file_path, tree, elements in all_xml_tasks:
+        for elem in elements:
+            if elem.text.strip() in translation_map:
+                elem.text = html.unescape(
+                    translation_map[elem.text.strip()])
+        tree.write(xml_file_path, encoding="UTF-8")
+\end{lstlisting}
+
+\subsubsection{Phân loại PDF}
+
+Hàm \texttt{is\_pdf\_truly\_editable()} phân tích từng trang PDF để phân loại:
+
+\begin{lstlisting}[language=Python, caption={Phân loại PDF native-text vs scan (translate.py)}]
+def is_pdf_truly_editable(pdf_path: str) -> bool:
+    with open(pdf_path, "rb") as f:
+        reader = PyPDF2.PdfReader(f)
+        for i, page in enumerate(reader.pages, start=1):
+            text = (page.extract_text() or "").strip()
+            has_text = len(text) >= MIN_TEXT_CHARS       # 20 chars
+            has_full_image = _page_full_page_image(page) # XObject ratio
+            if has_text and not has_full_image:
+                return True  # native text page found
+    return False  # all pages are scan/image
+\end{lstlisting}
+
+\section{Kiểm thử}
+
+\subsection{Kế hoạch kiểm thử}
+
+Hệ thống áp dụng phương pháp kiểm thử hộp đen (Black-box testing), kiểm tra từng chức năng
+dựa trên yêu cầu đặc tả. Bảng~\ref{tab:testcases} trình bày các ca kiểm thử chính.
+
+\begin{table}[H]
+\centering
+\caption{Bảng ca kiểm thử}
+\label{tab:testcases}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|l|X|X|l|}
+\hline
+\textbf{ID} & \textbf{Nhóm} & \textbf{Mô tả} & \textbf{Kết quả mong đợi} & \textbf{KQ} \\
+\hline
+TC-01 & Xác thực & Đăng nhập email/mật khẩu hợp lệ & JWT trả về, chuyển trang & Đạt \\
+\hline
+TC-02 & Xác thực & Đăng nhập sai mật khẩu & Lỗi 401 & Đạt \\
+\hline
+TC-03 & Dịch tài liệu & Dịch DOCX sang tiếng Nhật & Tệp DOCX dịch trả về, định dạng giữ nguyên & Đạt \\
+\hline
+TC-04 & Dịch tài liệu & Dịch XLSX sang 3 ngôn ngữ cùng lúc & 3 tệp XLSX kết quả & Đạt \\
+\hline
+TC-05 & Dịch tài liệu & Dịch PDF native-text & Tệp DOCX dịch trả về & Đạt \\
+\hline
+TC-06 & Dịch tài liệu & Dịch PDF scan & Tệp PDF dịch trả về (qua OCR) & Đạt \\
+\hline
+TC-07 & Dịch tài liệu & Dịch PPTX sang tiếng Trung & Tệp PPTX dịch trả về & Đạt \\
+\hline
+TC-08 & Dịch văn bản & Dịch văn bản từ tiếng Nhật sang tiếng Việt & Văn bản dịch hiển thị & Đạt \\
+\hline
+TC-09 & Dịch văn bản & Dịch với thuật ngữ trong glossary & Thuật ngữ được dịch đúng theo glossary & Đạt \\
+\hline
+TC-10 & Thư viện & Thêm từ khóa vào Private Library & Bản ghi PrivateKeyword được tạo & Đạt \\
+\hline
+TC-11 & Thư viện & Đề xuất từ khóa lên Common Library & Bản ghi KeywordQueue được tạo & Đạt \\
+\hline
+TC-12 & Thư viện & Duyệt đề xuất (Library Keeper) & Status = approved; GCS cập nhật & Đạt \\
+\hline
+TC-13 & Thư viện & Từ chối đề xuất & Status = rejected; thông báo gửi user & Đạt \\
+\hline
+TC-14 & Quản trị & Admin thay đổi vai trò người dùng & Role được cập nhật trong DB & Đạt \\
+\hline
+TC-15 & Quản trị & Admin xem thống kê từ khóa & Biểu đồ recharts hiển thị đúng & Đạt \\
+\hline
+TC-16 & Lịch sử & Xem danh sách tệp đã dịch & Bảng TranslatedFile hiển thị đúng & Đạt \\
+\hline
+TC-17 & Phi chức năng & Dịch tệp DOCX 10 trang & Hoàn thành trong $\leq 30$s & Đạt \\
+\hline
+TC-18 & Phi chức năng & Truy cập endpoint không xác thực & Lỗi 401 & Đạt \\
+\hline
+\end{tabularx}
+\end{table}
+
+\section{Triển khai}
+
+\subsection{Môi trường phát triển}
+
+\begin{itemize}
+  \item Backend: \texttt{python manage.py runserver} tại \texttt{http://127.0.0.1:8000}
+  \item Frontend: \texttt{npm run dev} (Vite) tại \texttt{http://localhost:5173}
+  \item Database: SQLite (fallback) hoặc PostgreSQL local
+  \item Auth: JWT simplejwt (local login, không cần Cognito)
+\end{itemize}
+
+\subsection{Môi trường production}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{0.5cm}
+\textit{[Hình: Sơ đồ triển khai production]}\\[0.3cm]
+\textbf{Image Description:} Sơ đồ triển khai: Người dùng → HTTPS → AWS ALB (với Cognito OIDC
+authentication action) → Target Group EC2/ECS chạy Docker containers:
+container-frontend (Nginx phục vụ React build) và container-backend (Django + Gunicorn).
+Backend kết nối tới: RDS PostgreSQL, AWS S3 (boto3), Google Cloud Translation API (HTTPS),
+Azure Document Intelligence (HTTPS), ConvertAPI (HTTPS). Biến môi trường được inject qua
+.env file hoặc AWS Secrets Manager.
+\vspace{0.5cm}}}
+\caption{Sơ đồ triển khai production trên AWS}
+\label{fig:deployment}
+\end{figure}
+
+Hệ thống production được triển khai trên AWS với:
+\begin{itemize}
+  \item \textbf{Xác thực:} AWS ALB tích hợp Amazon Cognito OIDC, inject header
+    \texttt{x-amzn-oidc-data} (JWT) vào mọi request. Backend middleware
+    \texttt{alb\_authentication.py} giải mã header này, tra cứu hoặc tạo \texttt{CustomUser}
+    dựa trên \texttt{cognito\_sub}.
+  \item \textbf{Lưu trữ tệp:} AWS~S3 bucket lưu tệp gốc (\texttt{uploads/}) và tệp dịch
+    (\texttt{translated/\{uuid\}.\{ext\}}) với tên UUID ngẫu nhiên.
+  \item \textbf{Container:} Dockerfile riêng cho backend (Python + pip) và frontend
+    (Node build + Nginx serve). Frontend Nginx cấu hình \texttt{try\_files} cho SPA routing.
+\end{itemize}

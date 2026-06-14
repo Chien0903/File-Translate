@@ -32,7 +32,7 @@ function processQueue(error, token = null) {
 }
 
 function clearAndRedirect() {
-  ["access", "refresh", "fullName", "role", "email", "auth_provider", "translationHistory"].forEach(
+  ["access", "refresh", "fullName", "role", "email", "translationHistory"].forEach(
     (k) => localStorage.removeItem(k),
   );
   if (window.location.pathname !== "/login") {

@@ -1,0 +1,187 @@
+\chapter{NỀN TẢNG LÝ THUYẾT VÀ CÔNG NGHỆ SỬ DỤNG}
+
+\section{Nền tảng lý thuyết}
+
+\subsection{Dịch máy thần kinh (Neural Machine Translation)}
+
+Dịch máy thần kinh (NMT) là phương pháp dịch tự động sử dụng mạng nơ-ron học sâu để mô hình hóa
+toàn bộ quá trình dịch như một bài toán học máy đầu-đến-cuối (end-to-end). Kiến trúc Transformer
+\cite{vaswani2017attention} --- được đề xuất năm 2017 --- đã trở thành nền tảng cho hầu hết các
+hệ thống NMT hiện đại, bao gồm Google Neural Machine Translation (GNMT) và các mô hình thương
+mại.
+
+Google Cloud Translation~API~v3 sử dụng kiến trúc NMT với các ưu điểm so với phương pháp thống
+kê (SMT) truyền thống: độ chính xác cao hơn về ngữ nghĩa, xử lý tốt hơn với câu dài, và hỗ trợ
+100+ cặp ngôn ngữ.
+
+\subsection{Glossary trong dịch máy}
+
+Glossary (bảng thuật ngữ) là một danh sách các cặp từ đã biết, trong đó mỗi cặp gồm một từ/cụm
+từ nguồn và bản dịch xác định của nó trong ngôn ngữ đích. Khi glossary được tích hợp vào quá
+trình dịch, hệ thống dịch sẽ ưu tiên sử dụng bản dịch trong glossary thay vì bản dịch do mô
+hình NMT tự sinh ra.
+
+Google Cloud Translation~API~v3 hỗ trợ glossary theo hai loại:
+\begin{itemize}
+  \item \textit{Unidirectional glossary:} Cặp ngôn ngữ cố định, một chiều.
+  \item \textit{Equivalent Term Set glossary:} Hỗ trợ nhiều ngôn ngữ trong một glossary,
+    có thể tái sử dụng cho nhiều cặp. Đây là loại được sử dụng trong hệ thống.
+\end{itemize}
+
+Glossary được lưu dưới dạng tệp CSV trên Google Cloud Storage và đăng ký với Google Translation
+API. Mỗi khi thuật ngữ trong thư viện chung thay đổi, hệ thống tự động tạo lại tệp CSV và cập
+nhật glossary tương ứng qua background thread.
+
+\subsection{Nhận dạng ký tự quang học (OCR)}
+
+OCR (Optical Character Recognition) là công nghệ nhận diện văn bản từ hình ảnh hoặc tài liệu
+scan. Trong hệ thống, Azure Document Intelligence~--- dịch vụ OCR của Microsoft Azure~--- được
+sử dụng để trích xuất nội dung từ các tệp PDF dạng scan trước khi dịch.
+
+Azure Document Intelligence cung cấp khả năng nhận diện bố cục trang (trang, bảng, hình ảnh),
+hỗ trợ đa ngôn ngữ Á-Âu và độ chính xác cao hơn so với Tesseract OCR truyền thống với tài
+liệu kỹ thuật có bảng biểu và ký tự đặc biệt.
+
+\section{Công nghệ sử dụng}
+
+\subsection{Frontend}
+
+\begin{table}[H]
+\centering
+\caption{Công nghệ Frontend}
+\label{tab:tech_fe}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Công nghệ} & \textbf{Phiên bản} & \textbf{Mục đích} \\
+\hline
+React              & 18.3              & Thư viện UI, xây dựng SPA theo mô hình component \\
+\hline
+Vite               & 6.x               & Build tool và dev server; Hot Module Replacement nhanh \\
+\hline
+React Router DOM   & 7.x               & Định tuyến phía client \\
+\hline
+Tailwind CSS       & 4.x               & Utility-first CSS framework \\
+\hline
+Ant Design (antd)  & 5.x               & UI component library: table, modal, form, notification \\
+\hline
+Axios              & 1.6+              & HTTP client gọi REST~API \\
+\hline
+react-toastify     & --                & Hiển thị thông báo toast \\
+\hline
+MSAL Browser       & --                & Microsoft Authentication Library cho Azure AD SSO \\
+\hline
+jwt-decode         & --                & Giải mã JWT token phía client \\
+\hline
+@bytescale/upload-widget & --         & Widget tải tệp lên S3 \\
+\hline
+recharts           & --                & Biểu đồ thống kê (keyword analytics) \\
+\hline
+\end{tabularx}
+\end{table}
+
+React được chọn vì kiến trúc component-based phù hợp với giao diện có nhiều widget tương tác (upload, language selector, keyword table). Vite được chọn thay Webpack vì thời gian build và hot-reload nhanh hơn đáng kể trong quá trình phát triển.
+
+\subsection{Backend}
+
+\begin{table}[H]
+\centering
+\caption{Công nghệ Backend}
+\label{tab:tech_be}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Công nghệ}           & \textbf{Phiên bản} & \textbf{Mục đích} \\
+\hline
+Python                       & 3.9+              & Ngôn ngữ lập trình chính \\
+\hline
+Django                       & 6.0               & Web framework, ORM, migration \\
+\hline
+Django REST Framework (DRF)  & 3.16.1            & Xây dựng REST~API \\
+\hline
+djangorestframework-simplejwt & 5.5.1            & JWT authentication (dev) \\
+\hline
+psycopg2-binary              & --                & Kết nối PostgreSQL \\
+\hline
+python-dotenv                & --                & Quản lý biến môi trường \\
+\hline
+\end{tabularx}
+\end{table}
+
+Django được chọn so với FastAPI và Flask vì: tích hợp ORM và migration mạnh mẽ, DRF cung cấp
+serializer và permission class hoàn chỉnh, hệ thống admin tích hợp sẵn.
+
+\subsection{Dịch thuật và xử lý tài liệu}
+
+\begin{table}[H]
+\centering
+\caption{Thư viện xử lý tài liệu và dịch thuật}
+\label{tab:tech_translate}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Thư viện / Dịch vụ}   & \textbf{Mục đích} \\
+\hline
+google-cloud-translate v3     & API dịch thuật chính, hỗ trợ custom glossary \\
+\hline
+google-cloud-storage          & Upload/download CSV glossary lên GCS \\
+\hline
+azure-ai-documentintelligence & OCR tài liệu PDF scan \\
+\hline
+convertapi                    & Chuyển đổi PDF→DOCX và XLS/CSV→XLSX \\
+\hline
+python-docx                   & Đọc/ghi tệp DOCX; trích xuất text từ paragraphs và tables \\
+\hline
+lxml                          & Parse và ghi XML trong DOCX (zip-based); merge run có cùng format \\
+\hline
+openpyxl                      & Đọc/ghi tệp XLSX; dịch từng cell \\
+\hline
+python-pptx                   & Đọc/ghi tệp PPTX; dịch text trong shapes và slides \\
+\hline
+pypdf / PyMuPDF               & Trích xuất text và metadata từ PDF để phân loại \\
+\hline
+Pillow / opencv-python        & Xử lý ảnh trong pipeline OCR \\
+\hline
+boto3                         & Tương tác với AWS~S3 \\
+\hline
+\end{tabularx}
+\end{table}
+
+\textbf{Lý do chọn Google Cloud Translation~API~v3 thay vì v2:}
+API~v3 hỗ trợ custom glossary với Equivalent Term Set (nhiều ngôn ngữ một glossary), batch
+translation (dịch nhiều chuỗi trong một lần gọi API), và model selection. Tính năng glossary là
+yêu cầu bắt buộc của hệ thống nên v3 là lựa chọn duy nhất phù hợp.
+
+\subsection{Hạ tầng và triển khai}
+
+\begin{table}[H]
+\centering
+\caption{Công nghệ hạ tầng và triển khai}
+\label{tab:tech_infra}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Công nghệ}         & \textbf{Mục đích} \\
+\hline
+AWS S3                     & Lưu trữ tệp gốc và tệp dịch với UUID-based key \\
+\hline
+Amazon Cognito             & SSO doanh nghiệp qua OIDC/OAuth2; ALB tích hợp sẵn \\
+\hline
+AWS ALB                    & Cân bằng tải; inject header \texttt{x-amzn-oidc-data} cho xác thực \\
+\hline
+PostgreSQL 12+             & Cơ sở dữ liệu quan hệ (production) \\
+\hline
+Docker                     & Container hóa backend và frontend; đảm bảo tái tạo môi trường \\
+\hline
+Nginx                      & Web server phục vụ frontend SPA; reverse proxy trong container \\
+\hline
+Google Cloud Storage       & Lưu trữ tệp CSV glossary cho Google Translation API \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Cơ sở dữ liệu}
+
+PostgreSQL được chọn là cơ sở dữ liệu quan hệ chính vì: hỗ trợ \texttt{JSONField} (dùng cho
+\texttt{keyword\_details} trong Notification), indexing mạnh mẽ, tương thích tốt với Django ORM.
+SQLite được dùng như fallback trong môi trường phát triển để đơn giản hóa setup.

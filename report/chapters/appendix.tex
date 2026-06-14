@@ -1,0 +1,110 @@
+\chapter{Hướng dẫn cài đặt và chạy hệ thống}
+\label{app:install}
+
+\section{Yêu cầu môi trường}
+
+\begin{itemize}
+  \item Node.js v18+, npm v9+
+  \item Python 3.9+
+  \item PostgreSQL 12+ (production) hoặc SQLite (development)
+  \item Docker và Docker Compose (để chạy container)
+\end{itemize}
+
+\section{Cài đặt Backend}
+
+\begin{lstlisting}[language=bash, caption={Cài đặt và chạy Backend}]
+cd WEB/multilanguage_transolator_be
+
+# Tao moi truong ao
+python -m venv env
+source env/bin/activate    # Linux/Mac
+# env\Scripts\activate     # Windows
+
+# Cai dat thu vien
+pip install -r requirements.txt
+
+# Cau hinh bien moi truong
+cp .env.example .env
+# Chinh sua .env: SECRET_KEY, DB_*, AWS_*, GOOGLE_APPLICATION_CREDENTIALS, ...
+
+# Chay migration
+python manage.py migrate
+
+# Khoi dong server
+python manage.py runserver   # http://127.0.0.1:8000
+\end{lstlisting}
+
+\section{Cài đặt Frontend}
+
+\begin{lstlisting}[language=bash, caption={Cài đặt và chạy Frontend}]
+cd WEB/multilanguage_transolator_fe
+
+# Cai dat thu vien
+npm install
+
+# Khoi dong development server
+npm run dev    # http://localhost:5173
+\end{lstlisting}
+
+\section{Biến môi trường quan trọng}
+
+\begin{table}[H]
+\centering
+\caption{Biến môi trường Backend}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Biến}                         & \textbf{Mô tả} \\
+\hline
+\texttt{SECRET\_KEY}                   & Django secret key \\
+\hline
+\texttt{DEBUG}                         & True (dev) / False (prod) \\
+\hline
+\texttt{DB\_NAME, DB\_USER, DB\_PASSWORD, DB\_HOST, DB\_PORT} & PostgreSQL connection \\
+\hline
+\texttt{AWS\_ACCESS\_KEY\_ID}           & AWS credentials \\
+\hline
+\texttt{AWS\_SECRET\_ACCESS\_KEY}       & AWS credentials \\
+\hline
+\texttt{AWS\_STORAGE\_BUCKET\_NAME}     & S3 bucket name \\
+\hline
+\texttt{GOOGLE\_APPLICATION\_CREDENTIALS} & Đường dẫn file JSON service account Google \\
+\hline
+\texttt{PROJECT\_ID}                   & Google Cloud project ID \\
+\hline
+\texttt{INPUT\_URI}                    & GCS URI cho glossary CSV (gs://bucket/file.csv) \\
+\hline
+\texttt{JWT\_ACCESS\_TTL\_MINUTES}      & TTL access token (mặc định: 15) \\
+\hline
+\texttt{FRONTEND\_URL}                 & URL frontend (CORS) \\
+\hline
+\end{tabularx}
+\end{table}
+
+\chapter{Đặc tả Use Case chi tiết}
+\label{app:usecase}
+
+\section{Đặc tả UC-05: Xem lịch sử dịch}
+
+\begin{table}[H]
+\centering
+\caption{Đặc tả UC-05: Xem lịch sử dịch}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Tên use case}    & UC-05: Xem lịch sử dịch \\
+\hline
+\textbf{Tác nhân}        & Người dùng đã đăng nhập \\
+\hline
+\textbf{Điều kiện trước} & Người dùng đã thực hiện ít nhất một lần dịch \\
+\hline
+\textbf{Mô tả}           & Người dùng xem danh sách tất cả tệp đã dịch, có thể lọc, tìm kiếm
+                           và tải lại tệp kết quả \\
+\hline
+\textbf{Luồng chính}     & Người dùng truy cập \texttt{/file-history} → Hệ thống trả về danh
+                           sách \texttt{TranslatedFile} của user hiện tại, sắp xếp theo
+                           \texttt{created\_at} giảm dần → Người dùng có thể click URL để
+                           tải tệp về từ S3 \\
+\hline
+\end{tabularx}
+\end{table}

@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include
-from api.urls import auth, keyword, translated_file, notification
 
 urlpatterns = [
     path('admin/', admin.site.urls),
