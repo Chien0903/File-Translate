@@ -2,7 +2,8 @@ import { useState } from "react";
 import { FiX, FiRefreshCw } from "react-icons/fi";
 import { MdHourglassEmpty, MdCheckCircle, MdCancel } from "react-icons/md";
 import SuggestStatusBadge from "./SuggestStatusBadge";
-import { ALL_LANGUAGES, EMPTY_KEYWORD } from "./constants";
+import { EMPTY_KEYWORD } from "./constants";
+import { useLibraryLanguages } from "../../../hooks/useLibraryLanguages";
 
 const WARNING_CONFIG = {
   pending: {
@@ -11,7 +12,7 @@ const WARNING_CONFIG = {
     icon: <MdHourglassEmpty className="text-yellow-600 shrink-0 mt-0.5" size={16} />,
   },
   approved: {
-    text: "This keyword has been approved into Common Library. Editing the content will reset the 'In Library' status — the existing entry in Common Library will remain unchanged.",
+    text: "This keyword has been approved into Common Library. Editing the content will reset the 'In Library' status.",
     color: "bg-green-50 border-green-300 text-green-800",
     icon: <MdCheckCircle className="text-green-600 shrink-0 mt-0.5" size={16} />,
   },
@@ -22,15 +23,17 @@ const WARNING_CONFIG = {
   },
 };
 
-const CONTENT_FIELDS = ["english", ...ALL_LANGUAGES.map((l) => l.key)];
-
 const KeywordFormModal = ({ initial, onSave, onClose, title, suggestionStatus }) => {
+  const { libraryLanguages } = useLibraryLanguages();
   const [form, setForm] = useState(initial || EMPTY_KEYWORD);
 
-  const handleChange = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+  const translations = form.translations || {};
+  const handleChange = (code, value) =>
+    setForm((f) => ({ ...f, translations: { ...(f.translations || {}), [code]: value } }));
 
-  const isValid = CONTENT_FIELDS.some((k) => (form[k] || "").trim() !== "");
-  const hasContentChanged = CONTENT_FIELDS.some((k) => (form[k] || "") !== (initial?.[k] || ""));
+  const allCodes = ["en", ...libraryLanguages.map((l) => l.code)];
+  const isValid = allCodes.some((c) => (translations[c] || "").trim() !== "");
+  const hasContentChanged = allCodes.some((c) => (translations[c] || "") !== ((initial?.translations || {})[c] || ""));
   const willResetStatus = suggestionStatus && hasContentChanged;
   const warning = WARNING_CONFIG[suggestionStatus];
 
@@ -46,20 +49,15 @@ const KeywordFormModal = ({ initial, onSave, onClose, title, suggestionStatus })
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <h3 className="text-lg font-bold text-[#004098]">{title}</h3>
-            {suggestionStatus && !willResetStatus && (
-              <SuggestStatusBadge status={suggestionStatus} />
-            )}
+            <h3 className="text-lg font-bold text-indigo-700">{title}</h3>
+            {suggestionStatus && !willResetStatus && <SuggestStatusBadge status={suggestionStatus} />}
             {willResetStatus && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-300 text-xs font-medium">
-                <FiRefreshCw size={11} />
-                Status will reset
+                <FiRefreshCw size={11} /> Status will reset
               </span>
             )}
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <FiX size={20} />
-          </button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><FiX size={20} /></button>
         </div>
 
         {warning && willResetStatus && (
@@ -73,19 +71,12 @@ const KeywordFormModal = ({ initial, onSave, onClose, title, suggestionStatus })
           <div className="overflow-auto border border-gray-200 rounded-lg">
             <table className="min-w-max w-full border-collapse">
               <thead>
-                <tr className="bg-[#004098] text-white">
-                  <th
-                    className="p-3 text-center border-r border-white/20 sticky left-0 z-10 bg-[#004098]"
-                    style={{ width: 220, minWidth: 220 }}
-                  >
+                <tr className="bg-indigo-700 text-white">
+                  <th className="p-3 text-center border-r border-white/20 sticky left-0 z-10 bg-indigo-700" style={{ width: 220, minWidth: 220 }}>
                     English
                   </th>
-                  {ALL_LANGUAGES.map((lang) => (
-                    <th
-                      key={lang.key}
-                      className="p-3 text-center border-r border-white/20"
-                      style={{ width: 180, minWidth: 180 }}
-                    >
+                  {libraryLanguages.map((lang) => (
+                    <th key={lang.code} className="p-3 text-center border-r border-white/20" style={{ width: 180, minWidth: 180 }}>
                       {lang.label}
                     </th>
                   ))}
@@ -93,22 +84,19 @@ const KeywordFormModal = ({ initial, onSave, onClose, title, suggestionStatus })
               </thead>
               <tbody>
                 <tr>
-                  <td
-                    className="p-0 border-r border-gray-200 sticky left-0 z-10 bg-white"
-                    style={{ boxShadow: "3px 0 8px rgba(0,0,0,0.05)" }}
-                  >
+                  <td className="p-0 border-r border-gray-200 sticky left-0 z-10 bg-white" style={{ boxShadow: "3px 0 8px rgba(0,0,0,0.05)" }}>
                     <textarea
-                      value={form.english}
-                      onChange={(e) => handleChange("english", e.target.value)}
+                      value={translations["en"] || ""}
+                      onChange={(e) => handleChange("en", e.target.value)}
                       className="w-full p-3 border-none resize-y min-h-[100px] focus:ring-2 focus:ring-inset focus:ring-blue-200 outline-none bg-transparent text-sm"
                       placeholder="Enter English..."
                     />
                   </td>
-                  {ALL_LANGUAGES.map((lang) => (
-                    <td key={lang.key} className="p-0 border-r border-gray-200 bg-white">
+                  {libraryLanguages.map((lang) => (
+                    <td key={lang.code} className="p-0 border-r border-gray-200 bg-white">
                       <textarea
-                        value={form[lang.key]}
-                        onChange={(e) => handleChange(lang.key, e.target.value)}
+                        value={translations[lang.code] || ""}
+                        onChange={(e) => handleChange(lang.code, e.target.value)}
                         className="w-full p-3 border-none resize-y min-h-[100px] focus:ring-2 focus:ring-inset focus:ring-blue-200 outline-none bg-transparent text-sm"
                         placeholder={`Enter ${lang.label}...`}
                       />
@@ -121,20 +109,13 @@ const KeywordFormModal = ({ initial, onSave, onClose, title, suggestionStatus })
         </div>
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors text-sm font-medium"
-          >
+          <button onClick={onClose} className="px-5 py-2 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors text-sm font-medium">
             Cancel
           </button>
           <button
             onClick={() => isValid && onSave(form)}
             disabled={!isValid}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-              isValid
-                ? "bg-[#004098] text-white hover:bg-[#003276]"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
+            className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${isValid ? "bg-indigo-700 text-white hover:bg-[#003276]" : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
           >
             Save
           </button>

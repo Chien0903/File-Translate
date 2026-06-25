@@ -82,7 +82,7 @@ def translate_text_with_glossary(
     if library_mode == "none":
         glossary_id = None
     elif library_mode == "private" and glossary_id and user_id:
-        glossary_id = f"{glossary_id}_{user_id}"
+        glossary_id = f"{glossary_id}_user_{user_id}"
 
     # Tiền xử lý để đảm bảo nội dung trong <> được dịch
     processed_text = preprocess_brackets(text)
@@ -221,18 +221,21 @@ def translate_file(file_path, source_lang, target_lang, translate_func, file_typ
         glossary_id = None
         print(f"[TRANSLATE FILE] library_mode={library_mode}, user_id={user_id}, source_lang={source_lang}, target_lang={target_lang}", flush=True)
         
-        if library_mode != "none" and source_lang in LANGUAGES:
+        if library_mode == "none":
+            print(f"[TRANSLATE FILE] => Dịch không có glossary (mode=none)", flush=True)
+        elif library_mode == "private" and user_id:
+            lang_a, lang_b = sorted([source_lang, target_lang])
+            safe_a = lang_a.replace("-", "_")
+            safe_b = lang_b.replace("-", "_")
+            glossary_id = f"toray_glossary_{safe_a}_{safe_b}_user_{user_id}"
+            print(f"[TRANSLATE FILE] => PRIVATE glossary: {glossary_id}", flush=True)
+        elif library_mode == "common" and source_lang in LANGUAGES:
             pair_code = f"{source_lang}-{target_lang}"
             if pair_code not in language_pair:
                 pair_code = f"{target_lang}-{source_lang}"
             if pair_code in language_pair:
-                base_glossary_id = f"toray_translation_glossary_{language_pair[pair_code]}"
-                if library_mode == "private" and user_id:
-                    glossary_id = f"{base_glossary_id}_{user_id}"
-                    print(f"[TRANSLATE FILE] => PRIVATE glossary: {glossary_id}", flush=True)
-                else:
-                    glossary_id = base_glossary_id
-                    print(f"[TRANSLATE FILE] => COMMON glossary: {glossary_id}", flush=True)
+                glossary_id = f"toray_translation_glossary_{language_pair[pair_code]}"
+                print(f"[TRANSLATE FILE] => COMMON glossary: {glossary_id}", flush=True)
             else:
                 print(f"[TRANSLATE FILE] => Không tìm thấy cặp ngôn ngữ {source_lang}-{target_lang}, dịch không có glossary", flush=True)
         else:

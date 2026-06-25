@@ -17,7 +17,7 @@ const CreateAccountModal = ({
             >
                 {/* Header */}
                 <div className="text-center mb-6">
-                    <h3 className="text-2xl font-bold text-[#004098] mb-2">
+                    <h3 className="text-2xl font-bold text-indigo-700 mb-2">
                         Create New Account
                     </h3>
                     <p className="text-gray-600 text-sm">
@@ -42,7 +42,7 @@ const CreateAccountModal = ({
                                             firstName: e.target.value,
                                         })
                                     }
-                                    className="w-full p-3 pl-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#004098] focus:ring-2 focus:ring-[#004098]/20 transition-all duration-200"
+                                    className="w-full p-3 pl-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-700 focus:ring-2 focus:ring-indigo-700/20 transition-all duration-200"
                                     placeholder="Enter first name"
                                     required
                                 />
@@ -75,7 +75,7 @@ const CreateAccountModal = ({
                                             lastName: e.target.value,
                                         })
                                     }
-                                    className="w-full p-3 pl-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#004098] focus:ring-2 focus:ring-[#004098]/20 transition-all duration-200"
+                                    className="w-full p-3 pl-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-700 focus:ring-2 focus:ring-indigo-700/20 transition-all duration-200"
                                     placeholder="Enter last name"
                                     required
                                 />
@@ -108,7 +108,7 @@ const CreateAccountModal = ({
                                 onChange={(e) =>
                                     onFieldChange({ ...newAccount, email: e.target.value })
                                 }
-                                className="w-full p-3 pl-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#004098] focus:ring-2 focus:ring-[#004098]/20 transition-all duration-200"
+                                className="w-full p-3 pl-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-700 focus:ring-2 focus:ring-indigo-700/20 transition-all duration-200"
                                 placeholder="example@mail.com"
                                 required
                             />
@@ -143,7 +143,7 @@ const CreateAccountModal = ({
                                         department: e.target.value,
                                     })
                                 }
-                                className="w-full p-3 pl-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#004098] focus:ring-2 focus:ring-[#004098]/20 transition-all duration-200"
+                                className="w-full p-3 pl-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-700 focus:ring-2 focus:ring-indigo-700/20 transition-all duration-200"
                                 placeholder="Enter department"
                                 required
                             />
@@ -174,7 +174,7 @@ const CreateAccountModal = ({
                                 onChange={(e) =>
                                     onFieldChange({ ...newAccount, role: e.target.value })
                                 }
-                                className="w-full p-3 pl-10 pr-10 border-2 border-gray-200 rounded-lg bg-white focus:outline-none focus:border-[#004098] focus:ring-2 focus:ring-[#004098]/20 transition-all duration-200 appearance-none"
+                                className="w-full p-3 pl-10 pr-10 border-2 border-gray-200 rounded-lg bg-white focus:outline-none focus:border-indigo-700 focus:ring-2 focus:ring-indigo-700/20 transition-all duration-200 appearance-none"
                                 required
                             >
                                 <option value="User">User</option>
@@ -221,7 +221,7 @@ const CreateAccountModal = ({
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-3 bg-gradient-to-r from-[#004098] to-[#0477BF] text-white rounded-lg hover:from-[#003875] hover:to-[#035a9e] font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
+                            className="px-6 py-3 bg-gradient-to-r from-indigo-700 to-indigo-500 text-white rounded-lg hover:from-indigo-800 hover:to-[#035a9e] font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
                         >
                             Create Account
                         </button>

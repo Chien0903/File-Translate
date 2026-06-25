@@ -32,7 +32,7 @@ const RegisterPage = () => {
           <RegisterForm route="/api/user/register/" />
           <p className="mt-6 text-gray-600 text-sm">
             Already have an account?
-            <a href="/login" className="text-[#004098CC] hover:underline ml-1">
+            <a href="/login" className="text-indigo-700 hover:underline ml-1">
               Sign in
             </a>
           </p>

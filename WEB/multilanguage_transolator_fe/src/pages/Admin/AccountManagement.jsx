@@ -363,7 +363,7 @@ function AccountManagement() {
     return (
       <>
         <div className="fixed top-0 left-0 w-full h-1 bg-gray-200 z-50">
-          <div className="h-full bg-[#004098CC] animate-loading-bar"></div>
+          <div className="h-full bg-indigo-700 animate-loading-bar"></div>
         </div>
       </>
     );
@@ -414,9 +414,9 @@ function AccountManagement() {
         <div className="overflow-auto flex-1 min-h-0 border border-gray-200">
           <table className="w-full border-collapse bg-white rounded-lg">
             <thead>
-              <tr className="bg-[#004098CC] text-white font-bold">
+              <tr className="bg-indigo-700 text-white font-bold">
                 <th
-                  className="p-[0.5rem] border-b border-gray-300 w-[4%] text-center cursor-pointer hover:bg-[#003875] transition-colors"
+                  className="p-[0.5rem] border-b border-gray-300 w-[4%] text-center cursor-pointer hover:bg-indigo-800 transition-colors"
                   onClick={() => handleSort("id")}
                 >
                   <div className="flex items-center justify-center">
@@ -425,7 +425,7 @@ function AccountManagement() {
                   </div>
                 </th>
                 <th
-                  className="p-[0.5rem] border-b border-gray-300 w-[28%] text-center cursor-pointer hover:bg-[#003875] transition-colors"
+                  className="p-[0.5rem] border-b border-gray-300 w-[28%] text-center cursor-pointer hover:bg-indigo-800 transition-colors"
                   onClick={() => handleSort("full_name")}
                 >
                   <div className="flex items-center justify-center">
@@ -439,7 +439,7 @@ function AccountManagement() {
                     ref={departmentDropdownRef}
                   >
                     <span
-                      className="cursor-pointer hover:bg-[#003875] px-3 py-1 rounded-md transition-all duration-200 flex items-center select-none"
+                      className="cursor-pointer hover:bg-indigo-800 px-3 py-1 rounded-md transition-all duration-200 flex items-center select-none"
                       onClick={() => setIsDepartmentDropdownOpen(!isDepartmentDropdownOpen)}
                     >
                       Department
@@ -452,7 +452,7 @@ function AccountManagement() {
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-[160px] bg-white border border-gray-300 rounded-lg shadow-lg z-30 overflow-hidden max-h-[300px] overflow-y-auto">
                         <div
                           className={`p-[0.5rem] cursor-pointer transition-colors border-b border-gray-200 font-normal ${filterDepartment === ""
-                            ? "bg-[#004098CC] text-white"
+                            ? "bg-indigo-700 text-white"
                             : "text-gray-700 hover:bg-gray-50"
                             }`}
                           onClick={() => handleDepartmentChange("")}
@@ -463,7 +463,7 @@ function AccountManagement() {
                           <div
                             key={dept}
                             className={`p-[0.5rem] cursor-pointer transition-colors border-b border-gray-200 font-normal ${filterDepartment === dept
-                              ? "bg-[#004098CC] text-white"
+                              ? "bg-indigo-700 text-white"
                               : "text-gray-700 hover:bg-gray-50"
                               }`}
                             onClick={() => handleDepartmentChange(dept)}
@@ -481,7 +481,7 @@ function AccountManagement() {
                     ref={roleDropdownRef}
                   >
                     <span
-                      className="cursor-pointer hover:bg-[#003875] px-3 py-1 rounded-md transition-all duration-200 flex items-center select-none"
+                      className="cursor-pointer hover:bg-indigo-800 px-3 py-1 rounded-md transition-all duration-200 flex items-center select-none"
                       onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                     >
                       Role
@@ -494,7 +494,7 @@ function AccountManagement() {
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-[140px] bg-white border border-gray-300 rounded-lg shadow-lg z-30 overflow-hidden">
                         <div
                           className={`p-[0.5rem] cursor-pointer transition-colors border-b border-gray-200 font-normal ${filterRole === ""
-                            ? "bg-[#004098CC] text-white"
+                            ? "bg-indigo-700 text-white"
                             : "text-gray-700 hover:bg-gray-50"
                             }`}
                           onClick={() => handleRoleChange("")}
@@ -503,7 +503,7 @@ function AccountManagement() {
                         </div>
                         <div
                           className={`p-[0.5rem] cursor-pointer transition-colors border-b border-gray-200 font-normal ${filterRole === "Admin"
-                            ? "bg-[#004098CC] text-white"
+                            ? "bg-indigo-700 text-white"
                             : "text-gray-700 hover:bg-gray-50"
                             }`}
                           onClick={() => handleRoleChange("Admin")}
@@ -512,7 +512,7 @@ function AccountManagement() {
                         </div>
                         <div
                           className={`p-[0.5rem] cursor-pointer transition-colors border-b border-gray-200 font-normal ${filterRole === "User"
-                            ? "bg-[#004098CC] text-white"
+                            ? "bg-indigo-700 text-white"
                             : "text-gray-700 hover:bg-gray-50"
                             }`}
                           onClick={() => handleRoleChange("User")}
@@ -521,7 +521,7 @@ function AccountManagement() {
                         </div>
                         <div
                           className={`p-[0.5rem] cursor-pointer transition-colors font-normal ${filterRole === "Library Keeper"
-                            ? "bg-[#004098CC] text-white"
+                            ? "bg-indigo-700 text-white"
                             : "text-gray-700 hover:bg-gray-50"
                             }`}
                           onClick={() => handleRoleChange("Library Keeper")}
@@ -536,7 +536,7 @@ function AccountManagement() {
                   Email
                 </th>
                 <th
-                  className="p-[0.5rem] border-b border-gray-300 w-[12%] text-center cursor-pointer hover:bg-[#003875] transition-colors"
+                  className="p-[0.5rem] border-b border-gray-300 w-[12%] text-center cursor-pointer hover:bg-indigo-800 transition-colors"
                   onClick={() => handleSort("date_joined")}
                   title="Sort by creation time"
                 >

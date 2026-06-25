@@ -168,7 +168,7 @@ const UserStatsTable = ({ data }) => {
                 placeholder="Search by username, email, or department..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="w-full pl-[2.5rem] pr-[0.75rem] py-[0.5rem] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0477BF] focus:border-transparent"
+                className="w-full pl-[2.5rem] pr-[0.75rem] py-[0.5rem] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
             

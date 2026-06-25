@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from "react";
+import { useLibraryLanguages } from "../../hooks/useLibraryLanguages";
 import keywordService from "../../services/keywordService";
 import notificationService from "../../services/notificationService";
 import { toast } from "react-toastify";
@@ -19,22 +20,11 @@ import Pagination from "../../components/Pagination";
 import Button from "../../components/common/Button";
 import * as XLSX from "xlsx";
 
-// Define all available languages
-const ALL_LANGUAGES = [
-  { key: 'japanese', label: 'Japanese' },
-  { key: 'vietnamese', label: 'Vietnamese' },
-  { key: 'chinese_traditional', label: 'Chinese Traditional' },
-  { key: 'chinese_simplified', label: 'Chinese Simplified' },
-  { key: 'bengali', label: 'Bengali' },
-  { key: 'indonesian', label: 'Indonesian' },
-  { key: 'hindi', label: 'Hindi' },
-  { key: 'oriya', label: 'Oriya' },
-  { key: 'thai', label: 'Thai' }
-];
 
 const ITEMS_PER_PAGE = 10;
 
 const SuggestionReviewList = () => {
+  const { libraryLanguages } = useLibraryLanguages();
   const [allSuggestions, setAllSuggestions] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedData, setEditedData] = useState({});
@@ -52,7 +42,7 @@ const SuggestionReviewList = () => {
   const [showColumnFilter, setShowColumnFilter] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState(() => {
     const saved = localStorage.getItem('suggestionVisibleColumns');
-    return saved ? JSON.parse(saved) : ALL_LANGUAGES.map(lang => lang.key);
+    return saved ? JSON.parse(saved) : null;
   });
   const columnFilterRef = useRef(null);
 
@@ -93,9 +83,31 @@ const SuggestionReviewList = () => {
     sessionStorage.removeItem(STORAGE_KEYS.currentPage);
   };
 
+  // When libraryLanguages loads, initialise or migrate visibleColumns
+  useEffect(() => {
+    if (libraryLanguages.length === 0) return;
+    const enabledCodes = libraryLanguages.map((l) => l.code);
+    if (visibleColumns === null) {
+      setVisibleColumns(enabledCodes);
+      return;
+    }
+    const hasAnyMatch = visibleColumns.some((k) => enabledCodes.includes(k));
+    if (!hasAnyMatch) {
+      setVisibleColumns(enabledCodes);
+    }
+  }, [libraryLanguages]);
+
+  // Effective visible columns — intersect saved prefs with currently-enabled languages
+  const effectiveVisibleColumns = useMemo(() => {
+    if (!visibleColumns) return [];
+    const enabledKeys = new Set(libraryLanguages.map((l) => l.code));
+    return visibleColumns.filter((k) => enabledKeys.has(k));
+  }, [visibleColumns, libraryLanguages]);
+
   // Save visible columns to localStorage
   useEffect(() => {
-    localStorage.setItem('suggestionVisibleColumns', JSON.stringify(visibleColumns));
+    if (visibleColumns !== null)
+      localStorage.setItem('suggestionVisibleColumns', JSON.stringify(visibleColumns));
   }, [visibleColumns]);
 
   // Handle click outside to close column filter
@@ -118,37 +130,26 @@ const SuggestionReviewList = () => {
   // Toggle column visibility
   const toggleColumnVisibility = (columnKey) => {
     setVisibleColumns(prev => {
-      if (prev.includes(columnKey)) {
-        // Don't allow hiding all columns
-        if (prev.length <= 1) {
+      const current = prev || libraryLanguages.map(l => l.code);
+      if (current.includes(columnKey)) {
+        if (effectiveVisibleColumns.length <= 1) {
           toast.warning("At least one language column must be visible", {
             style: { backgroundColor: "orange", color: "white" },
             icon: <FiAlertCircle />,
           });
-          return prev;
+          return current;
         }
-        return prev.filter(key => key !== columnKey);
-      } else {
-        return [...prev, columnKey];
+        return current.filter(key => key !== columnKey);
       }
+      return [...current, columnKey];
     });
   };
 
-  // Select all columns
-  const selectAllColumns = () => {
-    setVisibleColumns(ALL_LANGUAGES.map(lang => lang.key));
-  };
+  const selectAllColumns = () => setVisibleColumns(libraryLanguages.map(l => l.code));
+  const deselectAllColumns = () => setVisibleColumns(libraryLanguages.length > 0 ? [libraryLanguages[0].key] : []);
 
-  // Deselect all columns (keep at least one)
-  const deselectAllColumns = () => {
-    // Keep only the first language
-    setVisibleColumns([ALL_LANGUAGES[0].key]);
-  };
-
-  // Get filtered languages based on visibility
-  const getVisibleLanguages = () => {
-    return ALL_LANGUAGES.filter(lang => visibleColumns.includes(lang.key));
-  };
+  const getVisibleLanguages = () =>
+    libraryLanguages.filter(lang => effectiveVisibleColumns.includes(lang.code));
 
   // Handle column sort
   const handleSort = (field) => {
@@ -213,9 +214,7 @@ const SuggestionReviewList = () => {
     if (searchTerm.trim()) {
       const lower = searchTerm.toLowerCase();
       result = result.filter((s) =>
-        [s.japanese, s.english, s.vietnamese, s.chinese_traditional,
-         s.chinese_simplified, s.bengali, s.indonesian, s.hindi, s.oriya, s.thai]
-        .some((f) => (f || "").toLowerCase().includes(lower))
+        Object.values(s.translations || {}).some((f) => (f || "").toLowerCase().includes(lower))
       );
     }
     return result.sort((a, b) => {
@@ -328,11 +327,12 @@ const SuggestionReviewList = () => {
     }, 0);
   };
 
-  const handleInputChange = (field, value) => {
-    const updatedData = { ...editedData, [field]: value };
+  const handleInputChange = (code, value) => {
+    const updatedData = {
+      ...editedData,
+      translations: { ...(editedData.translations || {}), [code]: value },
+    };
     setEditedData(updatedData);
-
-    // Save updated state to session storage
     if (editingId) {
       saveEditingState(editingId, updatedData, currentPage);
     }
@@ -437,24 +437,18 @@ const SuggestionReviewList = () => {
 
     try {
       // Prepare data for Excel export
-      const exportData = allSuggestions.map((suggestion, index) => ({
-        No: index + 1,
-        Japanese: suggestion.japanese || "",
-        English: suggestion.english || "",
-        Vietnamese: suggestion.vietnamese || "",
-        "Chinese (Traditional)": suggestion.chinese_traditional || "",
-        "Chinese (Simplified)": suggestion.chinese_simplified || "",
-        Bengali: suggestion.bengali || "",
-        Indonesian: suggestion.indonesian || "",
-        Hindi: suggestion.hindi || "",
-        Oriya: suggestion.oriya || "",
-        Thai: suggestion.thai || "",
-        Status: suggestion.status || "",
-        "Created Date": suggestion.created_at
-          ? new Date(suggestion.created_at).toLocaleDateString()
-          : "",
-        ID: suggestion.id || "",
-      }));
+      const exportData = allSuggestions.map((suggestion, index) => {
+        const t = suggestion.translations || {};
+        return {
+          No: index + 1,
+          ...Object.fromEntries(Object.entries(t).map(([code, val]) => [code, val || ""])),
+          Status: suggestion.status || "",
+          "Created Date": suggestion.created_at
+            ? new Date(suggestion.created_at).toLocaleDateString()
+            : "",
+          ID: suggestion.id || "",
+        };
+      });
 
       // Create workbook and worksheet
       const workbook = XLSX.utils.book_new();
@@ -463,16 +457,8 @@ const SuggestionReviewList = () => {
       // Auto-size columns
       const colWidths = [
         { wch: 5 }, // No
-        { wch: 20 }, // Japanese
-        { wch: 20 }, // English
-        { wch: 20 }, // Vietnamese
-        { wch: 25 }, // Chinese (Traditional)
-        { wch: 25 }, // Chinese (Simplified)
-        { wch: 20 }, // Bengali
-        { wch: 20 }, // Indonesian
-        { wch: 20 }, // Hindi
-        { wch: 20 }, // Oriya
-        { wch: 20 }, // Thai
+        { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 25 }, { wch: 25 },
+        { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 },
         { wch: 10 }, // Status
         { wch: 15 }, // Created Date
         { wch: 10 }, // ID
@@ -544,75 +530,32 @@ const SuggestionReviewList = () => {
         const rowNumber = i + 2; // +2 because Excel rows start from 1 and we have header
 
         // Skip rows without ID (new suggestions)
+        const skipKeys = new Set(["No", "Status", "Created Date", "ID"]);
+        const translations = Object.fromEntries(
+          Object.entries(row)
+            .filter(([k]) => !skipKeys.has(k))
+            .map(([k, v]) => [k, v || ""])
+        );
+        const hasAnyContent = Object.values(translations).some((v) => v && v.trim() !== "");
+
         if (!row.ID) {
-          // Create new suggestion
-          const newSuggestion = {
-            japanese: row.Japanese || "",
-            english: row.English || "",
-            vietnamese: row.Vietnamese || "",
-            chinese_traditional: row["Chinese (Traditional)"] || "",
-            chinese_simplified: row["Chinese (Simplified)"] || "",
-            bengali: row.Bengali || "",
-            indonesian: row.Indonesian || "",
-            hindi: row.Hindi || "",
-            oriya: row.Oriya || "",
-            thai: row.Thai || "",
-          };
-
-          // Check if at least one field has content (not all empty)
-          const hasAnyContent = Object.values(newSuggestion).some(
-            (value) => value && value.trim() !== ""
-          );
-
           if (!hasAnyContent) {
             errors.push(`Row ${rowNumber}: All language fields are empty`);
           } else {
-            processedData.push({ type: "create", data: newSuggestion });
+            processedData.push({ type: "create", data: { translations } });
           }
         } else {
-          // Update existing suggestion
           const existingSuggestion = allSuggestions.find(
             (sug) => sug.id === parseInt(row.ID)
           );
           if (!existingSuggestion) {
-            errors.push(
-              `Row ${rowNumber}: Suggestion with ID ${row.ID} not found`
-            );
+            errors.push(`Row ${rowNumber}: Suggestion with ID ${row.ID} not found`);
             continue;
           }
-
-          const updatedSuggestion = {
-            id: parseInt(row.ID),
-            japanese: row.Japanese || "",
-            english: row.English || "",
-            vietnamese: row.Vietnamese || "",
-            chinese_traditional: row["Chinese (Traditional)"] || "",
-            chinese_simplified: row["Chinese (Simplified)"] || "",
-            bengali: row.Bengali || "",
-            indonesian: row.Indonesian || "",
-            hindi: row.Hindi || "",
-            oriya: row.Oriya || "",
-            thai: row.Thai || "",
-          };
-
-          // Check if at least one field has content (not all empty)
-          const hasAnyContent = Object.values({
-            japanese: updatedSuggestion.japanese,
-            english: updatedSuggestion.english,
-            vietnamese: updatedSuggestion.vietnamese,
-            chinese_traditional: updatedSuggestion.chinese_traditional,
-            chinese_simplified: updatedSuggestion.chinese_simplified,
-            bengali: updatedSuggestion.bengali,
-            indonesian: updatedSuggestion.indonesian,
-            hindi: updatedSuggestion.hindi,
-            oriya: updatedSuggestion.oriya,
-            thai: updatedSuggestion.thai,
-          }).some((value) => value && value.trim() !== "");
-
           if (!hasAnyContent) {
             errors.push(`Row ${rowNumber}: All language fields are empty`);
           } else {
-            processedData.push({ type: "update", data: updatedSuggestion });
+            processedData.push({ type: "update", data: { id: parseInt(row.ID), translations } });
           }
         }
       }
@@ -745,62 +688,26 @@ const SuggestionReviewList = () => {
   };
 
   const handleSubmitReview = async () => {
-    // Kiểm tra tất cả các trường ngôn ngữ
-    const requiredFields = [
-      "japanese",
-      "english",
-      "vietnamese",
-      "chinese_traditional",
-      "chinese_simplified",
-      "bengali",
-      "indonesian",
-      "hindi",
-      "oriya",
-      "thai",
-    ];
-    const emptyFields = requiredFields.filter(
-      (field) => !editedData[field] || editedData[field].trim() === ""
-    );
-  
-    if (emptyFields.length > 0) {
-      toast.error(
-        `Please fill in all language fields: ${emptyFields.join(", ")}`,
-        {
-          style: { backgroundColor: "red", color: "white" },
-          icon: <FiAlertCircle />,
-        }
-      );
+    const t = editedData.translations || {};
+    const hasContent = Object.values(t).some((v) => v && v.trim() !== "");
+    if (!hasContent) {
+      toast.error("Please fill in at least one language field.", {
+        style: { backgroundColor: "red", color: "white" },
+        icon: <FiAlertCircle />,
+      });
       return;
     }
-  
+
     try {
-      // First update the suggestion content
       await keywordService.updateSuggestion(editingId, editedData);
-  
-      // Then approve the suggestion
       await keywordService.approveSuggestion(editingId);
-  
-      // Create notification for all users about the new keyword
+
       try {
         await notificationService.createNotification({
           title: "New Keyword Added",
-          message: `A new keyword has been added to the library.`,
+          message: "A new keyword has been added to the library.",
           details: true,
-          keyword_details: [
-            {
-              id: editingId,
-              japanese: editedData.japanese,
-              english: editedData.english,
-              vietnamese: editedData.vietnamese,
-              chinese_traditional: editedData.chinese_traditional,
-              chinese_simplified: editedData.chinese_simplified,
-              bengali: editedData.bengali,
-              indonesian: editedData.indonesian,
-              hindi: editedData.hindi,
-              oriya: editedData.oriya,
-              thai: editedData.thai,
-            },
-          ],
+          keyword_details: [{ id: editingId, translations: editedData.translations }],
         });
       } catch (notificationError) {
         console.error("Failed to create notification:", notificationError);
@@ -846,52 +753,19 @@ const SuggestionReviewList = () => {
   };
   
 
-  // Thêm hàm kiểm tra tất cả các field đã được điền
   const isAllFieldsFilled = () => {
-    const requiredFields = [
-      "japanese",
-      "english",
-      "vietnamese",
-      "chinese_traditional",
-      "chinese_simplified",
-      "bengali",
-      "indonesian",
-      "hindi",
-      "oriya",
-      "thai",
-    ];
-    return requiredFields.every(
-      (field) => editedData[field] && editedData[field].trim() !== ""
-    );
+    const t = editedData.translations || {};
+    return Object.values(t).some((v) => v && v.trim() !== "");
   };
 
-  // Thêm hàm kiểm tra có thay đổi nào được thực hiện hay không
   const hasChanges = () => {
     if (!editingId) return false;
-
-    const originalSuggestion = allSuggestions.find(
-      (sug) => sug.id === editingId
-    );
-    if (!originalSuggestion) return false;
-
-    const requiredFields = [
-      "japanese",
-      "english",
-      "vietnamese",
-      "chinese_traditional",
-      "chinese_simplified",
-      "bengali",
-      "indonesian",
-      "hindi",
-      "oriya",
-      "thai",
-    ];
-
-    return requiredFields.some((field) => {
-      const original = originalSuggestion[field] || "";
-      const edited = editedData[field] || "";
-      return original.trim() !== edited.trim();
-    });
+    const original = allSuggestions.find((s) => s.id === editingId);
+    if (!original) return false;
+    const origT = original.translations || {};
+    const editT = editedData.translations || {};
+    const allCodes = new Set([...Object.keys(origT), ...Object.keys(editT)]);
+    return [...allCodes].some((c) => (origT[c] || "").trim() !== (editT[c] || "").trim());
   };
 
   // Handle cancel editing
@@ -969,7 +843,7 @@ const SuggestionReviewList = () => {
                 >
                   <FiFilter className="text-gray-600" />
                   <span className="font-medium text-gray-700">
-                    Columns ({visibleColumns.length}/{ALL_LANGUAGES.length})
+                    Columns ({effectiveVisibleColumns.length}/{libraryLanguages.length})
                   </span>
                 </button>
 
@@ -1002,15 +876,15 @@ const SuggestionReviewList = () => {
                     </div>
 
                     <div className="p-2">
-                      {ALL_LANGUAGES.map((lang) => (
+                      {libraryLanguages.map((lang) => (
                         <label
-                          key={lang.key}
+                          key={lang.code}
                           className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer transition-colors"
                         >
                           <input
                             type="checkbox"
-                            checked={visibleColumns.includes(lang.key)}
-                            onChange={() => toggleColumnVisibility(lang.key)}
+                            checked={effectiveVisibleColumns.includes(lang.code)}
+                            onChange={() => toggleColumnVisibility(lang.code)}
                             className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                           />
                           <span className="text-sm text-gray-700 flex-1">{lang.label}</span>
@@ -1028,7 +902,7 @@ const SuggestionReviewList = () => {
                   placeholder="Search keywords..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64 px-3 py-2 pl-9 pr-9 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004098] focus:border-[#004098] transition-colors"
+                  className="w-64 px-3 py-2 pl-9 pr-9 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-700 focus:border-indigo-700 transition-colors"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg
@@ -1137,9 +1011,9 @@ const SuggestionReviewList = () => {
           <div className="overflow-auto flex-1 py-[0.5rem] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
             <table className="w-full border-collapse bg-white min-w-max">
               <thead className="sticky top-0 z-20">
-                <tr className="bg-[#004098] text-white font-semibold shadow-sm">
+                <tr className="bg-indigo-700 text-white font-semibold shadow-sm">
                   {bulkDeleteMode && (
-                    <th className="p-[0.5rem] border-b border-blue-600 text-center sticky left-0 z-30 bg-[#004098] border-r border-white/20" style={{ width: '40px', minWidth: '40px' }}>
+                    <th className="p-[0.5rem] border-b border-blue-600 text-center sticky left-0 z-30 bg-indigo-700 border-r border-white/20" style={{ width: '40px', minWidth: '40px' }}>
                       <input
                         type="checkbox"
                         checked={
@@ -1154,24 +1028,24 @@ const SuggestionReviewList = () => {
                     </th>
                   )}
                   <th
-                    className={`p-[0.5rem] border-b border-blue-600 text-center font-semibold text-sm sticky z-30 bg-[#004098] border-r border-white/20 ${bulkDeleteMode ? 'left-[40px]' : 'left-0'}`}
+                    className={`p-[0.5rem] border-b border-blue-600 text-center font-semibold text-sm sticky z-30 bg-indigo-700 border-r border-white/20 ${bulkDeleteMode ? 'left-[40px]' : 'left-0'}`}
                     style={{ width: '70px', minWidth: '70px' }}
                   >
                     No
                   </th>
                   <th
-                    className={`p-[0.75rem] border-b border-blue-600 text-center font-semibold sticky z-30 bg-[#004098] border-r border-white/20 ${bulkDeleteMode ? 'left-[110px]' : 'left-[70px]'}`}
+                    className={`p-[0.75rem] border-b border-blue-600 text-center font-semibold sticky z-30 bg-indigo-700 border-r border-white/20 ${bulkDeleteMode ? 'left-[110px]' : 'left-[70px]'}`}
                     style={{ width: '220px', minWidth: '220px', boxShadow: '3px 0 8px rgba(0,0,0,0.15)' }}
                   >
                     English
                   </th>
                   {getVisibleLanguages().map((lang) => (
-                    <th key={lang.key} className="p-[0.75rem] border-b border-blue-600 text-center font-semibold border-r border-white/20" style={{ width: '200px', minWidth: '200px' }}>
+                    <th key={lang.code} className="p-[0.75rem] border-b border-blue-600 text-center font-semibold border-r border-white/20" style={{ width: '200px', minWidth: '200px' }}>
                       {lang.label}
                     </th>
                   ))}
                   <th 
-                    className="p-[0.5rem] border-b border-blue-600 text-center font-semibold text-sm border-r border-white/20 cursor-pointer hover:bg-[#003875] transition-colors" 
+                    className="p-[0.5rem] border-b border-blue-600 text-center font-semibold text-sm border-r border-white/20 cursor-pointer hover:bg-indigo-800 transition-colors" 
                     style={{ width: '140px', minWidth: '140px' }}
                     onClick={() => handleSort("created_at")}
                     title="Sort by creation time"
@@ -1185,7 +1059,7 @@ const SuggestionReviewList = () => {
                       )}
                     </div>
                   </th>
-                  <th className="p-[0.5rem] border-b border-blue-600 text-center font-semibold text-sm sticky right-0 z-30 bg-[#004098] border-l border-white/20" style={{ width: '130px', minWidth: '130px', boxShadow: '-3px 0 8px rgba(0,0,0,0.15)' }}>
+                  <th className="p-[0.5rem] border-b border-blue-600 text-center font-semibold text-sm sticky right-0 z-30 bg-indigo-700 border-l border-white/20" style={{ width: '130px', minWidth: '130px', boxShadow: '-3px 0 8px rgba(0,0,0,0.15)' }}>
                     Actions
                   </th>
                 </tr>
@@ -1195,7 +1069,7 @@ const SuggestionReviewList = () => {
                   <tr>
                     <td colSpan={13} className="p-4">
                       <div className="w-full h-1 bg-gray-200 rounded-full overflow-hidden fixed top-0 left-0">
-                        <div className="h-full bg-[#004098CC] animate-loading-bar"></div>
+                        <div className="h-full bg-indigo-700 animate-loading-bar"></div>
                       </div>
                     </td>
                   </tr>
@@ -1256,9 +1130,9 @@ const SuggestionReviewList = () => {
                       >
                         {editingId === sug.id ? (
                           <textarea
-                            value={editedData.english || ""}
+                            value={(editedData.translations || {})["en"] || ""}
                             onChange={(e) =>
-                              handleInputChange('english', e.target.value)
+                              handleInputChange("en", e.target.value)
                             }
                             onFocus={(e) => {
                               e.preventDefault();
@@ -1279,9 +1153,9 @@ const SuggestionReviewList = () => {
                           <div
                             className="truncate max-w-[200px] mx-auto flex items-center justify-center text-gray-800 px-2"
                             style={{ height: "50px", maxHeight: "50px" }}
-                            title={sug.english || "-"}
+                            title={(sug.translations || {})["en"] || "-"}
                           >
-                            {sug.english || (
+                            {(sug.translations || {})["en"] || (
                               <span className="text-gray-400 italic">
                                 Empty
                               </span>
@@ -1292,15 +1166,15 @@ const SuggestionReviewList = () => {
 
                       {getVisibleLanguages().map((lang) => (
                         <td
-                          key={lang.key}
+                          key={lang.code}
                           className="p-[0.75rem] border-r border-gray-100 text-center align-top"
                           style={{ height: "80px", maxHeight: "80px", width: '200px' }}
                         >
                           {editingId === sug.id ? (
                             <textarea
-                              value={editedData[lang.key] || ""}
+                              value={(editedData.translations || {})[lang.code] || ""}
                               onChange={(e) =>
-                                handleInputChange(lang.key, e.target.value)
+                                handleInputChange(lang.code, e.target.value)
                               }
                               onFocus={(e) => {
                                 e.preventDefault();
@@ -1321,9 +1195,9 @@ const SuggestionReviewList = () => {
                             <div
                               className="truncate max-w-[200px] mx-auto flex items-center justify-center text-gray-800 px-2"
                               style={{ height: "50px", maxHeight: "50px" }}
-                              title={sug[lang.key] || "-"}
+                              title={(sug.translations || {})[lang.code] || "-"}
                             >
-                              {sug[lang.key] || (
+                              {(sug.translations || {})[lang.code] || (
                                 <span className="text-gray-400 italic">
                                   Empty
                                 </span>

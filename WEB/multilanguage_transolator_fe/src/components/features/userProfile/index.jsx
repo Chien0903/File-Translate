@@ -282,7 +282,7 @@ const ProfileForm = () => {
               Cancel
             </button>
             <button
-              className="bg-[#004098] hover:bg-[#003078] text-white px-6 py-2 rounded-full font-medium"
+              className="bg-indigo-700 hover:bg-[#003078] text-white px-6 py-2 rounded-full font-medium"
               onClick={async () => {
                 setLoading(true);
                 const isChangingProfile = isProfileDataChanged();

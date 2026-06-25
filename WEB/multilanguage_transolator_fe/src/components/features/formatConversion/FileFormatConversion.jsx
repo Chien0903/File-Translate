@@ -272,7 +272,7 @@ const FileFormatConversion = () => {
                     cy="50"
                     r="40"
                     fill="none"
-                    stroke="#004098"
+                    stroke="#4338CA"
                     strokeWidth="10"
                     strokeDasharray={`${uploadProgress * 2.51} 251`}
                     strokeDashoffset="0"
@@ -286,13 +286,13 @@ const FileFormatConversion = () => {
                 </div>
               </div>
 
-              <p className="text-[#004098] font-bold text-lg mb-4">
+              <p className="text-indigo-700 font-bold text-lg mb-4">
                 {uploadProgress}% to complete
               </p>
 
               <div className="w-full max-w-md h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#004098] rounded-full"
+                  className="h-full bg-indigo-700 rounded-full"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>

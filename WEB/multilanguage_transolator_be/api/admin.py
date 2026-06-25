@@ -9,19 +9,19 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ["email", "first_name", "last_name", "department"]
     list_filter = ["is_active", "is_staff", "is_superuser", "role"]
     ordering = ["-id"]
-    
+
     fieldsets = (
         (None, {"fields": ("email", "first_name", "last_name", "department", "password", "role")}),
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser")}),
     )
-    
+
     add_fieldsets = (
         (None, {
             "classes": ("wide",),
             "fields": ("email", "first_name", "last_name", "department", "role", "password1", "password2", "is_active", "is_staff", "is_superuser"),
         }),
     )
-    
+
     readonly_fields = ["id"]
 
 class NotificationAdmin(admin.ModelAdmin):
@@ -41,84 +41,51 @@ class PasswordResetTokenAdmin(admin.ModelAdmin):
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Notification, NotificationAdmin)
-    
+
 @admin.register(KeywordQueue)
 class KeywordQueueAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'is_processed', 'created_at', 'processed_at')
     list_filter = ('is_processed', 'created_at', 'processed_at')
-    search_fields = ('user__username', 'japanese', 'english', 'vietnamese', 'chinese_traditional', 'chinese_simplified')
+    search_fields = ('user__username', 'translations')
     readonly_fields = ('created_at', 'processed_at')
-    
+
     fieldsets = (
-        ('User Information', {
-            'fields': ('user',)
-        }),
-        ('Translation Content', {
-            'fields': ('japanese', 'english', 'vietnamese', 'chinese_traditional', 'chinese_simplified')
-        }),
-        ('Processing Status', {
-            'fields': ('is_processed', 'processed_at')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at',),
-            'classes': ('collapse',)
-        })
+        ('User Information', {'fields': ('user',)}),
+        ('Translation Content', {'fields': ('translations',)}),
+        ('Processing Status', {'fields': ('is_processed', 'processed_at')}),
+        ('Timestamps', {'fields': ('created_at',), 'classes': ('collapse',)}),
     )
 
 @admin.register(KeywordSuggestion)
 class KeywordSuggestionAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'status', 'suggestion_count', 'frequency_percentage', 'approved_by', 'created_at', 'updated_at')
     list_filter = ('status', 'created_at')
-    search_fields = ('user__username', 'japanese', 'english', 'vietnamese', 'chinese_traditional', 'chinese_simplified')
+    search_fields = ('user__username',)
     readonly_fields = ('suggestion_count', 'frequency_percentage', 'created_at', 'updated_at')
-    
+
     fieldsets = (
-        ('User Information', {
-            'fields': ('user',)
-        }),
-        ('Translation Content', {
-            'fields': ('japanese', 'english', 'vietnamese', 'chinese_traditional', 'chinese_simplified')
-        }),
-        ('Statistics', {
-            'fields': ('suggestion_count', 'frequency_percentage')
-        }),
-        ('Status Information', {
-            'fields': ('status', 'approved_by')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        })
+        ('User Information', {'fields': ('user',)}),
+        ('Translation Content', {'fields': ('translations',)}),
+        ('Statistics', {'fields': ('suggestion_count', 'frequency_percentage')}),
+        ('Status Information', {'fields': ('status', 'approved_by')}),
+        ('Timestamps', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
     )
 
 
 @admin.register(PrivateKeyword)
 class PrivateKeywordAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "user",
-        "suggestion",
-        "english",
-        "japanese",
-        "vietnamese",
-        "created_at",
-        "updated_at",
-    )
+    list_display = ("id", "user", "suggestion", "get_en", "get_ja", "created_at", "updated_at")
     list_filter = ("created_at", "updated_at")
-    search_fields = (
-        "user__email",
-        "english",
-        "japanese",
-        "vietnamese",
-        "chinese_traditional",
-        "chinese_simplified",
-        "thai",
-        "bengali",
-        "hindi",
-        "indonesian",
-        "oriya",
-    )
+    search_fields = ("user__email",)
     readonly_fields = ("created_at", "updated_at")
+
+    @admin.display(description="English")
+    def get_en(self, obj):
+        return (obj.translations or {}).get("en", "")
+
+    @admin.display(description="Japanese")
+    def get_ja(self, obj):
+        return (obj.translations or {}).get("ja", "")
 
 
 @admin.register(TranslatedFile)
@@ -127,19 +94,10 @@ class TranslatedFileAdmin(admin.ModelAdmin):
     list_filter = ('file_type', 'original_language', 'target_language', 'created_at')
     search_fields = ('user__email', 'original_file_name')
     readonly_fields = ('created_at', 'updated_at')
-    
+
     fieldsets = (
-        ('User Information', {
-            'fields': ('user',)
-        }),
-        ('File Information', {
-            'fields': ('original_file_url', 'original_file_name', 'translated_file_url', 'file_type')
-        }),
-        ('Language Information', {
-            'fields': ('original_language', 'target_language')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        })
+        ('User Information', {'fields': ('user',)}),
+        ('File Information', {'fields': ('original_file_url', 'original_file_name', 'translated_file_url', 'file_type')}),
+        ('Language Information', {'fields': ('original_language', 'target_language')}),
+        ('Timestamps', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
     )

@@ -14,7 +14,7 @@ const GcsStatusModal = ({ gcsStatus, onClose }) => {
                 className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-11/12"
                 onClick={(e) => e.stopPropagation()}
             >
-                <h3 className="text-lg text-[#004098CC] font-bold mb-4 flex items-center">
+                <h3 className="text-lg text-indigo-700 font-bold mb-4 flex items-center">
                     <FiCloud className="mr-2" /> GCS Upload & Glossary Status
                 </h3>
 

@@ -19,6 +19,7 @@ import ConversionResults from "../pages/conversionResults";
 import PrivateLibrary from "../pages/privateLibrary/index";
 import TextTranslation from "../pages/textTranslation";
 import KeywordStatsAdmin from "../pages/Admin/KeywordStatsAdmin";
+import LanguageManagement from "../pages/Admin/LanguageManagement";
 
 /** Redirect unauthenticated users to /login */
 function ProtectedRoute({ children }) {
@@ -61,6 +62,7 @@ function App() {
             <Route path="/admin/edit-user/:id" element={<EditUserRole />} />
             <Route path="/admin" element={<AccountManagement />} />
             <Route path="/admin/keyword-stats" element={<KeywordStatsAdmin />} />
+            <Route path="/admin/languages" element={<LanguageManagement />} />
             <Route path="/translation-results" element={<TranslationResults />} />
             <Route path="/file-format-conversion" element={<FormatConversionPage />} />
             <Route path="/conversion-results" element={<ConversionResults />} />

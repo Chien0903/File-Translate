@@ -172,7 +172,7 @@ function RegisterForm({ route }) {
             value={email}
             onChange={handleEmailChange}
             onBlur={handleEmailBlur}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#004098CC]"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-700"
             placeholder="example@email.com"
             required
           />
@@ -206,7 +206,7 @@ function RegisterForm({ route }) {
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#004098CC]"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-700"
               placeholder="Enter first name"
               required
             />
@@ -236,7 +236,7 @@ function RegisterForm({ route }) {
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#004098CC]"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-700"
               placeholder="Enter last name"
               required
             />
@@ -267,7 +267,7 @@ function RegisterForm({ route }) {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#004098CC]"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-700"
             placeholder="Enter password"
             required
           />
@@ -297,7 +297,7 @@ function RegisterForm({ route }) {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#004098CC]"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-700"
             placeholder="Confirm password"
             required
           />
@@ -311,7 +311,7 @@ function RegisterForm({ route }) {
           className={`w-56 py-2 text-white rounded-full transition font-medium flex items-center justify-center ${
             loading
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-[#004098CC] hover:bg-[#00306E]"
+              : "bg-indigo-700 hover:bg-indigo-800"
           }`}
         >
           {loading ? (

@@ -11,10 +11,10 @@ Dự án nâng cấp hệ thống Multilanguage Translator từ cấu hình ngô
 | Phase | Tên | Thời gian | Trạng thái |
 |-------|-----|-----------|------------|
 | 1 | Database & Backend Core | 3–4 ngày | ✅ HOÀN THÀNH |
-| 2 | API Layer | 2–3 ngày | 🔲 Chưa bắt đầu |
-| 3 | Frontend — Admin UI | 2–3 ngày | 🔲 Chưa bắt đầu |
-| 4 | Kết nối luồng dịch với DB | 2 ngày | 🔲 Chưa bắt đầu |
-| 5 | Dynamic Glossary Pairs | 1–2 ngày | 🔲 Chưa bắt đầu |
+| 2 | API Layer | 2–3 ngày | ✅ HOÀN THÀNH |
+| 3 | Frontend — Admin UI | 2–3 ngày | ✅ HOÀN THÀNH |
+| 4 | Kết nối luồng dịch với DB | 2 ngày | ✅ HOÀN THÀNH |
+| 5 | Dynamic Glossary Pairs | 1–2 ngày | ✅ HOÀN THÀNH |
 
 ---
 

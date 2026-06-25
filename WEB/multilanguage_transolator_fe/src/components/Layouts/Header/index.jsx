@@ -1,93 +1,87 @@
 import { useState, useEffect } from "react";
-import { IoChevronDown } from "react-icons/io5";
-import { FaUser } from "react-icons/fa";
+import { MdNotificationsNone, MdLogout } from "react-icons/md";
 import { HiMenu } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
-import Notifications from "../../../components/Notifications";
-import { ICON_SIZES } from "../../../constants/constants";
 import { useAuth } from "../../../hooks/useAuth";
 
 const Header = ({ onMobileMenuClick }) => {
-  const { fullName, role } = useAuth();
+  const { fullName, role, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
 
-  // Handle clicking outside to close dropdowns
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showUserMenu) {
-        const target = event.target;
-        if (!target.closest(".user-menu")) {
-          setShowUserMenu(false);
-        }
-      }
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".user-menu-container")) setShowUserMenu(false);
     };
-
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [showUserMenu]);
+  }, []);
+
+  const initials = fullName
+    ? fullName.split(" ").filter(Boolean).map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    : "U";
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
-    <div className="bg-white flex items-center p-4 border border-gray-200 w-full relative">
-      {/* Mobile Menu Button */}
-      <div className="md:hidden mr-3">
+    <header className="bg-white border-b border-gray-200 px-5 h-14 flex items-center justify-between flex-shrink-0">
+      {/* Left */}
+      <div className="flex items-center gap-3">
         <button
           onClick={onMobileMenuClick}
-          className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+          className="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-500"
         >
-          <HiMenu size={ICON_SIZES.INTERFACE_LARGE} className="text-gray-600" />
+          <HiMenu size={20} />
         </button>
+        <span className="font-semibold text-gray-800 text-sm">Multi-Language Translator</span>
       </div>
 
-      {/* App title */}
-      <div className="z-10 cursor-pointer font-semibold text-blue-900 text-lg" onClick={() => navigate("/")}>
-        Multi-Language Translator
-      </div>
+      {/* Right */}
+      <div className="flex items-center gap-2">
+        {/* Notification bell */}
+        <button className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+          <MdNotificationsNone size={22} />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+        </button>
 
-      {/* User menu and notifications on right */}
-      <div className="flex items-center ml-auto gap-4" style={{ zIndex: '50' }}>
-        {/* Notifications Component */}
-        <Notifications />
-
-        {/* User Profile */}
+        {/* User avatar + name */}
         <div
-          className="user-menu relative inline-flex items-center whitespace-nowrap cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowUserMenu(!showUserMenu);
-          }}
+          className="user-menu-container relative flex items-center gap-2 cursor-pointer px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+          onClick={(e) => { e.stopPropagation(); setShowUserMenu(!showUserMenu); }}
         >
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-              <FaUser size={ICON_SIZES.INTERFACE_DEFAULT} className="text-gray-500" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-semibold">{fullName}</span>
-              <span className="text-xs text-gray-600">{role}</span>
-            </div>
-            <IoChevronDown className="ml-1 text-gray-500" />
+          <div className="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-xs font-semibold">{initials}</span>
+          </div>
+          <div className="hidden md:block">
+            <div className="text-sm font-semibold text-gray-900 leading-tight">{fullName}</div>
+            <div className="text-xs text-gray-400 leading-tight">{role}</div>
           </div>
 
-          {/* Dropdown Menu */}
           {showUserMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-100 rounded-2xl shadow-md w-full min-w-full z-50 overflow-hidden whitespace-nowrap">
-              <ul className="flex flex-col p-2">
-                <li
-                  className="px-5 py-3 rounded text-base font-normal text-gray-800 cursor-pointer text-left hover:bg-[#0477BF] hover:text-white transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate("/my-profile");
-                    setShowUserMenu(false);
-                  }}
-                >
-                  My account
-                </li>
-              </ul>
+            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg w-44 z-50 overflow-hidden">
+              <button
+                className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={(e) => { e.stopPropagation(); navigate("/my-profile"); setShowUserMenu(false); }}
+              >
+                My account
+              </button>
             </div>
           )}
         </div>
+
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+          title="Sign out"
+        >
+          <MdLogout size={20} />
+        </button>
       </div>
-    </div>
+    </header>
   );
 };
 

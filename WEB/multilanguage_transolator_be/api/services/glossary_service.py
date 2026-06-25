@@ -162,8 +162,38 @@ def manage_glossary(
     return result
 
 
-# Language pairs mapping: pair_key -> glossary_id_suffix
-# Đồng bộ với Translate_v2/create_glossary.py
+def make_glossary_id(lang1: str, lang2: str) -> str:
+    """
+    Tạo glossary ID từ 2 language codes — luôn sort để đảm bảo commutative.
+    Ví dụ: make_glossary_id('vi', 'en') == make_glossary_id('en', 'vi') == 'toray_glossary_en_vi'
+    """
+    pair = sorted([lang1, lang2])
+    return "toray_glossary_" + "_".join(c.replace("-", "_") for c in pair)
+
+
+def generate_pairs_from_db():
+    """
+    Tạo tất cả cặp (lang1, lang2) từ Language records active trong DB.
+    Dùng itertools.combinations để đảm bảo không trùng và đúng thứ tự.
+    Trả về list of tuple: [('bn', 'en'), ('bn', 'hi'), ...]
+    """
+    import itertools
+    try:
+        from ..models.language import Language
+        codes = list(
+            Language.objects.filter(is_active=True)
+            .order_by('sort_order')
+            .values_list('code', flat=True)
+        )
+        return list(itertools.combinations(sorted(codes), 2))
+    except Exception as e:
+        logger.error(f"generate_pairs_from_db failed: {e}. Falling back to LANGUAGE_PAIRS.")
+        # Fallback sang LANGUAGE_PAIRS cũ nếu DB chưa có
+        return [(p.split("-", 1)[0], p.split("-", 1)[1]) for p in LANGUAGE_PAIRS.keys()]
+
+
+# DEPRECATED: dùng make_glossary_id() + generate_pairs_from_db() thay thế.
+# Giữ lại để tương thích với các glossary cũ đã tạo trên GCS (toray_translation_glossary_1..44).
 LANGUAGE_PAIRS = {
     "vi-en": 1,
     "vi-ja": 2,
@@ -241,16 +271,15 @@ def delete_glossary(glossary_id: str, location: str = "us-central1", timeout: in
 
 def manage_all_glossaries(mode=1):
     """
-    Manage all glossaries for all language pairs.
+    Manage all glossaries for all language pairs (dynamic from DB).
     - If a pair has valid keywords: create/update glossary.
     - If a pair has NO keywords: delete the glossary so stale entries don't affect translation.
     """
     results = []
     errors = []
 
-    for pair, glossary_id_suffix in LANGUAGE_PAIRS.items():
-        source_lang_code, target_lang_code = pair.split("-", 1)
-        glossary_id = f"toray_translation_glossary_{glossary_id_suffix}"
+    for source_lang_code, target_lang_code in generate_pairs_from_db():
+        glossary_id = make_glossary_id(source_lang_code, target_lang_code)
         try:
             logger.info(f"Managing glossary: {glossary_id} ({source_lang_code} -> {target_lang_code})")
             tsv_path = create_pair_csv_file(
@@ -319,84 +348,71 @@ def manage_all_glossaries(mode=1):
     return results, errors
 
 
-def create_glossary_csv_file():
-    """Extract approved keywords -> CSV with 10 columns: en, ja, vi, zh-CN, zh-TW, th, bn, hi, id, or"""
+def _get_active_language_codes():
+    """Return sorted ISO codes of all active languages."""
     try:
-        approved_keywords = KeywordSuggestion.objects.filter(
-            status='approved'
-        ).select_related('user', 'approved_by')
+        from ..models.language import Language
+        return list(Language.objects.filter(is_active=True).order_by('sort_order').values_list('code', flat=True))
+    except Exception:
+        return ['en', 'ja', 'vi', 'zh-CN', 'zh-TW', 'th', 'bn', 'hi', 'id', 'or']
 
-        if not approved_keywords.exists():
+
+def create_glossary_csv_file():
+    """Extract approved keywords -> CSV with columns = active language codes."""
+    try:
+        approved_keywords = list(KeywordSuggestion.objects.filter(status='approved'))
+        if not approved_keywords:
             logger.warning("No approved keywords found for CSV generation")
             return None
 
-        # CRITICAL: newline='' required on Windows so csv.writer controls line endings
-        csv_file = tempfile.NamedTemporaryFile(
-            mode='w', delete=False, suffix='.csv',
-            encoding='utf-8', newline=''
-        )
+        lang_codes = _get_active_language_codes()
 
+        csv_file = tempfile.NamedTemporaryFile(
+            mode='w', delete=False, suffix='.csv', encoding='utf-8', newline=''
+        )
         try:
             writer = csv.writer(csv_file, quoting=csv.QUOTE_MINIMAL)
-
-            # Header: 10 columns (đồng bộ với tất cả ngôn ngữ hỗ trợ)
-            writer.writerow(['en', 'ja', 'vi', 'zh-CN', 'zh-TW', 'th', 'bn', 'hi', 'id', 'or'])
-
-            for keyword in approved_keywords:
-                writer.writerow([
-                    keyword.english or '',
-                    keyword.japanese or '',
-                    keyword.vietnamese or '',
-                    keyword.chinese_simplified or '',
-                    keyword.chinese_traditional or '',
-                    keyword.thai or '',
-                    keyword.bengali or '',
-                    keyword.hindi or '',
-                    keyword.indonesian or '',
-                    keyword.oriya or '',
-                ])
-
+            writer.writerow(lang_codes)
+            for kw in approved_keywords:
+                t = kw.translations or {}
+                writer.writerow([t.get(c, '') for c in lang_codes])
             csv_file.close()
-            logger.info(f"Created CSV file with {approved_keywords.count()} keywords at: {csv_file.name}")
+            logger.info(f"Created CSV with {len(approved_keywords)} keywords: {csv_file.name}")
             return csv_file.name
-
         except Exception as e:
             csv_file.close()
             if os.path.exists(csv_file.name):
                 os.unlink(csv_file.name)
             raise e
-
     except Exception as e:
         logger.error(f"Error creating CSV file: {str(e)}")
-        raise Exception(f"Error creating CSV file: {str(e)}")
+        raise
 
 
 def create_pair_csv_file(user, source_lang, target_lang):
-    """Extract approved AND private keywords for a SPECIFIC pair. Only include rows where BOTH sides exist."""
-    LANG_MAP = {
-        'en': 'english', 'ja': 'japanese', 'vi': 'vietnamese',
-        'zh-CN': 'chinese_simplified', 'zh-TW': 'chinese_traditional',
-        'th': 'thai', 'bn': 'bengali', 'hi': 'hindi',
-        'id': 'indonesian', 'or': 'oriya'
-    }
-    src_field = LANG_MAP.get(source_lang)
-    tgt_field = LANG_MAP.get(target_lang)
-    if not src_field or not tgt_field:
+    """Extract approved AND private keywords for a SPECIFIC language pair."""
+    approved_keywords = list(KeywordSuggestion.objects.filter(status='approved'))
+    private_keywords = list(PrivateKeyword.objects.filter(user=user)) if user is not None else []
+    all_keywords = approved_keywords + private_keywords
+
+    # Build pair rows using translations dict
+    seen = set()
+    pair_rows = []
+    for kw in all_keywords:
+        t = kw.translations or {}
+        src = normalize_glossary_value(t.get(source_lang, ""))
+        tgt = normalize_glossary_value(t.get(target_lang, ""))
+        if not is_valid_glossary_value(src) or not is_valid_glossary_value(tgt):
+            continue
+        key = (src, tgt)
+        if key in seen:
+            continue
+        seen.add(key)
+        pair_rows.append([src, tgt])
+
+    if not pair_rows:
+        logger.warning(f"No valid rows for pair {source_lang}->{target_lang}")
         return None
-
-    approved_keywords = KeywordSuggestion.objects.filter(status='approved').iterator()
-    private_keywords = (
-        PrivateKeyword.objects.filter(user=user).iterator() if user is not None else []
-    )
-
-    # Combine iterables into a single iterable without forcing evaluation
-    all_keywords = list(approved_keywords) + list(private_keywords)
-
-    pair_rows = build_pair_rows(
-        rows=all_keywords,
-        source_lang_col=src_field,
-        target_lang_col=tgt_field,
-    )
     if not pair_rows:
         return None
 
@@ -470,32 +486,19 @@ def upload_csv_to_gcs(source_file_path: str, custom_blob_name: str = None):
 
 
 def create_user_glossary_csv_file(user):
-    """Extract approved keywords AND user's private keywords -> CSV."""
+    """Extract approved + user's private keywords -> CSV with active language columns."""
     try:
         approved_keywords = list(KeywordSuggestion.objects.filter(status='approved'))
         private_keywords = list(PrivateKeyword.objects.filter(user=user))
-        
-        csv_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv', encoding='utf-8')
+        lang_codes = _get_active_language_codes()
+
+        csv_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv', encoding='utf-8', newline='')
         try:
             writer = csv.writer(csv_file, quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(['en', 'ja', 'vi', 'zh-CN', 'zh-TW', 'th', 'bn', 'hi', 'id', 'or'])
-            
-            for keyword in approved_keywords:
-                writer.writerow([
-                    keyword.english or '', keyword.japanese or '', keyword.vietnamese or '',
-                    keyword.chinese_simplified or '', keyword.chinese_traditional or '',
-                    keyword.thai or '', keyword.bengali or '', keyword.hindi or '',
-                    keyword.indonesian or '', keyword.oriya or '',
-                ])
-                
-            for keyword in private_keywords:
-                writer.writerow([
-                    keyword.english or '', keyword.japanese or '', keyword.vietnamese or '',
-                    keyword.chinese_simplified or '', keyword.chinese_traditional or '',
-                    keyword.thai or '', keyword.bengali or '', keyword.hindi or '',
-                    keyword.indonesian or '', keyword.oriya or '',
-                ])
-                
+            writer.writerow(lang_codes)
+            for kw in approved_keywords + private_keywords:
+                t = kw.translations or {}
+                writer.writerow([t.get(c, '') for c in lang_codes])
             csv_file.close()
             return csv_file.name
         except Exception as e:
@@ -505,7 +508,7 @@ def create_user_glossary_csv_file(user):
             raise e
     except Exception as e:
         logger.error(f"Error creating user CSV file: {str(e)}")
-        raise e
+        raise
 
 def upload_user_csv_to_gcs(source_file_path: str, user_id: int):
     try:
@@ -529,9 +532,8 @@ def _manage_user_glossaries_bg(user_id):
     try:
         user = User.objects.get(id=user_id)
         
-        print("[BACKGROUND THREAD] 1. Đang tạo file CSV 10 cột (Common + Private keywords)...", flush=True)
-        
-        # Lấy cả từ thư viện chung (approved) và từ private của user
+        print("[BACKGROUND THREAD] 1. Đang tạo file CSV (Common + Private keywords)...", flush=True)
+
         approved_keywords = list(KeywordSuggestion.objects.filter(status='approved'))
         private_keywords = list(PrivateKeyword.objects.filter(user=user))
         print(f"[BACKGROUND THREAD]    => Approved: {len(approved_keywords)} từ | Private: {len(private_keywords)} từ", flush=True)
@@ -540,30 +542,15 @@ def _manage_user_glossaries_bg(user_id):
             print("[BACKGROUND THREAD] => Dừng lại: Không có từ vựng nào.", flush=True)
             return
 
-        # CRITICAL: newline='' required on Windows so csv.writer controls line endings
-        # Without it, Python adds \r\n causing Google to read "en\r" as invalid language code
-        csv_file_obj = tempfile.NamedTemporaryFile(
-            mode='w', delete=False, suffix='.csv',
-            encoding='utf-8', newline=''
-        )
+        lang_codes = _get_active_language_codes()
+        csv_file_obj = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv', encoding='utf-8', newline='')
         try:
             import csv as csv_module
             writer = csv_module.writer(csv_file_obj, quoting=csv_module.QUOTE_MINIMAL)
-            writer.writerow(['en', 'ja', 'vi', 'zh-CN', 'zh-TW', 'th', 'bn', 'hi', 'id', 'or'])
-            for kw in approved_keywords:
-                writer.writerow([
-                    kw.english or '', kw.japanese or '', kw.vietnamese or '',
-                    kw.chinese_simplified or '', kw.chinese_traditional or '',
-                    kw.thai or '', kw.bengali or '', kw.hindi or '',
-                    kw.indonesian or '', kw.oriya or '',
-                ])
-            for kw in private_keywords:
-                writer.writerow([
-                    kw.english or '', kw.japanese or '', kw.vietnamese or '',
-                    kw.chinese_simplified or '', kw.chinese_traditional or '',
-                    kw.thai or '', kw.bengali or '', kw.hindi or '',
-                    kw.indonesian or '', kw.oriya or '',
-                ])
+            writer.writerow(lang_codes)
+            for kw in approved_keywords + private_keywords:
+                t = kw.translations or {}
+                writer.writerow([t.get(c, '') for c in lang_codes])
             csv_file_obj.close()
             csv_file_path = csv_file_obj.name
         except Exception as e:
@@ -576,35 +563,23 @@ def _manage_user_glossaries_bg(user_id):
         custom_blob_name = f"glossary_term_user_{user.id}.csv"
         input_uri = upload_csv_to_gcs(csv_file_path, custom_blob_name=custom_blob_name)
         print(f"[BACKGROUND THREAD] => Upload thành công: {input_uri}", flush=True)
-        
-        # Debug: show preview of CSV content
-        with open(csv_file_path, encoding='utf-8') as f:
-            preview = f.read(400)
-        print(f"[BACKGROUND THREAD]    => Preview CSV:\n{preview}", flush=True)
 
         client = translate.TranslationServiceClient()
 
-        print(f"[BACKGROUND THREAD] 3. Bắt đầu gọi API Google per-pair (dùng CSV 10 cột)...", flush=True)
-        # Determine which languages have data
-        pks = PrivateKeyword.objects.filter(user=user)
+        print(f"[BACKGROUND THREAD] 3. Bắt đầu gọi API Google per-pair...", flush=True)
+        # Determine which languages have data from translations JSONField
+        pks = PrivateKeyword.objects.filter(user=user).only('translations')
         has_lang = set()
         for pk in pks:
-            if pk.english and pk.english.strip(): has_lang.add('en')
-            if pk.japanese and pk.japanese.strip(): has_lang.add('ja')
-            if pk.vietnamese and pk.vietnamese.strip(): has_lang.add('vi')
-            if pk.chinese_simplified and pk.chinese_simplified.strip(): has_lang.add('zh-CN')
-            if pk.chinese_traditional and pk.chinese_traditional.strip(): has_lang.add('zh-TW')
-            if pk.thai and pk.thai.strip(): has_lang.add('th')
-            if pk.bengali and pk.bengali.strip(): has_lang.add('bn')
-            if pk.hindi and pk.hindi.strip(): has_lang.add('hi')
-            if pk.indonesian and pk.indonesian.strip(): has_lang.add('id')
+            for code, val in (pk.translations or {}).items():
+                if val and str(val).strip():
+                    has_lang.add(code)
         print(f"[BACKGROUND THREAD] => Ngôn ngữ có dữ liệu: {has_lang}", flush=True)
 
-        for pair, glossary_id_suffix in LANGUAGE_PAIRS.items():
-            source_lang_code, target_lang_code = pair.split("-", 1)
+        for source_lang_code, target_lang_code in generate_pairs_from_db():
             # Chỉ tạo glossary nếu user có từ vựng ở cả 2 ngôn ngữ
             if source_lang_code in has_lang and target_lang_code in has_lang:
-                glossary_id = f"toray_translation_glossary_{glossary_id_suffix}_{user.id}"
+                glossary_id = make_glossary_id(source_lang_code, target_lang_code) + f"_user_{user.id}"
                 name = client.glossary_path(os.getenv("PROJECT_ID"), "us-central1", glossary_id)
                 mode = 0
                 try:
@@ -613,7 +588,7 @@ def _manage_user_glossaries_bg(user_id):
                 except Exception:
                     pass
 
-                print(f"\n[BACKGROUND THREAD] => Xử lý cặp {pair}: {glossary_id} (mode={mode})", flush=True)
+                print(f"\n[BACKGROUND THREAD] => Xử lý cặp {source_lang_code}-{target_lang_code}: {glossary_id} (mode={mode})", flush=True)
                 logger.info(f"Managing private glossary: {glossary_id} mode={mode}")
                 try:
                     # Build pair-specific TSV so empty/placeholder cells are removed

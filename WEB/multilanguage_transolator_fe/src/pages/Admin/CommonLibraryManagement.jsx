@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useLibraryLanguages } from "../../hooks/useLibraryLanguages";
 import {
   FiSearch,
   FiAlertCircle,
@@ -25,22 +26,11 @@ import {
   DuplicateAlertsModal,
 } from "../../components/features/admin/LibrarySuggestionQueueModals";
 
-// Define all available languages
-const ALL_LANGUAGES = [
-  { key: 'japanese', label: 'Japanese', emoji: '🇯🇵' },
-  { key: 'vietnamese', label: 'Vietnamese', emoji: '🇻🇳' },
-  { key: 'chinese_traditional', label: 'Chinese Traditional', emoji: '🇹🇼' },
-  { key: 'chinese_simplified', label: 'Chinese Simplified', emoji: '🇨🇳' },
-  { key: 'bengali', label: 'Bengali', emoji: '🇧🇩' },
-  { key: 'indonesian', label: 'Indonesian', emoji: '🇮🇩' },
-  { key: 'hindi', label: 'Hindi', emoji: '🇮🇳' },
-  { key: 'oriya', label: 'Oriya', emoji: '🇮🇳' },
-  { key: 'thai', label: 'Thai', emoji: '🇹🇭' }
-];
 
 const QUEUE_PAGE_SIZE = 8;
 
 const CommonLibraryManagement = () => {
+  const { libraryLanguages } = useLibraryLanguages();
   const { role } = useAuth();
   const [keywords, setKeywords] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -50,18 +40,7 @@ const CommonLibraryManagement = () => {
   const [editingKeyword, setEditingKeyword] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
-  const [newKeyword, setNewKeyword] = useState({
-    japanese: "",
-    english: "",
-    vietnamese: "",
-    chinese_traditional: "",
-    chinese_simplified: "",
-    bengali: "",
-    indonesian: "",
-    hindi: "",
-    oriya: "",
-    thai: "",
-  });
+  const [newKeyword, setNewKeyword] = useState({ translations: {} });
 
   const [isAddingKeyword, setIsAddingKeyword] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -70,7 +49,7 @@ const CommonLibraryManagement = () => {
   const [showColumnFilter, setShowColumnFilter] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState(() => {
     const saved = localStorage.getItem('libraryVisibleColumns');
-    return saved ? JSON.parse(saved) : ALL_LANGUAGES.map(lang => lang.key);
+    return saved ? JSON.parse(saved) : null; // null = show all enabled languages
   });
   const columnFilterRef = useRef(null);
 
@@ -115,9 +94,31 @@ const CommonLibraryManagement = () => {
   const [loadingDupAlerts, setLoadingDupAlerts] = useState(false);
   const [dupAlertBusyId, setDupAlertBusyId] = useState(null);
 
+  // When libraryLanguages loads, initialise or migrate visibleColumns
+  useEffect(() => {
+    if (libraryLanguages.length === 0) return;
+    const enabledCodes = libraryLanguages.map((l) => l.code);
+    if (visibleColumns === null) {
+      setVisibleColumns(enabledCodes);
+      return;
+    }
+    const hasAnyMatch = visibleColumns.some((k) => enabledCodes.includes(k));
+    if (!hasAnyMatch) {
+      setVisibleColumns(enabledCodes);
+    }
+  }, [libraryLanguages]);
+
+  // Effective visible columns — intersect saved prefs with currently-enabled languages
+  const effectiveVisibleColumns = useMemo(() => {
+    if (!visibleColumns) return [];
+    const enabledKeys = new Set(libraryLanguages.map((l) => l.code));
+    return visibleColumns.filter((k) => enabledKeys.has(k));
+  }, [visibleColumns, libraryLanguages]);
+
   // Save visible columns to localStorage
   useEffect(() => {
-    localStorage.setItem('libraryVisibleColumns', JSON.stringify(visibleColumns));
+    if (visibleColumns !== null)
+      localStorage.setItem('libraryVisibleColumns', JSON.stringify(visibleColumns));
   }, [visibleColumns]);
 
   // Handle click outside to close column filter
@@ -140,37 +141,26 @@ const CommonLibraryManagement = () => {
   // Toggle column visibility
   const toggleColumnVisibility = (columnKey) => {
     setVisibleColumns(prev => {
-      if (prev.includes(columnKey)) {
-        // Don't allow hiding all columns
-        if (prev.length <= 1) {
+      const current = prev || libraryLanguages.map(l => l.code);
+      if (current.includes(columnKey)) {
+        if (effectiveVisibleColumns.length <= 1) {
           toast.warning("At least one language column must be visible", {
             style: { backgroundColor: "orange", color: "white" },
             icon: <FiAlertCircle />,
           });
-          return prev;
+          return current;
         }
-        return prev.filter(key => key !== columnKey);
-      } else {
-        return [...prev, columnKey];
+        return current.filter(key => key !== columnKey);
       }
+      return [...current, columnKey];
     });
   };
 
-  // Select all columns
-  const selectAllColumns = () => {
-    setVisibleColumns(ALL_LANGUAGES.map(lang => lang.key));
-  };
+  const selectAllColumns = () => setVisibleColumns(libraryLanguages.map(l => l.code));
+  const deselectAllColumns = () => setVisibleColumns(libraryLanguages.length > 0 ? [libraryLanguages[0].key] : []);
 
-  // Deselect all columns (keep at least one)
-  const deselectAllColumns = () => {
-    // Keep only the first language
-    setVisibleColumns([ALL_LANGUAGES[0].key]);
-  };
-
-  // Get filtered languages based on visibility
-  const getVisibleLanguages = () => {
-    return ALL_LANGUAGES.filter(lang => visibleColumns.includes(lang.key));
-  };
+  const getVisibleLanguages = () =>
+    libraryLanguages.filter(lang => effectiveVisibleColumns.includes(lang.code));
 
   // Handle column sort (only for sortable columns)
   const handleSort = (field) => {
@@ -530,21 +520,9 @@ const CommonLibraryManagement = () => {
   // Filter and sort keywords
   const filteredKeywords = keywords
     .filter((item) => {
-      const searchInFields = [
-        item.japanese || "",
-        item.english || "",
-        item.vietnamese || "",
-        item.chinese_traditional || "",
-        item.chinese_simplified || "",
-        item.bengali || "",
-        item.indonesian || "",
-        item.hindi || "",
-        item.oriya || "",
-        item.thai || "",
-      ];
-
+      const searchInFields = Object.values(item.translations || {});
       return searchInFields.some((field) =>
-        field.toLowerCase().includes(searchTerm.toLowerCase())
+        (field || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
     })
     .sort((a, b) => {
@@ -602,29 +580,12 @@ const CommonLibraryManagement = () => {
         )
       );
 
-      // Tạo notification cho tất cả users về việc sửa từ khóa
       try {
         await notificationService.createNotificationForAll({
           title: "Keyword Updated",
           message: "A keyword in the library has been updated.",
           details: true,
-          keyword_details: [
-            {
-              id: editingKeyword.id,
-              japanese: editingKeyword.japanese || "",
-              english: editingKeyword.english || "",
-              vietnamese: editingKeyword.vietnamese || "",
-              chinese_traditional: editingKeyword.chinese_traditional || "",
-              chinese_simplified: editingKeyword.chinese_simplified || "",
-              bengali: editingKeyword.bengali || "",
-              indonesian: editingKeyword.indonesian || "",
-              hindi: editingKeyword.hindi || "",
-              oriya: editingKeyword.oriya || "",
-              thai: editingKeyword.thai || "",
-              action: "updated",
-              updated_at: new Date().toISOString(),
-            },
-          ],
+          keyword_details: [{ id: editingKeyword.id, translations: editingKeyword.translations, action: "updated" }],
         });
       } catch (notificationError) {
         console.error("Failed to create notification:", notificationError);
@@ -644,16 +605,14 @@ const CommonLibraryManagement = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditingKeyword({ ...editingKeyword, [name]: value });
+  const handleChange = (updatedKeyword) => {
+    setEditingKeyword(updatedKeyword);
   };
 
   const handleAddKeyword = async () => {
-    const filledLanguages = Object.values(newKeyword).filter(
-      (val) => val.trim() !== ""
-    );
-    if (filledLanguages.length === 0) {
+    const translations = newKeyword.translations || {};
+    const hasContent = Object.values(translations).some((v) => v && v.trim() !== "");
+    if (!hasContent) {
       toast.error("Please enter at least one language field!", {
         style: { backgroundColor: "red", color: "white" },
         icon: <FiAlertCircle />,
@@ -668,18 +627,7 @@ const CommonLibraryManagement = () => {
         icon: <FiAlertCircle />,
       });
       setIsAddingKeyword(false);
-      setNewKeyword({
-        japanese: "",
-        english: "",
-        vietnamese: "",
-        chinese_traditional: "",
-        chinese_simplified: "",
-        bengali: "",
-        indonesian: "",
-        hindi: "",
-        oriya: "",
-        thai: "",
-      });
+      setNewKeyword({ translations: {} });
       // Refresh danh sách keywords sau khi submit thành công
       fetchKeywords();
     } catch (error) {
@@ -721,7 +669,8 @@ const CommonLibraryManagement = () => {
   };
 
   const isFormValid = () => {
-    return Object.values(newKeyword).some((val) => val.trim() !== "");
+    const t = newKeyword.translations || {};
+    return Object.values(t).some((val) => val && val.trim() !== "");
   };
 
   // Drag to scroll handlers
@@ -752,7 +701,7 @@ const CommonLibraryManagement = () => {
       {/* Loading Bar */}
       {loading && (
         <div className="fixed top-0 left-0 w-full h-1 bg-gray-200 z-50">
-          <div className="h-full bg-[#004098CC] animate-loading-bar"></div>
+          <div className="h-full bg-indigo-700 animate-loading-bar"></div>
         </div>
       )}
 
@@ -788,7 +737,7 @@ const CommonLibraryManagement = () => {
               >
                 <FiFilter className="text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">
-                  Columns ({visibleColumns.length}/{ALL_LANGUAGES.length})
+                  Columns ({effectiveVisibleColumns.length}/{libraryLanguages.length})
                 </span>
               </button>
 
@@ -821,15 +770,15 @@ const CommonLibraryManagement = () => {
                   </div>
 
                   <div className="p-2">
-                    {ALL_LANGUAGES.map((lang) => (
+                    {libraryLanguages.map((lang) => (
                       <label
-                        key={lang.key}
+                        key={lang.code}
                         className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer transition-colors"
                       >
                         <input
                           type="checkbox"
-                          checked={visibleColumns.includes(lang.key)}
-                          onChange={() => toggleColumnVisibility(lang.key)}
+                          checked={effectiveVisibleColumns.includes(lang.code)}
+                          onChange={() => toggleColumnVisibility(lang.code)}
                           className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                         />
                         <span className="text-sm text-gray-700 flex-1">{lang.label}</span>
@@ -868,9 +817,9 @@ const CommonLibraryManagement = () => {
           >
             <table className="min-w-full border-collapse bg-white">
               <thead className="sticky top-0 z-20">
-                <tr className="bg-[#004098] text-white font-bold">
+                <tr className="bg-indigo-700 text-white font-bold">
                   <th
-                    className="p-[0.5rem] border-b border-gray-300 text-center cursor-pointer hover:bg-[#003875] transition-colors sticky left-0 z-30 bg-[#004098] border-r border-white/20"
+                    className="p-[0.5rem] border-b border-gray-300 text-center cursor-pointer hover:bg-indigo-800 transition-colors sticky left-0 z-30 bg-indigo-700 border-r border-white/20"
                     style={{ width: '70px', minWidth: '70px' }}
                     onClick={() => handleSort("id")}
                   >
@@ -880,7 +829,7 @@ const CommonLibraryManagement = () => {
                     </div>
                   </th>
                   <th
-                    className="p-[0.5rem] border-b border-gray-300 text-center cursor-pointer border-r border-white/20 sticky left-[70px] z-30 bg-[#004098]"
+                    className="p-[0.5rem] border-b border-gray-300 text-center cursor-pointer border-r border-white/20 sticky left-[70px] z-30 bg-indigo-700"
                     style={{ width: '220px', minWidth: '220px', boxShadow: '3px 0 8px rgba(0,0,0,0.15)' }}
                   >
                     <div className="flex items-center justify-center gap-1">
@@ -888,14 +837,14 @@ const CommonLibraryManagement = () => {
                     </div>
                   </th>
                   {getVisibleLanguages().map((lang) => (
-                    <th key={lang.key} className="p-[0.5rem] border-b border-gray-300 text-center border-r border-white/20" style={{ width: '200px', minWidth: '200px' }}>
+                    <th key={lang.code} className="p-[0.5rem] border-b border-gray-300 text-center border-r border-white/20" style={{ width: '200px', minWidth: '200px' }}>
                       <div className="flex items-center justify-center gap-1 text-sm">
                         <span>{lang.label}</span>
                       </div>
                     </th>
                   ))}
                   <th
-                    className="p-[0.5rem] border-b border-gray-300 text-center cursor-pointer hover:bg-[#003875] transition-colors border-r border-white/20"
+                    className="p-[0.5rem] border-b border-gray-300 text-center cursor-pointer hover:bg-indigo-800 transition-colors border-r border-white/20"
                     style={{ width: '140px', minWidth: '140px' }}
                     onClick={() => handleSort("date_modified")}
                   >
@@ -906,7 +855,7 @@ const CommonLibraryManagement = () => {
                   </th>
                   {(role === "Library Keeper" || role === "Admin") && (
                     <th
-                      className="p-[0.5rem] border-b border-gray-300 text-center text-xs sticky right-0 z-30 bg-[#004098]"
+                      className="p-[0.5rem] border-b border-gray-300 text-center text-xs sticky right-0 z-30 bg-indigo-700"
                       style={{ width: '130px', minWidth: '130px', boxShadow: '-3px 0 8px rgba(0,0,0,0.15)' }}
                     >
                       Action
@@ -940,13 +889,13 @@ const CommonLibraryManagement = () => {
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap'
                       }}
-                      title={item.english || ""}
+                      title={(item.translations || {})["en"] || ""}
                     >
-                      {item.english || <span className="text-gray-400 italic">—</span>}
+                      {(item.translations || {})["en"] || <span className="text-gray-400 italic">—</span>}
                     </td>
                     {getVisibleLanguages().map((lang) => (
                       <td
-                        key={lang.key}
+                        key={lang.code}
                         className="p-[0.75rem] border-b border-gray-200 text-left border-r border-gray-100"
                         style={{
                           maxWidth: '200px',
@@ -954,9 +903,9 @@ const CommonLibraryManagement = () => {
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap'
                         }}
-                        title={item[lang.key] || ""}
+                        title={(item.translations || {})[lang.code] || ""}
                       >
-                        {item[lang.key] || <span className="text-gray-400 italic">—</span>}
+                        {(item.translations || {})[lang.code] || <span className="text-gray-400 italic">—</span>}
                       </td>
                     ))}
                     <td className="p-[0.75rem] border-b border-gray-200 text-center border-r border-gray-100">

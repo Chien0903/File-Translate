@@ -32,8 +32,22 @@ PROJECT_ID = os.getenv("PROJECT_ID")
 if google_credentials_path:
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials_path
 
-# Định nghĩa các ngôn ngữ hỗ trợ (mở rộng)
-LANGUAGES = {
+# Định nghĩa các ngôn ngữ hỗ trợ — load động từ DB, fallback nếu chưa có Django
+def _load_languages_from_db():
+    try:
+        import django
+        from django.conf import settings as django_settings
+        if not django_settings.configured:
+            return None
+        from api.models.language import Language
+        rows = Language.objects.filter(is_active=True).values('code', 'name')
+        if rows:
+            return {r['code']: r['name'] for r in rows}
+    except Exception:
+        pass
+    return None
+
+_LANGUAGES_FALLBACK = {
     'vi': "Vietnamese",
     'ja': "Japanese",
     'zh-CN': "Chinese (Simplified)",
@@ -44,7 +58,13 @@ LANGUAGES = {
     'hi': "Hindi",
     'id': "Indonesian",
     'or': "Oriya",
+    'fr': "French",
 }
+
+def _get_languages():
+    return _load_languages_from_db() or _LANGUAGES_FALLBACK
+
+LANGUAGES = _get_languages()
 
 # language_pair được import từ create_glossary.py để đồng bộ với backend
 def extract_content(file_path: str) -> str:

@@ -1,341 +1,126 @@
+import { NavLink } from "react-router-dom";
+import { useState } from "react";
 import {
-  MdTranslate,
-  MdHistory,
-  MdLibraryBooks,
-  MdManageAccounts,
-  MdMenu,
-  MdNoteAlt,
-  MdRuleFolder,
-  MdTransform,
+  MdDescription,
   MdTextFields,
+  MdSyncAlt,
+  MdHistory,
+  MdBookmarkBorder,
+  MdMenuBook,
+  MdPeopleOutline,
   MdBarChart,
-  MdBookmark,
+  MdLanguage,
+  MdChevronLeft,
+  MdChevronRight,
+  MdClose,
 } from "react-icons/md";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { ICON_SIZES } from "../../../constants/constants";
 import { useAuth } from "../../../hooks/useAuth";
 
-const SideBar = ({ onExpandChange, isMobile = false, onMobileClose }) => {
+const NAV_MAIN = [
+  { icon: MdDescription, label: "File Translation", path: "/" },
+  { icon: MdTextFields, label: "Text Translation", path: "/text-translation" },
+  { icon: MdSyncAlt, label: "Format Conversion", path: "/file-format-conversion" },
+  { icon: MdHistory, label: "File History", path: "/file-history" },
+];
+
+const NAV_LIBRARIES = [
+  { icon: MdBookmarkBorder, label: "Private Library", path: "/private-library" },
+  { icon: MdMenuBook, label: "Common Library", path: "/common-library" },
+];
+
+const NAV_ADMIN = [
+  { icon: MdPeopleOutline, label: "Account Management", path: "/admin" },
+  { icon: MdBarChart, label: "Keyword Stats", path: "/admin/keyword-stats" },
+  { icon: MdLanguage, label: "Languages", path: "/admin/languages" },
+];
+
+const NavItem = ({ icon: Icon, label, path, expanded, isMobile, onMobileClose }) => (
+  <NavLink
+    to={path}
+    end={path === "/" || path === "/admin"}
+    onClick={() => { if (isMobile && onMobileClose) onMobileClose(); }}
+    className={({ isActive }) =>
+      `w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
+        ${isActive ? "bg-indigo-700 text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"}`
+    }
+  >
+    <Icon size={20} className="flex-shrink-0" />
+    {(expanded || isMobile) && (
+      <span className="whitespace-nowrap overflow-hidden text-ellipsis">{label}</span>
+    )}
+  </NavLink>
+);
+
+const SectionLabel = ({ label, expanded, isMobile }) =>
+  (expanded || isMobile) ? (
+    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1 pt-4 pb-1">
+      {label}
+    </p>
+  ) : (
+    <div className="border-t border-gray-100 my-2" />
+  );
+
+const SideBar = ({ isMobile = false, onMobileClose }) => {
   const { role } = useAuth();
-  const [expanded, setExpanded] = useState(isMobile ? true : false); // Always expanded on mobile
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Notify parent component when expanded state changes
-  useEffect(() => {
-    if (onExpandChange) {
-      onExpandChange(expanded);
-    }
-  }, [expanded, onExpandChange]);
-
-  const toggleSidebar = () => {
-    if (!isMobile) {
-      setExpanded(!expanded);
-    }
-  };
-
-  // Handle navigation with mobile close
-  const handleNavigate = (path) => {
-    navigate(path);
-    if (isMobile && onMobileClose) {
-      onMobileClose();
-    }
-  };
-
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const [expanded, setExpanded] = useState(true);
 
   return (
     <div
-      className={`${isMobile ? "w-64" : expanded ? "w-[15rem]" : "w-[5rem]"
-        } h-full bg-white border-r border-gray-200 shadow-sm flex flex-col py-[1.5rem] relative overflow-hidden`}
-      style={{
-        transition: isMobile
-          ? "none"
-          : "width 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-        willChange: "width",
-      }}
+      className={`${isMobile ? "w-64" : expanded ? "w-64" : "w-16"} h-full bg-white border-r border-gray-200 flex flex-col flex-shrink-0`}
+      style={{ transition: isMobile ? "none" : "width 250ms ease" }}
     >
-      {/* Toggle Button / Mobile Close Button */}
-      <div
-        className={`flex items-center justify-center cursor-pointer hover:bg-gray-100 p-[0.5rem] mb-[1.5rem] w-full transition-colors duration-200 ${isMobile ? "justify-between px-[1.5rem]" : "justify-center"
-          }`}
-        onClick={isMobile ? onMobileClose : toggleSidebar}
-      >
+      {/* Logo */}
+      <div className={`flex items-center gap-3 p-4 border-b border-gray-100 ${!expanded && !isMobile ? "justify-center" : ""}`}>
+        <div className="w-10 h-10 bg-indigo-700 rounded-xl flex items-center justify-center flex-shrink-0">
+          <span className="text-white font-bold text-lg">T</span>
+        </div>
+        {(expanded || isMobile) && (
+          <div className="min-w-0">
+            <div className="font-bold text-gray-900 text-sm leading-tight truncate">Toray Translate</div>
+            <div className="text-gray-400 text-xs truncate">Enterprise Edition</div>
+          </div>
+        )}
         {isMobile && (
+          <button onClick={onMobileClose} className="ml-auto p-1 text-gray-400 hover:text-gray-600">
+            <MdClose size={20} />
+          </button>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+        {NAV_MAIN.map((item) => (
+          <NavItem key={item.path} {...item} expanded={expanded} isMobile={isMobile} onMobileClose={onMobileClose} />
+        ))}
+
+        <SectionLabel label="Libraries" expanded={expanded} isMobile={isMobile} />
+        {NAV_LIBRARIES.map((item) => (
+          <NavItem key={item.path} {...item} expanded={expanded} isMobile={isMobile} onMobileClose={onMobileClose} />
+        ))}
+
+        {role === "Admin" && (
           <>
-            <span className="text-lg font-semibold text-[#004098]">Menu</span>
-            <div className="text-[#0477BF] bg-[#E6F1F8] rounded-full p-[0.5rem] transition-all duration-300 hover:scale-110">
-              <MdMenu size={ICON_SIZES.INTERFACE_LARGE} />
-            </div>
+            <SectionLabel label="Admin" expanded={expanded} isMobile={isMobile} />
+            {NAV_ADMIN.map((item) => (
+              <NavItem key={item.path} {...item} expanded={expanded} isMobile={isMobile} onMobileClose={onMobileClose} />
+            ))}
           </>
         )}
-        {!isMobile && (
-          <div className="text-[#0477BF] bg-[#E6F1F8] rounded-full p-[0.5rem] transition-all duration-300 hover:scale-110">
-            <MdMenu size={ICON_SIZES.INTERFACE_LARGE} />
-          </div>
-        )}
-      </div>
+      </nav>
 
-      {/* Menu Items */}
-      <div className="flex flex-col w-full space-y-[0.25rem] h-full">
-        {/* File Translation */}
-        <div
-          className={`flex items-center cursor-pointer p-[0.75rem] ${isActive("/") ? "bg-[#0477BF] text-white" : "hover:bg-gray-100"
-            } mx-[0.75rem] rounded-md transition-all duration-200`}
-          onClick={() => handleNavigate("/")}
+      {/* Collapse button */}
+      {!isMobile && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-2 p-4 border-t border-gray-100 text-gray-400 hover:text-gray-700 text-sm transition-colors w-full"
         >
-          <MdTranslate
-            size={ICON_SIZES.INTERFACE_LARGE}
-            className={`${isActive("/") ? "text-white" : "text-gray-500"
-              } flex-shrink-0 transition-colors duration-200`}
-          />
-          <span
-            className="ml-[0.75rem] font-medium whitespace-nowrap"
-            style={{
-              opacity: expanded ? 1 : 0,
-              transform: expanded ? "translateX(0)" : "translateX(-10px)",
-              transition:
-                "opacity 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms, transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms",
-              transitionDelay: expanded ? "100ms" : "0ms",
-            }}
-          >
-            File Translation
-          </span>
-        </div>
-
-        {/* Text Translation - Temporarily Hidden */}
-
-        <div
-          className={`flex items-center cursor-pointer p-[0.75rem] ${isActive("/text-translation")
-              ? "bg-[#0477BF] text-white"
-              : "hover:bg-gray-100"
-            } mx-[0.75rem] rounded-md transition-all duration-200`}
-          onClick={() => handleNavigate("/text-translation")}
-        >
-          <MdTextFields
-            size={ICON_SIZES.INTERFACE_LARGE}
-            className={`${isActive("/text-translation") ? "text-white" : "text-gray-500"
-              } flex-shrink-0 transition-colors duration-200`}
-          />
-          <span
-            className="ml-[0.75rem] font-medium whitespace-nowrap"
-            style={{
-              opacity: expanded ? 1 : 0,
-              transform: expanded ? "translateX(0)" : "translateX(-10px)",
-              transition:
-                "opacity 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms, transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms",
-              transitionDelay: expanded ? "110ms" : "0ms",
-            }}
-          >
-            Text Translation
-          </span>
-        </div>
-
-
-        {/* File Format Conversion */}
-        <div
-          className={`flex items-center cursor-pointer p-[0.75rem] ${isActive("/file-format-conversion")
-              ? "bg-[#0477BF] text-white"
-              : "hover:bg-gray-100"
-            } mx-[0.75rem] rounded-md transition-all duration-200`}
-          onClick={() => handleNavigate("/file-format-conversion")}
-        >
-          <MdTransform
-            size={ICON_SIZES.INTERFACE_LARGE}
-            className={`${isActive("/file-format-conversion")
-                ? "text-white"
-                : "text-gray-500"
-              } flex-shrink-0 transition-colors duration-200`}
-          />
-          <span
-            className="ml-[0.75rem] font-medium whitespace-nowrap"
-            style={{
-              opacity: expanded ? 1 : 0,
-              transform: expanded ? "translateX(0)" : "translateX(-10px)",
-              transition:
-                "opacity 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms, transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms",
-              transitionDelay: expanded ? "120ms" : "0ms",
-            }}
-          >
-            Format Conversion
-          </span>
-        </div>
-
-        {/* File history */}
-        <div
-          className={`flex items-center cursor-pointer p-[0.75rem] ${isActive("/file-history")
-              ? "bg-[#0477BF] text-white"
-              : "hover:bg-gray-100"
-            } mx-[0.75rem] rounded-md transition-all duration-200`}
-          onClick={() => handleNavigate("/file-history")}
-        >
-          <MdHistory
-            size={ICON_SIZES.INTERFACE_LARGE}
-            className={`${isActive("/file-history") ? "text-white" : "text-gray-500"
-              } flex-shrink-0 transition-colors duration-200`}
-          />
-          <span
-            className="ml-[0.75rem] font-medium whitespace-nowrap"
-            style={{
-              opacity: expanded ? 1 : 0,
-              transform: expanded ? "translateX(0)" : "translateX(-10px)",
-              transition:
-                "opacity 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms, transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms",
-              transitionDelay: expanded ? "140ms" : "0ms",
-            }}
-          >
-            File history
-          </span>
-        </div>
-
-        {/* Admin and Library sections */}
-        <div className="flex-grow"></div>
-
-        {/* Private Library */}
-        <div
-          className={`flex items-center cursor-pointer p-[0.75rem] ${isActive("/private-library")
-              ? "bg-[#0477BF] text-white"
-              : "hover:bg-gray-100"
-            } mx-[0.75rem] rounded-md transition-all duration-200`}
-          onClick={() => handleNavigate("/private-library")}
-        >
-          <MdBookmark
-            size={ICON_SIZES.INTERFACE_LARGE}
-            className={`${isActive("/private-library") ? "text-white" : "text-gray-500"
-              } flex-shrink-0 transition-colors duration-200`}
-          />
-          <span
-            className="ml-[0.75rem] font-medium whitespace-nowrap"
-            style={{
-              opacity: expanded ? 1 : 0,
-              transform: expanded ? "translateX(0)" : "translateX(-10px)",
-              transition:
-                "opacity 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms, transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms",
-              transitionDelay: expanded ? "130ms" : "0ms",
-            }}
-          >
-            Private Library
-          </span>
-        </div>
-
-        {/* Suggestion Review - HIDDEN
-        {(role === "Admin" || role === "Library Keeper") && (
-          <div
-            className={`flex items-center cursor-pointer p-[0.75rem] ${isActive("/suggestion-review")
-                ? "bg-[#0477BF] text-white"
-                : "hover:bg-gray-100"
-              } mx-[0.75rem] rounded-md transition-all duration-200`}
-            onClick={() => handleNavigate("/suggestion-review")}
-          >
-            <MdRuleFolder
-              size={ICON_SIZES.INTERFACE_LARGE}
-              className={`${isActive("/suggestion-review") ? "text-white" : "text-gray-500"
-                } flex-shrink-0 transition-colors duration-200`}
-            />
-            <span
-              className="ml-[0.75rem] font-medium whitespace-nowrap"
-              style={{
-                opacity: expanded ? 1 : 0,
-                transform: expanded ? "translateX(0)" : "translateX(-10px)",
-                transition:
-                  "opacity 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms, transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms",
-                transitionDelay: expanded ? "140ms" : "0ms",
-              }}
-            >
-              Review Suggestions
-            </span>
-          </div>
-        )}
-        */}
-
-        {/* Library */}
-        <div
-          className={`flex items-center cursor-pointer p-[0.75rem] ${isActive("/common-library")
-              ? "bg-[#0477BF] text-white"
-              : "hover:bg-gray-100"
-            } mx-[0.75rem] rounded-md transition-all duration-200`}
-          onClick={() => handleNavigate("/common-library")}
-        >
-          <MdLibraryBooks
-            size={ICON_SIZES.INTERFACE_LARGE}
-            className={`${isActive("/common-library") ? "text-white" : "text-gray-500"
-              } flex-shrink-0 transition-colors duration-200`}
-          />
-          <span
-            className="ml-[0.75rem] font-medium whitespace-nowrap"
-            style={{
-              opacity: expanded ? 1 : 0,
-              transform: expanded ? "translateX(0)" : "translateX(-10px)",
-              transition:
-                "opacity 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms, transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms",
-              transitionDelay: expanded ? "160ms" : "0ms",
-            }}
-          >
-            Common Library
-          </span>
-        </div>
-
-        {/* Account Management */}
-        {role === "Admin" && (
-          <div
-            className={`flex items-center cursor-pointer p-[0.75rem] ${isActive("/admin")
-                ? "bg-[#0477BF] text-white"
-                : "hover:bg-gray-100"
-              } mx-[0.75rem] rounded-md transition-all duration-200`}
-            onClick={() => handleNavigate("/admin")}
-          >
-            <MdManageAccounts
-              size={ICON_SIZES.INTERFACE_LARGE}
-              className={`${isActive("/admin") ? "text-white" : "text-gray-500"
-                } flex-shrink-0 transition-colors duration-200`}
-            />
-            <span
-              className="ml-[0.75rem] font-medium whitespace-nowrap"
-              style={{
-                opacity: expanded ? 1 : 0,
-                transform: expanded ? "translateX(0)" : "translateX(-10px)",
-                transition:
-                  "opacity 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms, transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms",
-                transitionDelay: expanded ? "180ms" : "0ms",
-              }}
-            >
-              Account Management
-            </span>
-          </div>
-        )}
-
-        {/* Keyword Stats */}
-        {role === "Admin" && (
-          <div
-            className={`flex items-center cursor-pointer p-[0.75rem] ${isActive("/admin/keyword-stats")
-                ? "bg-[#0477BF] text-white"
-                : "hover:bg-gray-100"
-              } mx-[0.75rem] rounded-md transition-all duration-200`}
-            onClick={() => handleNavigate("/admin/keyword-stats")}
-          >
-            <MdBarChart
-              size={ICON_SIZES.INTERFACE_LARGE}
-              className={`${isActive("/admin/keyword-stats") ? "text-white" : "text-gray-500"
-                } flex-shrink-0 transition-colors duration-200`}
-            />
-            <span
-              className="ml-[0.75rem] font-medium whitespace-nowrap"
-              style={{
-                opacity: expanded ? 1 : 0,
-                transform: expanded ? "translateX(0)" : "translateX(-10px)",
-                transition:
-                  "opacity 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms, transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 50ms",
-                transitionDelay: expanded ? "190ms" : "0ms",
-              }}
-            >
-              Keyword Stats
-            </span>
-          </div>
-        )}
-      </div>
+          {expanded ? (
+            <><MdChevronLeft size={20} /><span>Collapse</span></>
+          ) : (
+            <MdChevronRight size={20} />
+          )}
+        </button>
+      )}
     </div>
   );
 };

@@ -126,7 +126,7 @@ function LoginForm({ route, method }) {
             onChange={handleEmailChange}
             className={`w-full pl-10 pr-4 py-2 border ${
               emailError || generalError ? "border-red-500" : "border-gray-300"
-            } rounded-md focus:outline-none focus:ring-1 focus:ring-[#004098CC]`}
+            } rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-700`}
             placeholder="your.email@example.com"
           />
         </div>
@@ -212,7 +212,7 @@ function LoginForm({ route, method }) {
         <a
           // Removed: forgot password (SSO-only)
           href="#"
-          className="text-[#004098CC] text-sm hover:underline"
+          className="text-indigo-700 text-sm hover:underline"
         >
           Forgot password?
         </a>
@@ -221,7 +221,7 @@ function LoginForm({ route, method }) {
       <div className="flex justify-center">
         <button
           type="submit"
-          className="w-48 py-2 bg-[#004098CC] text-white rounded-full hover:bg-[#00306E] transition font-medium"
+          className="w-48 py-2 bg-indigo-700 text-white rounded-full hover:bg-indigo-800 transition font-medium"
           disabled={loading}
         >
           {loading ? "Signing in..." : "Sign in"}

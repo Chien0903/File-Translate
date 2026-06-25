@@ -95,7 +95,7 @@ const EditUserRole = ({ isOpen, onClose, userId, onUserUpdated }) => {
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h3 className="text-2xl font-bold text-[#004098] mb-2">
+          <h3 className="text-2xl font-bold text-indigo-700 mb-2">
             Edit User Role
           </h3>
           <p className="text-gray-600 text-sm">Manage user role information</p>
@@ -201,7 +201,7 @@ const EditUserRole = ({ isOpen, onClose, userId, onUserUpdated }) => {
                   <label
                     key={r}
                     className={`flex items-center space-x-3 cursor-pointer p-4 border-2 rounded-lg transition-all duration-200 ${role === r
-                      ? "border-[#004098] bg-[#004098]/5"
+                      ? "border-indigo-700 bg-indigo-700/5"
                       : "border-gray-200 hover:border-gray-300"
                       }`}
                   >
@@ -211,10 +211,10 @@ const EditUserRole = ({ isOpen, onClose, userId, onUserUpdated }) => {
                       value={r}
                       checked={role === r}
                       onChange={() => setRole(r)}
-                      className="w-4 h-4 text-[#004098] focus:ring-[#004098] focus:ring-2"
+                      className="w-4 h-4 text-indigo-700 focus:ring-indigo-700 focus:ring-2"
                     />
                     <span
-                      className={`font-medium ${role === r ? "text-[#004098]" : "text-gray-700"
+                      className={`font-medium ${role === r ? "text-indigo-700" : "text-gray-700"
                         }`}
                     >
                       {r}
@@ -236,7 +236,7 @@ const EditUserRole = ({ isOpen, onClose, userId, onUserUpdated }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-3 bg-gradient-to-r from-[#004098] to-[#0477BF] text-white rounded-lg hover:from-[#003875] hover:to-[#035a9e] font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 bg-gradient-to-r from-indigo-700 to-indigo-500 text-white rounded-lg hover:from-indigo-800 hover:to-[#035a9e] font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Saving..." : "Save Changes"}
               </button>

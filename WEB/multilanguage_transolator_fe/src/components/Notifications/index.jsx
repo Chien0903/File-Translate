@@ -360,8 +360,9 @@ const Notifications = () => {
             (n) =>
               n.keyword_details?.some(
                 (k) =>
-                  k.japanese === keyword.japanese &&
-                  k.english === keyword.english
+                  k.id === keyword.id ||
+                  (k.translations && keyword.translations &&
+                    JSON.stringify(k.translations) === JSON.stringify(keyword.translations))
               )
           );
 
@@ -573,7 +574,7 @@ const Notifications = () => {
             }}
           >
             <div className="flex justify-center items-center mb-4">
-              <h3 className="text-lg text-[#004098CC] font-bold">
+              <h3 className="text-lg text-indigo-700 font-bold">
                 {selectedNotification.action_type === "updated"
                   ? "KEYWORDS UPDATED"
                   : selectedNotification.action_type === "deleted"
@@ -584,105 +585,53 @@ const Notifications = () => {
               </h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse bg-white overflow-hidden">
-                <thead>
-                  <tr className="bg-[#004098CC] text-white font-bold">
-                    <th className="p-[0.75rem] border-b border-gray-300 text-center w-[5%]">
-                      No
-                    </th>
-                    <th className="p-[0.75rem] border-b border-gray-300 text-center w-[12%]">
-                      Japanese
-                    </th>
-                    <th className="p-[0.75rem] border-b border-gray-300 text-center w-[12%]">
-                      English
-                    </th>
-                    <th className="p-[0.75rem] border-b border-gray-300 text-center w-[12%]">
-                      Vietnamese
-                    </th>
-                    <th className="p-[0.75rem] border-b border-gray-300 text-center w-[12%]">
-                      Chinese (Traditional)
-                    </th>
-                    <th className="p-[0.75rem] border-b border-gray-300 text-center w-[12%]">
-                      Chinese (Simplified)
-                    </th>
-                    <th className="p-[0.75rem] border-b border-gray-300 text-center w-[10%]">
-                      Action
-                    </th>
-                    <th className="p-[0.75rem] border-b border-gray-300 text-center w-[15%]">
-                      {selectedNotification.action_type === "deleted"
-                        ? "Deleted Time"
-                        : selectedNotification.action_type === "updated"
-                        ? "Updated Time"
-                        : selectedNotification.action_type === "added"
-                        ? "Added Time"
-                        : "Update Time"}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedNotification.keyword_details?.map(
-                    (keyword, index) => (
-                      <tr
-                        key={index}
-                        className={`hover:bg-gray-50 cursor-pointer transition-colors duration-150 ${
-                          index % 2 === 0 ? "bg-white" : "bg-[#F8F8F8]"
-                        }`}
-                      >
-                        <td className="p-[0.75rem] border-b border-gray-200 text-center">
-                          {index + 1}
-                        </td>
-                        <td className="p-[0.75rem] border-b border-gray-200 text-center truncate max-w-[150px]">
-                          {keyword.japanese || ""}
-                        </td>
-                        <td className="p-[0.75rem] border-b border-gray-200 text-center truncate max-w-[150px]">
-                          {keyword.english || ""}
-                        </td>
-                        <td className="p-[0.75rem] border-b border-gray-200 text-center truncate max-w-[150px]">
-                          {keyword.vietnamese || ""}
-                        </td>
-                        <td className="p-[0.75rem] border-b border-gray-200 text-center truncate max-w-[150px]">
-                          {keyword.chinese_traditional || ""}
-                        </td>
-                        <td className="p-[0.75rem] border-b border-gray-200 text-center truncate max-w-[150px]">
-                          {keyword.chinese_simplified || ""}
-                        </td>
-                        <td className="p-[0.75rem] border-b border-gray-200 text-center">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                              (keyword.action ||
-                                selectedNotification.action_type) === "updated"
-                                ? "bg-blue-100 text-blue-800"
-                                : (keyword.action ||
-                                    selectedNotification.action_type) ===
-                                  "deleted"
-                                ? "bg-red-100 text-red-800"
-                                : (keyword.action ||
-                                    selectedNotification.action_type) ===
-                                  "added"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {(
-                              keyword.action ||
-                              selectedNotification.action_type ||
-                              "updated"
-                            ).toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="p-[0.75rem] border-b border-gray-200 text-center text-sm truncate">
-                          {formatDate(
-                            keyword.updated_at ||
-                              keyword.deleted_at ||
-                              keyword.added_at ||
-                              selectedNotification.created_at
-                          )}
-                        </td>
+              {(() => {
+                const details = selectedNotification.keyword_details || [];
+                const langCodes = [...new Set(details.flatMap((kw) => Object.keys(kw.translations || {})))];
+                const timeLabel = selectedNotification.action_type === "deleted" ? "Deleted Time"
+                  : selectedNotification.action_type === "updated" ? "Updated Time"
+                  : selectedNotification.action_type === "added" ? "Added Time"
+                  : "Update Time";
+                return (
+                  <table className="w-full border-collapse bg-white overflow-hidden">
+                    <thead>
+                      <tr className="bg-indigo-700 text-white font-bold">
+                        <th className="p-[0.75rem] border-b border-gray-300 text-center w-[5%]">No</th>
+                        {langCodes.map((code) => (
+                          <th key={code} className="p-[0.75rem] border-b border-gray-300 text-center" style={{ minWidth: 120 }}>{code.toUpperCase()}</th>
+                        ))}
+                        <th className="p-[0.75rem] border-b border-gray-300 text-center w-[10%]">Action</th>
+                        <th className="p-[0.75rem] border-b border-gray-300 text-center w-[15%]">{timeLabel}</th>
                       </tr>
-                    )
-                  )}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {details.map((keyword, index) => (
+                        <tr key={index} className={`hover:bg-gray-50 cursor-pointer transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-[#F8F8F8]"}`}>
+                          <td className="p-[0.75rem] border-b border-gray-200 text-center">{index + 1}</td>
+                          {langCodes.map((code) => (
+                            <td key={code} className="p-[0.75rem] border-b border-gray-200 text-center truncate max-w-[150px]">
+                              {(keyword.translations || {})[code] || ""}
+                            </td>
+                          ))}
+                          <td className="p-[0.75rem] border-b border-gray-200 text-center">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              (keyword.action || selectedNotification.action_type) === "updated" ? "bg-blue-100 text-blue-800"
+                              : (keyword.action || selectedNotification.action_type) === "deleted" ? "bg-red-100 text-red-800"
+                              : (keyword.action || selectedNotification.action_type) === "added" ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                            }`}>
+                              {(keyword.action || selectedNotification.action_type || "updated").toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="p-[0.75rem] border-b border-gray-200 text-center text-sm truncate">
+                            {formatDate(keyword.updated_at || keyword.deleted_at || keyword.added_at || selectedNotification.created_at)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                );
+              })()}
             </div>
           </div>
         </PopupPortal>

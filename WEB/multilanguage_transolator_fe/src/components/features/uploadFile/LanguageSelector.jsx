@@ -1,21 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { buttonStyles } from "../../../styles/buttonStyles";
 
-const LANGUAGE_CODES = {
-  English: "en",
-  Japanese: "ja",
-  "Chinese (Simplified)": "zh-CN",
-  "Chinese (Traditional)": "zh-TW",
-  Vietnamese: "vi",
-  // Order for newly added languages
-  Bengali: "bn",
-  Indonesian: "id",
-  Hindi: "hi",
-  Oriya: "or",
-  Thai: "th",
-};
-
 const LanguageSelector = ({
+  allLanguages = [],
   selectedOriginLanguage,
   onOriginLanguageChange,
   selectedTargetLanguages,
@@ -57,8 +44,7 @@ const LanguageSelector = ({
     onOriginLanguageChange(language);
     setShowLanguages(false);
 
-    // Filter out the selected origin language and handle Chinese variants
-    let filtered = Object.keys(LANGUAGE_CODES).filter((l) => l !== language);
+    let filtered = allLanguages.filter((l) => l !== language);
 
     if (language === "Chinese (Traditional)") {
       filtered = filtered.filter((l) => l !== "Chinese (Simplified)");
@@ -90,14 +76,14 @@ const LanguageSelector = ({
         {showLanguages && (
           <div className="absolute left-0 top-full mt-1 bg-white rounded-lg shadow-md w-48 z-10 overflow-hidden">
             <ul className="py-1">
-              {Object.keys(LANGUAGE_CODES).map((lang, index) => (
+              {allLanguages.map((lang, index) => (
                 <li
                   key={lang}
                   className={`py-2.5 px-2 cursor-pointer text-center ${
                     selectedOriginLanguage === lang
-                      ? "bg-[#F0F7FF] text-[#0066CC]"
-                      : "hover:bg-[#F8FBFF] text-gray-700"
-                  } ${index !== 0 ? "border-t border-[#E6F0FF]" : ""}`}
+                      ? "bg-indigo-50 text-indigo-600"
+                      : "hover:bg-indigo-50 text-gray-700"
+                  } ${index !== 0 ? "border-t border-indigo-50" : ""}`}
                   onClick={() => handleOriginLanguageSelect(lang)}
                 >
                   <span className="text-sm block w-full">{lang}</span>
@@ -126,15 +112,15 @@ const LanguageSelector = ({
                   key={lang}
                   className={`py-3 px-2 cursor-pointer flex items-center ${
                     selectedTargetLanguages.includes(lang)
-                      ? "bg-[#F0F7FF] text-[#0066CC]"
-                      : "hover:bg-[#F8FBFF] text-gray-700"
-                  } ${index !== 0 ? "border-t border-[#E6F0FF]" : ""}`}
+                      ? "bg-indigo-50 text-indigo-600"
+                      : "hover:bg-indigo-50 text-gray-700"
+                  } ${index !== 0 ? "border-t border-indigo-50" : ""}`}
                   onClick={() => handleTargetLanguageSelect(lang)}
                 >
                   <div
                     className={`w-5 h-5 flex items-center justify-center mr-3 ${
                       selectedTargetLanguages.includes(lang)
-                        ? "text-[#0066CC]"
+                        ? "text-indigo-600"
                         : "text-gray-300"
                     }`}
                   >

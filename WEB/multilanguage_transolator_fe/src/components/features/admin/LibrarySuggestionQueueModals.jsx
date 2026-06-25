@@ -2,19 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FiX, FiUsers, FiCheck, FiTrash2, FiSearch, FiAlertTriangle, FiEyeOff } from "react-icons/fi";
 import { FaExclamationTriangle } from "react-icons/fa";
 import Pagination from "../../Pagination";
-
-const LANG_ROWS = [
-  { key: "japanese", label: "Japanese" },
-  { key: "english", label: "English" },
-  { key: "vietnamese", label: "Vietnamese" },
-  { key: "chinese_traditional", label: "Chinese (Trad.)" },
-  { key: "chinese_simplified", label: "Chinese (Simp.)" },
-  { key: "bengali", label: "Bengali" },
-  { key: "indonesian", label: "Indonesian" },
-  { key: "hindi", label: "Hindi" },
-  { key: "oriya", label: "Oriya" },
-  { key: "thai", label: "Thai" },
-];
+import { useLibraryLanguages } from "../../../hooks/useLibraryLanguages";
 
 const modalShell =
   "rounded-xl border border-gray-200 shadow-xl overflow-hidden flex flex-col bg-white";
@@ -44,7 +32,7 @@ export function QueueThresholdModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
       <div className={`${modalShell} max-w-md w-full`}>
-        <div className="flex justify-between items-center px-5 py-4 bg-[#004098] text-white">
+        <div className="flex justify-between items-center px-5 py-4 bg-indigo-700 text-white">
           <h3 className="text-base font-semibold tracking-tight">
             Queue threshold
           </h3>
@@ -73,7 +61,7 @@ export function QueueThresholdModal({
             type="number"
             min={2}
             max={9999}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 mb-5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0477BF] focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 mb-5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             value={value}
             onChange={(e) => { setValue(e.target.value); setShowConfirm(false); }}
           />
@@ -89,7 +77,7 @@ export function QueueThresholdModal({
               type="button"
               disabled={saving}
               onClick={() => setShowConfirm(true)}
-              className="px-5 py-2 rounded-full bg-[#004098] text-white text-sm font-medium hover:bg-[#003875] disabled:opacity-50 transition-colors"
+              className="px-5 py-2 rounded-full bg-indigo-700 text-white text-sm font-medium hover:bg-indigo-800 disabled:opacity-50 transition-colors"
             >
               Save
             </button>
@@ -143,15 +131,21 @@ export function QueueThresholdModal({
   );
 }
 function LangTable({ data }) {
+  const { libraryLanguages } = useLibraryLanguages();
+  const translations = data?.translations || {};
+  const allLangs = [
+    { code: "en", label: "English" },
+    ...libraryLanguages.map((l) => ({ code: l.code, label: l.label })),
+  ];
   return (
     <div className="text-xs border border-gray-200 rounded-lg overflow-hidden max-h-52 overflow-y-auto bg-gray-50/50">
       <table className="w-full">
         <tbody>
-          {LANG_ROWS.map(({ key, label }) => {
-            const v = data?.[key];
+          {allLangs.map(({ code, label }) => {
+            const v = translations[code];
             if (!v || String(v).trim() === "") return null;
             return (
-              <tr key={key} className="border-b border-gray-100 last:border-0">
+              <tr key={code} className="border-b border-gray-100 last:border-0">
                 <td className="p-2 bg-white font-medium text-gray-500 w-[38%] border-r border-gray-100">
                   {label}
                 </td>
@@ -253,7 +247,7 @@ export function SuggestionQueueModal({
       <div
         className={`${modalShell} max-w-5xl w-full h-[90vh] min-h-0`}
       >
-        <div className="flex justify-between items-start gap-3 px-5 py-4 bg-[#004098] text-white shrink-0">
+        <div className="flex justify-between items-start gap-3 px-5 py-4 bg-indigo-700 text-white shrink-0">
           <div>
             <h3 className="text-base font-semibold tracking-tight">
               Suggestion search
@@ -275,7 +269,7 @@ export function SuggestionQueueModal({
                 <FaExclamationTriangle size={14} className="shrink-0" />
                 Duplicate alerts
                 {typeof duplicateAlertCount === "number" && duplicateAlertCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1 min-w-[1.35rem] h-[1.35rem] px-1 flex items-center justify-center rounded-full bg-red-600 text-white text-[11px] font-bold ring-2 ring-[#004098]">
+                  <span className="absolute -top-1.5 -right-1 min-w-[1.35rem] h-[1.35rem] px-1 flex items-center justify-center rounded-full bg-red-600 text-white text-[11px] font-bold ring-2 ring-indigo-700">
                     {duplicateAlertCount > 99 ? "99+" : duplicateAlertCount}
                   </span>
                 )}
@@ -298,7 +292,7 @@ export function SuggestionQueueModal({
               <div className="relative">
                 {loading ? (
                   <div className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2">
-                    <div className="h-[18px] w-[18px] animate-spin rounded-full border-2 border-gray-300 border-t-[#0477BF]" />
+                    <div className="h-[18px] w-[18px] animate-spin rounded-full border-2 border-gray-300 border-t-indigo-500" />
                   </div>
                 ) : (
                   <FiSearch
@@ -315,7 +309,7 @@ export function SuggestionQueueModal({
                       ? "Step 2: Search keyword for selected user"
                       : "Step 1: Search user name or email"
                   }
-                  className={`w-full border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-[#0477BF] focus:outline-none focus:ring-2 focus:ring-[#0477BF]/25 ${
+                  className={`w-full border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 ${
                     !selectedUser && filteredUsers.length > 0 ? "rounded-t-2xl rounded-b-md" : "rounded-full"
                   }`}
                   value={selectedUser ? keywordQuery : userQuery}
@@ -367,7 +361,7 @@ export function SuggestionQueueModal({
 
             {selectedUser && (
               <div className="mt-3 flex items-center gap-2 text-xs">
-                <span className="px-2.5 py-1 rounded-full bg-[#E6F1F8] text-[#004098] font-medium">
+                <span className="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-medium">
                   User: {selectedUser}
                 </span>
                 <button
@@ -437,7 +431,7 @@ export function SuggestionQueueModal({
                         className="border border-gray-200 rounded-xl p-4 flex flex-col lg:flex-row gap-4 bg-white shadow-sm"
                       >
                         <div className="flex shrink-0 flex-col gap-2 text-sm lg:w-[11rem]">
-                          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#E6F1F8] px-2.5 py-1 text-xs font-semibold text-[#004098]">
+                          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
                             <FiUsers className="shrink-0" size={14} />
                             {row.user_display || row.user_email || "Unknown"}
                           </span>
@@ -451,26 +445,7 @@ export function SuggestionQueueModal({
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="text-xs border border-gray-200 rounded-lg overflow-hidden bg-gray-50/50">
-                            <table className="w-full">
-                              <tbody>
-                                {LANG_ROWS.map(({ key, label }) => {
-                                  const v = row[key];
-                                  if (!v || String(v).trim() === "") return null;
-                                  return (
-                                    <tr key={key} className="border-b border-gray-100 last:border-0">
-                                      <td className="p-2 bg-white font-medium text-gray-500 w-[38%] border-r border-gray-100">
-                                        {label}
-                                      </td>
-                                      <td className="p-2 text-gray-900 break-words bg-white">
-                                        {v}
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
+                          <LangTable data={row} />
                         </div>
                         <div className="flex shrink-0 flex-row justify-end gap-2 lg:flex-col">
                           <button
@@ -562,8 +537,8 @@ export function DuplicateLibraryCompareModal({
             </h4>
             <LangTable data={existingApproved} />
           </div>
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm ring-2 ring-[#0477BF]/20">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-[#004098] mb-3 pb-2 border-b border-gray-100">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm ring-2 ring-indigo-500/20">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-indigo-700 mb-3 pb-2 border-b border-gray-100">
               Pending suggestion
             </h4>
             <LangTable data={pendingSuggestion} />
@@ -590,7 +565,7 @@ export function DuplicateLibraryCompareModal({
             type="button"
             disabled={busy}
             onClick={onUseSuggestion}
-            className="px-5 py-2 rounded-full bg-[#004098] text-white text-sm font-medium hover:bg-[#003875] disabled:opacity-50"
+            className="px-5 py-2 rounded-full bg-indigo-700 text-white text-sm font-medium hover:bg-indigo-800 disabled:opacity-50"
           >
             Use suggestion (update library)
           </button>
@@ -688,8 +663,8 @@ export function DuplicateAlertsModal({
                               <LangTable data={ex} />
                             </div>
                           )}
-                          <div className="rounded-lg border border-gray-200 p-3 ring-2 ring-[#0477BF]/20">
-                            <h4 className="text-xs font-semibold uppercase tracking-wide text-[#004098] mb-2 pb-1.5 border-b border-gray-100">
+                          <div className="rounded-lg border border-gray-200 p-3 ring-2 ring-indigo-500/20">
+                            <h4 className="text-xs font-semibold uppercase tracking-wide text-indigo-700 mb-2 pb-1.5 border-b border-gray-100">
                               Pending suggestion #{s?.id}
                             </h4>
                             <LangTable data={s} />
@@ -725,7 +700,7 @@ export function DuplicateAlertsModal({
                               onClick={() =>
                                 onApprove(s.id, "use_pending", alert.notification_id)
                               }
-                              className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-[#004098] text-white text-sm font-medium hover:bg-[#003875] disabled:opacity-50 transition-colors"
+                              className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-indigo-700 text-white text-sm font-medium hover:bg-indigo-800 disabled:opacity-50 transition-colors"
                             >
                               Use suggestion (update library)
                             </button>

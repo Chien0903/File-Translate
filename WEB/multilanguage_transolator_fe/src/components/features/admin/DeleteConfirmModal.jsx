@@ -12,7 +12,7 @@ const DeleteConfirmModal = ({ isOpen, onConfirm, onCancel }) => {
                 className="bg-white p-6 rounded-lg shadow-xl max-w-md w-11/12 text-center"
                 onClick={(e) => e.stopPropagation()}
             >
-                <h3 className="text-lg text-[#004098CC] font-bold mb-4">
+                <h3 className="text-lg text-indigo-700 font-bold mb-4">
                     Confirm Delete
                 </h3>
                 <p className="text-gray-600 mb-6">

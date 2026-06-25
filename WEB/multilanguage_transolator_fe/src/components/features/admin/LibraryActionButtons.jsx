@@ -24,16 +24,7 @@ const LibraryActionButtons = ({
 
   const handleExport = () => {
     const exportData = keywords.map((keyword) => ({
-      japanese: keyword.japanese || "",
-      english: keyword.english || "",
-      vietnamese: keyword.vietnamese || "",
-      chinese_traditional: keyword.chinese_traditional || "",
-      chinese_simplified: keyword.chinese_simplified || "",
-      bengali: keyword.bengali || "",
-      indonesian: keyword.indonesian || "",
-      hindi: keyword.hindi || "",
-      oriya: keyword.oriya || "",
-      thai: keyword.thai || "",
+      ...(keyword.translations || {}),
       date_modified: keyword.date_modified || "",
     }));
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -171,7 +162,7 @@ const LibraryActionButtons = ({
           onOpenQueueThreshold && (
             <button
               type="button"
-              className="flex items-center justify-center px-4 py-2 min-w-[140px] rounded-full border-2 border-[#004098] text-[#004098] bg-white hover:bg-[#E6F1F8] transition-colors shadow-sm"
+              className="flex items-center justify-center px-4 py-2 min-w-[140px] rounded-full border-2 border-indigo-700 text-indigo-700 bg-white hover:bg-indigo-50 transition-colors shadow-sm"
               onClick={onOpenQueueThreshold}
               title="Minimum distinct users who must suggest the same content before it appears in the queue"
             >
@@ -183,7 +174,7 @@ const LibraryActionButtons = ({
           onOpenSuggestionQueue && (
             <button
               type="button"
-              className="flex items-center justify-center px-4 py-2 min-w-[168px] rounded-full bg-[#004098] text-white hover:bg-[#003875] transition-colors shadow-sm"
+              className="flex items-center justify-center px-4 py-2 min-w-[168px] rounded-full bg-indigo-700 text-white hover:bg-indigo-800 transition-colors shadow-sm"
               onClick={onOpenSuggestionQueue}
               title="Search pending suggestions by user name"
             >

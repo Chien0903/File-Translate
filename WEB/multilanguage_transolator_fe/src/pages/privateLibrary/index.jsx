@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useLibraryLanguages } from "../../hooks/useLibraryLanguages";
 import {
   FiSearch,
   FiAlertCircle,
@@ -27,7 +28,6 @@ import {
   KeywordFormModal,
   DeleteModal,
   StatusLegend,
-  ALL_LANGUAGES,
   EMPTY_KEYWORD,
 } from "../../components/features/privateLibrary";
 
@@ -59,6 +59,7 @@ const buildKeywordSignature = (item) =>
 
 // ---- Main Page ----
 const PrivateLibrary = () => {
+  const { libraryLanguages } = useLibraryLanguages();
   const [keywords, setKeywords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -83,8 +84,30 @@ const PrivateLibrary = () => {
   const statusFilterRef = useRef(null);
   const [visibleColumns, setVisibleColumns] = useState(() => {
     const saved = localStorage.getItem("privateLibraryVisibleColumns");
-    return saved ? JSON.parse(saved) : ALL_LANGUAGES.map((l) => l.key);
+    return saved ? JSON.parse(saved) : null; // null = "show all enabled" — resolved after hook loads
   });
+
+  // When libraryLanguages loads, initialise or migrate visibleColumns
+  useEffect(() => {
+    if (libraryLanguages.length === 0) return;
+    const enabledCodes = libraryLanguages.map((l) => l.code);
+    if (visibleColumns === null) {
+      setVisibleColumns(enabledCodes);
+      return;
+    }
+    // If none of the saved values match current ISO codes, saved prefs are stale — reset
+    const hasAnyMatch = visibleColumns.some((k) => enabledCodes.includes(k));
+    if (!hasAnyMatch) {
+      setVisibleColumns(enabledCodes);
+    }
+  }, [libraryLanguages]);
+
+  // Effective visible columns — intersect saved prefs with currently-enabled languages
+  const effectiveVisibleColumns = useMemo(() => {
+    if (!visibleColumns) return [];
+    const enabledKeys = new Set(libraryLanguages.map((l) => l.code));
+    return visibleColumns.filter((k) => enabledKeys.has(k));
+  }, [visibleColumns, libraryLanguages]);
 
   const columnFilterRef = useRef(null);
   const legendRef = useRef(null);
@@ -326,16 +349,7 @@ const PrivateLibrary = () => {
       return;
     }
     const exportData = keywords.map((kw) => ({
-      english: kw.english || "",
-      japanese: kw.japanese || "",
-      vietnamese: kw.vietnamese || "",
-      chinese_traditional: kw.chinese_traditional || "",
-      chinese_simplified: kw.chinese_simplified || "",
-      bengali: kw.bengali || "",
-      indonesian: kw.indonesian || "",
-      hindi: kw.hindi || "",
-      oriya: kw.oriya || "",
-      thai: kw.thai || "",
+      ...(kw.translations || {}),
       suggestion_status: kw.suggestion_status || "",
     }));
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -352,11 +366,7 @@ const PrivateLibrary = () => {
   // ---- Sorting & Filtering ----
   const filteredKeywords = keywords
     .filter((item) => {
-      const fields = [
-        item.english, item.japanese, item.vietnamese,
-        item.chinese_traditional, item.chinese_simplified,
-        item.bengali, item.indonesian, item.hindi, item.oriya, item.thai,
-      ];
+      const fields = Object.values(item.translations || {});
       const matchSearch = fields.some((f) =>
         (f || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -387,18 +397,19 @@ const PrivateLibrary = () => {
   const suggestableOnPage = currentItems.filter(canSuggest);
 
   const getVisibleLanguages = () =>
-    ALL_LANGUAGES.filter((l) => visibleColumns.includes(l.key));
+    libraryLanguages.filter((l) => effectiveVisibleColumns.includes(l.code));
 
   const toggleColumnVisibility = (key) => {
     setVisibleColumns((prev) => {
-      if (prev.includes(key)) {
-        if (prev.length <= 1) {
+      const current = prev || libraryLanguages.map((l) => l.code);
+      if (current.includes(key)) {
+        if (effectiveVisibleColumns.length <= 1) {
           toast.warning("At least one language column must be visible.");
-          return prev;
+          return current;
         }
-        return prev.filter((k) => k !== key);
+        return current.filter((k) => k !== key);
       }
-      return [...prev, key];
+      return [...current, key];
     });
   };
 
@@ -538,7 +549,7 @@ const PrivateLibrary = () => {
         });
       } else {
         toast.info(data.message, {
-          style: { backgroundColor: "#004098", color: "white" },
+          style: { backgroundColor: "#4338CA", color: "white" },
           icon: <FiInfo />,
         });
       }
@@ -601,7 +612,7 @@ const PrivateLibrary = () => {
       {/* Loading bar */}
       {loading && (
         <div className="fixed top-0 left-0 w-full h-1 bg-gray-200 z-50">
-          <div className="h-full bg-[#004098CC] animate-loading-bar" />
+          <div className="h-full bg-indigo-700 animate-loading-bar" />
         </div>
       )}
 
@@ -611,15 +622,15 @@ const PrivateLibrary = () => {
           {/* Left: title + action buttons */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <MdBookmark className="text-[#004098]" size={22} />
-              <span className="text-base font-semibold text-[#004098]">
+              <MdBookmark className="text-indigo-700" size={22} />
+              <span className="text-base font-semibold text-indigo-700">
                 My Private Library
               </span>
             </div>
 
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#004098] text-white rounded-full text-sm font-medium hover:bg-[#003276] transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-700 text-white rounded-full text-sm font-medium hover:bg-[#003276] transition-colors shadow-sm"
             >
               <FiPlus size={15} />
               Add Keyword
@@ -671,7 +682,7 @@ const PrivateLibrary = () => {
 
             <button
               onClick={fetchKeywords}
-              className="p-2 text-gray-500 hover:text-[#004098] hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 text-gray-500 hover:text-indigo-700 hover:bg-gray-100 rounded-full transition-colors"
               title="Refresh"
             >
               <FiRefreshCw size={16} />
@@ -685,7 +696,7 @@ const PrivateLibrary = () => {
               <button
                 className={`flex items-center gap-2 px-4 py-2 border rounded-full transition-colors text-sm ${
                   statusFilter !== "all"
-                    ? "bg-[#004098] border-[#004098] text-white hover:bg-[#003276]"
+                    ? "bg-indigo-700 border-indigo-700 text-white hover:bg-[#003276]"
                     : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                 }`}
                 onClick={() => setShowStatusFilter(!showStatusFilter)}
@@ -731,7 +742,7 @@ const PrivateLibrary = () => {
               >
                 <FiFilter className="text-gray-600" />
                 <span className="font-medium text-gray-700">
-                  Columns ({visibleColumns.length}/{ALL_LANGUAGES.length})
+                  Columns ({effectiveVisibleColumns.length}/{libraryLanguages.length})
                 </span>
               </button>
               {showColumnFilter && (
@@ -743,15 +754,15 @@ const PrivateLibrary = () => {
                     </button>
                   </div>
                   <div className="p-2">
-                    {ALL_LANGUAGES.map((lang) => (
+                    {libraryLanguages.map((lang) => (
                       <label
-                        key={lang.key}
+                        key={lang.code}
                         className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded cursor-pointer"
                       >
                         <input
                           type="checkbox"
-                          checked={visibleColumns.includes(lang.key)}
-                          onChange={() => toggleColumnVisibility(lang.key)}
+                          checked={effectiveVisibleColumns.includes(lang.code)}
+                          onChange={() => toggleColumnVisibility(lang.code)}
                           className="w-4 h-4 text-blue-600 rounded"
                         />
                         <span className="text-sm text-gray-700 flex-1">{lang.label}</span>
@@ -830,10 +841,10 @@ const PrivateLibrary = () => {
           >
             <table className="min-w-full border-collapse bg-white">
               <thead className="sticky top-0 z-20">
-                <tr className="bg-[#004098] text-white font-bold">
+                <tr className="bg-indigo-700 text-white font-bold">
                   {/* No. */}
                   <th
-                    className="p-2 border-b border-gray-300 text-center cursor-pointer hover:bg-[#003875] sticky left-0 z-30 bg-[#004098] border-r border-white/20 text-xs"
+                    className="p-2 border-b border-gray-300 text-center cursor-pointer hover:bg-indigo-800 sticky left-0 z-30 bg-indigo-700 border-r border-white/20 text-xs"
                     style={{ width: 60, minWidth: 60 }}
                     onClick={() => handleSort("id")}
                   >
@@ -843,7 +854,7 @@ const PrivateLibrary = () => {
                   </th>
                   {/* English */}
                   <th
-                    className="p-2 border-b border-gray-300 text-center border-r border-white/20 sticky left-[60px] z-30 bg-[#004098] text-xs"
+                    className="p-2 border-b border-gray-300 text-center border-r border-white/20 sticky left-[60px] z-30 bg-indigo-700 text-xs"
                     style={{ width: 220, minWidth: 220, boxShadow: "3px 0 8px rgba(0,0,0,0.15)" }}
                   >
                     English
@@ -851,7 +862,7 @@ const PrivateLibrary = () => {
                   {/* Language columns */}
                   {getVisibleLanguages().map((lang) => (
                     <th
-                      key={lang.key}
+                      key={lang.code}
                       className="p-2 border-b border-gray-300 text-center border-r border-white/20 text-xs"
                       style={{ width: 180, minWidth: 180 }}
                     >
@@ -860,7 +871,7 @@ const PrivateLibrary = () => {
                   ))}
                   {/* Modified */}
                   <th
-                    className="p-2 border-b border-gray-300 text-center cursor-pointer hover:bg-[#003875] border-r border-white/20 text-xs"
+                    className="p-2 border-b border-gray-300 text-center cursor-pointer hover:bg-indigo-800 border-r border-white/20 text-xs"
                     style={{ width: 100, minWidth: 100 }}
                     onClick={() => handleSort("updated_at")}
                   >
@@ -870,14 +881,14 @@ const PrivateLibrary = () => {
                   </th>
                   {/* Actions */}
                   <th
-                    className="p-2 border-b border-gray-300 text-center border-r border-white/20 text-xs sticky right-[110px] z-30 bg-[#004098]"
+                    className="p-2 border-b border-gray-300 text-center border-r border-white/20 text-xs sticky right-[110px] z-30 bg-indigo-700"
                     style={{ width: 80, minWidth: 80 }}
                   >
                     Actions
                   </th>
                   {/* Suggest column header */}
                   <th
-                    className="p-2 border-b border-gray-300 text-xs sticky right-0 z-30 bg-[#004098]"
+                    className="p-2 border-b border-gray-300 text-xs sticky right-0 z-30 bg-indigo-700"
                     style={{ width: 110, minWidth: 110, boxShadow: "-3px 0 8px rgba(0,0,0,0.15)" }}
                   >
                     <div className="flex flex-col items-center gap-0.5">
@@ -951,16 +962,16 @@ const PrivateLibrary = () => {
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
                           }}
-                          title={item.english || ""}
+                          title={(item.translations || {})["en"] || ""}
                         >
-                          {item.english || (
+                          {(item.translations || {})["en"] || (
                             <span className="text-gray-400 italic">—</span>
                           )}
                         </td>
                         {/* Language columns */}
                         {getVisibleLanguages().map((lang) => (
                           <td
-                            key={lang.key}
+                            key={lang.code}
                             className="p-2 border-b border-gray-200 text-left border-r border-gray-100 text-sm"
                             style={{
                               maxWidth: 180,
@@ -968,9 +979,9 @@ const PrivateLibrary = () => {
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
                             }}
-                            title={item[lang.key] || ""}
+                            title={(item.translations || {})[lang.code] || ""}
                           >
-                            {item[lang.key] || (
+                            {(item.translations || {})[lang.code] || (
                               <span className="text-gray-300 italic">—</span>
                             )}
                           </td>
@@ -1139,7 +1150,7 @@ const PrivateLibrary = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <FaFileImport className="text-purple-500 text-2xl" />
-                <h3 className="text-lg text-[#004098] font-bold">
+                <h3 className="text-lg text-indigo-700 font-bold">
                   Preview Import Data ({importPreviewData.length} keywords)
                 </h3>
               </div>
@@ -1156,7 +1167,7 @@ const PrivateLibrary = () => {
             <div className="overflow-auto max-h-[55vh] mb-6 border border-gray-200 rounded-lg">
               <table className="w-full border-collapse bg-white min-w-max">
                 <thead className="sticky top-0 z-10">
-                  <tr className="bg-[#004098] text-white font-bold text-sm">
+                  <tr className="bg-indigo-700 text-white font-bold text-sm">
                     <th className="p-3 text-center border-r border-white/20 w-14">No</th>
                     <th className="p-3 text-center border-r border-white/20 min-w-[140px]">English</th>
                     {["Japanese","Vietnamese","Chinese Traditional","Chinese Simplified","Bengali","Indonesian","Hindi","Oriya","Thai"].map((l) => (
@@ -1168,7 +1179,7 @@ const PrivateLibrary = () => {
                   {importPreviewData.map((item, index) => (
                     <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                       <td className="p-3 border-r border-b border-gray-200 text-center text-sm text-gray-600">{index + 1}</td>
-                      <td className="p-3 border-r border-b border-gray-200 text-sm text-gray-700">{item.english || <span className="text-gray-400 italic">—</span>}</td>
+                      <td className="p-3 border-r border-b border-gray-200 text-sm text-gray-700">{(item.translations || {})["en"] || <span className="text-gray-400 italic">—</span>}</td>
                       {["japanese","vietnamese","chinese_traditional","chinese_simplified","bengali","indonesian","hindi","oriya","thai"].map((key) => (
                         <td key={key} className="p-3 border-r border-b border-gray-200 text-sm text-gray-700">
                           {item[key] || <span className="text-gray-400 italic">—</span>}
