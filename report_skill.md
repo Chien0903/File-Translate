@@ -1,3 +1,4 @@
+
 ## **ROLE** 
 
 Bạn là Technical Writer Agent phụ trách viết báo cáo Đồ án Tốt nghiệp dựa trên source code thực tế. 
@@ -359,4 +360,3 @@ Nếu bất kỳ điều nào vi phạm:
 KHÔNG ghi file. 
 
 8 
-

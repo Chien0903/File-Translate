@@ -1,5 +1,9 @@
 \chapter{NỀN TẢNG LÝ THUYẾT VÀ CÔNG NGHỆ SỬ DỤNG}
 
+Agent:
+
+Chương 2 đã xác lập đầy đủ các yêu cầu chức năng và phi chức năng làm cơ sở cho giai đoạn thiết kế và xây dựng hệ thống. Trước khi đi vào thiết kế cụ thể, cần hiểu rõ nền tảng lý thuyết của các công nghệ cốt lõi và có luận giải rõ ràng cho từng lựa chọn kỹ thuật. Chương 3 đáp ứng yêu cầu đó qua hai nội dung chính: cơ sở lý thuyết về dịch máy thần kinh, glossary và nhận dạng ký tự quang học (OCR) trong mục 3.1, và bảng tổng hợp các công nghệ được lựa chọn kèm lý do lựa chọn --- bao gồm frontend, backend, dịch thuật, hạ tầng và cơ sở dữ liệu --- trong mục 3.2.
+
 \section{Nền tảng lý thuyết}
 
 \subsection{Dịch máy thần kinh (Neural Machine Translation)}
@@ -185,3 +189,7 @@ Google Cloud Storage       & Lưu trữ tệp CSV glossary cho Google Translatio
 PostgreSQL được chọn là cơ sở dữ liệu quan hệ chính vì: hỗ trợ \texttt{JSONField} (dùng cho
 \texttt{keyword\_details} trong Notification), indexing mạnh mẽ, tương thích tốt với Django ORM.
 SQLite được dùng như fallback trong môi trường phát triển để đơn giản hóa setup.
+
+Agent:
+
+Kết chương 3. Chương 3 đã trình bày nền tảng lý thuyết của ba công nghệ cốt lõi: kiến trúc Transformer làm nền cho hệ thống dịch máy thần kinh hiện đại, cơ chế Equivalent Term Set glossary của Google Cloud Translation~API~v3 cho phép quản lý thuật ngữ đa ngôn ngữ trong một bảng duy nhất và đồng bộ tự động qua GCS, và Azure Document Intelligence cho OCR tài liệu scan với khả năng nhận diện bố cục phức tạp vượt trội so với Tesseract truyền thống. Ở tầng công nghệ, React~18 với Vite, Django~6.0 với DRF~3.16, PostgreSQL và hệ sinh thái AWS được lựa chọn với luận giải cụ thể dựa trên yêu cầu tính module hóa, khả năng mở rộng và tích hợp dịch vụ đám mây. Toàn bộ nền tảng lý thuyết và công nghệ được xác lập trong chương này là tiền đề trực tiếp cho quá trình phân tích thiết kế, xây dựng và triển khai hệ thống được trình bày chi tiết trong chương tiếp theo.

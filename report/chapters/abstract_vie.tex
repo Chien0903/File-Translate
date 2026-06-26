@@ -14,10 +14,11 @@ xử lý tài liệu dạng scan.
 Hệ thống được xây dựng theo kiến trúc ba tầng: giao diện web đơn trang (SPA) sử dụng React~18
 và Vite~6, tầng API sử dụng Django REST Framework~3.16, và tầng dữ liệu bao gồm PostgreSQL,
 AWS~S3 và Google Cloud Storage. Lõi dịch thuật tích hợp Google Cloud Translation~API~v3 với hỗ
-trợ 44 cặp bảng thuật ngữ tùy chỉnh (glossary) trên 10 ngôn ngữ: Tiếng Việt, Tiếng Nhật,
+trợ 45 cặp bảng thuật ngữ tùy chỉnh (glossary) trên 10 ngôn ngữ ban đầu (C(10,2)~=~45,
+tự động điều chỉnh khi bổ sung ngôn ngữ): Tiếng Việt, Tiếng Nhật,
 Tiếng Trung giản thể, Tiếng Trung phồn thể, Tiếng Anh, Tiếng Thái, Tiếng Bengali, Tiếng Hindi,
-Tiếng Indonesia và Tiếng Oriya. Hệ thống hỗ trợ dịch 5 định dạng tài liệu: DOCX, XLSX, PPTX,
-PDF (bao gồm cả tài liệu scan) và CSV/XLS.
+Tiếng Indonesia và Tiếng Oriya. Hệ thống hỗ trợ dịch 6 định dạng tài liệu: DOCX, XLSX, PPTX,
+PDF native-text, PDF scan và CSV/XLS.
 
 Ba đóng góp kỹ thuật nổi bật của đồ án gồm: (1)~pipeline dịch đa định dạng với thuật toán phân
 loại PDF thông minh, tự động nhận diện PDF native-text để chuyển đổi sang DOCX trước khi dịch,

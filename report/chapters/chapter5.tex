@@ -3,6 +3,10 @@
 Chương này trình bày ba đóng góp kỹ thuật nổi bật của hệ thống, mỗi đóng góp được trình bày
 theo cấu trúc: (1)~đặt vấn đề, (2)~giải pháp được đề xuất, (3)~kết quả đạt được.
 
+Agent:
+
+Trong khuôn khổ hệ thống đã được thiết kế và xây dựng tại chương 4, ba đóng góp kỹ thuật sau đây được đánh giá là có tính mới và ứng dụng thực tiễn cao nhất, đồng thời phản ánh các quyết định kiến trúc quan trọng trong quá trình phát triển: (i)~pipeline phân loại và dịch tài liệu đa định dạng với thuật toán nhận diện PDF thông minh trong mục 5.1, (ii)~hệ thống quản lý thuật ngữ ba cấp với quy trình đề xuất cộng đồng theo ngưỡng trong mục 5.2, và (iii)~cơ chế inject ngữ cảnh bảng thuật ngữ qua thread-local storage trong mục 5.3.
+
 % =========================================================
 \section{Pipeline dịch tài liệu đa định dạng với phân loại PDF thông minh}
 
@@ -83,6 +87,23 @@ Nhánh FALSE: Azure Document Intelligence OCR (PDF→text+layout) →
 \label{fig:pdf_pipeline}
 \end{figure}
 
+Agent:
+\begin{lstlisting}[language=bash, caption={Mermaid source -- Pipeline phân loại và dịch PDF}]
+flowchart TD
+    INPUT["Input: Tệp PDF"] --> CHECK{"is_pdf_truly_editable?\n(3 tiêu chí:\n1. has extractable text\n2. NOT all images\n3. char/word ratio OK)"}
+
+    CHECK -->|"TRUE: PDF native text"| CONV["ConvertAPI\nPDF -> DOCX"]
+    CHECK -->|"FALSE: PDF scan / image"| OCR["Azure Document Intelligence\nOCR Pipeline"]
+
+    CONV --> DOCX_TRANS["translate_docx()\nBatch XML paragraph translation\n+ glossary injection"]
+    DOCX_TRANS --> OUT_DOCX["Output: DOCX da dich\n(bao toan dinh dang)"]
+
+    OCR --> EXTRACT["Trich xuat text + layout\n(bang, doan van, tieu de)"]
+    EXTRACT --> TRANS["translate_text_with_glossary()\nper segment -- thread-local context"]
+    TRANS --> DRAW["Ve lai PDF\nvoi text da dich + font embedding"]
+    DRAW --> OUT_PDF["Output: PDF da dich"]
+\end{lstlisting}
+
 \subsection{Kết quả đạt được}
 
 \begin{itemize}
@@ -122,8 +143,9 @@ Yêu cầu đặt ra:
 Đồ án thiết kế hệ thống quản lý thuật ngữ theo ba cấp độ:
 
 \textbf{Cấp 1 -- Thư viện cá nhân (Private Library):} Mỗi người dùng có bảng
-\texttt{PrivateKeyword} riêng với 10 trường ngôn ngữ và trường ghi chú. Chỉ người dùng đó
-nhìn thấy và có thể sử dụng khi dịch với \texttt{library\_mode=private}.
+\texttt{PrivateKeyword} riêng, lưu từ điển đa ngôn ngữ qua trường \texttt{translations}
+(JSONField, dạng \texttt{\{"vi": "...", "ja": "...", ...\}}) và trường \texttt{note}. Chỉ
+người dùng đó nhìn thấy và có thể sử dụng khi dịch với \texttt{library\_mode=private}.
 
 \textbf{Cấp 2 -- Hàng chờ đề xuất (Suggestion Queue):} Khi người dùng muốn chia sẻ thuật
 ngữ lên thư viện chung, hệ thống lưu vào \texttt{KeywordQueue}. Hệ thống đếm số người dùng
@@ -136,8 +158,9 @@ Khi duyệt (\texttt{status=approved}), hệ thống trigger background thread:
 \begin{enumerate}
   \item Tạo tệp CSV từ tất cả \texttt{KeywordSuggestion} đã duyệt.
   \item Upload CSV lên Google Cloud Storage.
-  \item Gọi \texttt{manage\_glossary(mode=1)} để cập nhật 44 glossary trên Google Translation
-    API.
+  \item Gọi \texttt{manage\_glossary(mode=1)} để cập nhật 45 glossary trên Google Translation
+    API (toàn bộ C(n,2) cặp với $n$ ngôn ngữ active, lấy động qua
+    \texttt{generate\_pairs\_from\_db()}).
 \end{enumerate}
 
 Agent:
@@ -155,12 +178,46 @@ Cấp 2 (Suggestion Queue): User nhấn ``Đề xuất'' → KeywordQueue → H�
 users → Nếu $\geq$ ngưỡng → tạo KeywordSuggestion(pending) → notify Library Keeper.
 \newline
 Cấp 3 (Common Library): Library Keeper duyệt → status=approved → background thread →
-CSV → GCS upload → Google Translation API update 44 glossaries. Khi dịch với mode=common:
+CSV → GCS upload → Google Translation API update 45 glossaries (C(10,2)). Khi dịch với mode=common:
 thread-local context → inject common glossary vào Translation API.
 \vspace{0.5cm}}}
 \caption{Kiến trúc hệ thống quản lý thuật ngữ ba cấp}
 \label{fig:library_arch}
 \end{figure}
+
+Agent:
+\begin{lstlisting}[language=bash, caption={Mermaid source -- Kien truc he thong quan ly thuat ngu ba cap}]
+flowchart TB
+    subgraph L1["Cap 1: Private Library"]
+        direction LR
+        USER["Nguoi dung"] -->|"CRUD thuat ngu"| PK[("PrivateKeyword\ntranslations: JSONField\n{vi:.., ja:.., en:..}")]
+    end
+
+    subgraph L2["Cap 2: Suggestion Queue"]
+        direction TB
+        PK -->|"De xuat"| KQ[("KeywordQueue\nis_processed: False")]
+        KQ -->|"Background job:\ndem unique users >= min_suggesters"| KS[("KeywordSuggestion\nstatus=pending")]
+        KS -->|"Thong bao"| LK["Library Keeper"]
+    end
+
+    subgraph L3["Cap 3: Common Library"]
+        direction TB
+        LK -->|"Duyet / Tu choi"| KS_A[("KeywordSuggestion\nstatus=approved")]
+        KS_A -->|"async_manage_common_glossaries()\nbackground thread"| CSV["CSV file\n(pair rows)"]
+        CSV -->|"upload_csv_to_gcs()"| GCS[("Google Cloud Storage\nglossary CSV")]
+        GCS -->|"manage_glossary()\ncreate / update"| GCTA["Google Translation API\n45 glossary pairs (C(10,2))"]
+    end
+
+    subgraph TRANS["Qua trinh dich"]
+        direction LR
+        MODE{"library_mode?"}
+        MODE -->|"mode=private"| PGLOSS["Private Glossary\n_user_ID"]
+        MODE -->|"mode=common"| CGLOSS["Common Glossary\ntoray_translation_glossary_*"]
+    end
+
+    GCTA --> CGLOSS
+    PK -.->|"private mode"| PGLOSS
+\end{lstlisting}
 
 Cơ chế ngưỡng đề xuất giúp lọc các thuật ngữ được ít người quan tâm và đảm bảo chỉ những thuật
 ngữ được nhiều người dùng xác nhận mới vào hàng chờ duyệt, giảm tải cho Library Keeper.
@@ -170,8 +227,9 @@ ngữ được nhiều người dùng xác nhận mới vào hàng chờ duyệt
 \begin{itemize}
   \item Hệ thống thuật ngữ hoạt động tự động từ đầu đến cuối: từ đề xuất của người dùng đến
     áp dụng vào Translation API mà không cần thao tác thủ công trên Google Console.
-  \item 44 cặp glossary được đồng bộ tự động sau mỗi lần duyệt thuật ngữ, bao phủ toàn bộ
-    10 ngôn ngữ hỗ trợ.
+  \item 45 cặp glossary (C(10,2) với 10 ngôn ngữ mặc định, tự động mở rộng theo số ngôn ngữ
+    active trong DB) được đồng bộ tự động sau mỗi lần duyệt thuật ngữ, bao phủ toàn bộ các
+    cặp ngôn ngữ đang kích hoạt trong hệ thống.
   \item Cơ chế cập nhật bất đồng bộ (background thread) đảm bảo API dịch thuật không bị chờ
     đợi trong quá trình cập nhật glossary (có thể mất 30--180~giây cho mỗi glossary).
   \item Người dùng nhận thông báo in-app khi đề xuất được duyệt hoặc từ chối.
@@ -274,3 +332,7 @@ dịch chia sẻ \textbf{cùng một instance module} và do đó cùng một đ
   \item Dễ mở rộng: để thêm thông tin ngữ cảnh mới (ví dụ: ngôn ngữ ưu tiên của user), chỉ
     cần thêm field vào \texttt{\_translation\_context} mà không ảnh hưởng module nào khác.
 \end{itemize}
+
+Agent:
+
+Kết chương 5. Chương 5 đã trình bày chi tiết ba đóng góp kỹ thuật nổi bật của đồ án. Thứ nhất, thuật toán phân loại PDF đa tiêu chí \texttt{is\_pdf\_truly\_editable()} giải quyết vấn đề định tuyến pipeline cho PDF native-text và PDF scan mà không cần can thiệp thủ công, đảm bảo chất lượng dịch tối ưu cho từng loại tài liệu. Thứ hai, kiến trúc thuật ngữ ba cấp --- Private Library, Suggestion Queue và Common Library --- cho phép toàn bộ quy trình từ đề xuất cộng đồng đến cập nhật 45 cặp glossary (C(10,2) với 10 ngôn ngữ mặc định) diễn ra tự động, không yêu cầu thao tác thủ công trên Google Cloud Console. Thứ ba, cơ chế thread-local context injection cho phép tích hợp chế độ thư viện vào tất cả module dịch thuật mà không phá vỡ tính độc lập và khả năng tái sử dụng của từng module, đồng thời đảm bảo an toàn khi xử lý nhiều request đồng thời. Ba đóng góp này kết hợp với nhau tạo nên một hệ thống dịch thuật tài liệu doanh nghiệp hoàn chỉnh, và được tổng kết, đánh giá trong chương kết luận tiếp theo.

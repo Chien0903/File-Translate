@@ -1,5 +1,9 @@
 \chapter{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
 
+Agent:
+
+Chương 5 đã phân tích chuyên sâu ba đóng góp kỹ thuật nổi bật của đồ án, cho thấy hệ thống đã giải quyết được các thách thức kỹ thuật cốt lõi đặt ra từ chương 1. Chương 6 khép lại đồ án với hai nội dung: tổng hợp và đánh giá toàn bộ kết quả đạt được cùng các hạn chế còn tồn tại trong mục 6.1, và đề xuất sáu hướng phát triển tiềm năng để nâng cao và mở rộng hệ thống trong tương lai trong mục 6.2.
+
 \section{Kết luận}
 
 \subsection{Kết quả đạt được}
@@ -17,8 +21,9 @@ ngôn ngữ cho môi trường doanh nghiệp. Các kết quả cụ thể đạ
     pipeline ConvertAPI→DOCX hoặc Azure OCR phù hợp mà không cần can thiệp của người dùng.
 
   \item \textbf{Hệ thống quản lý thuật ngữ:} Ba cấp (Private Library, Suggestion Queue,
-    Common Library) với 44 cặp glossary Google Translation API hoạt động tự động, cho phép
-    doanh nghiệp duy trì bộ từ điển kỹ thuật nhất quán qua cơ chế đề xuất cộng đồng.
+    Common Library) với 45 cặp glossary Google Translation API (C(10,2) với 10 ngôn ngữ
+    mặc định, tự động mở rộng khi thêm ngôn ngữ) hoạt động tự động, cho phép doanh nghiệp
+    duy trì bộ từ điển kỹ thuật nhất quán qua cơ chế đề xuất cộng đồng.
 
   \item \textbf{Kiến trúc sạch:} Cơ chế thread-local context injection cho phép tích hợp chế
     độ thư viện vào tất cả module dịch mà không thay đổi chữ ký hàm hiện có, đảm bảo tính
@@ -41,7 +46,7 @@ ngôn ngữ cho môi trường doanh nghiệp. Các kết quả cụ thể đạ
     xử lý các đối tượng đặc biệt.
 
   \item \textbf{Cập nhật glossary bất đồng bộ:} Sau khi duyệt thuật ngữ, glossary Google
-    Translation được cập nhật trong background thread (30--180~giây/pair × 44 pairs). Trong
+    Translation được cập nhật trong background thread (30--180~giây/pair × 45 pairs). Trong
     khoảng thời gian này, các yêu cầu dịch vẫn sử dụng glossary cũ.
 
   \item \textbf{Phát hiện ngôn ngữ nguồn:} Một số tài liệu hỗn hợp nhiều ngôn ngữ trong cùng

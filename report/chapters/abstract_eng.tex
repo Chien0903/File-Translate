@@ -12,10 +12,11 @@ support, and scanned-document processing.
 The system adopts a three-tier architecture: a Single-Page Application (SPA) frontend built with
 React~18 and Vite~6, a REST~API layer powered by Django REST Framework~3.16, and a data layer
 comprising PostgreSQL, AWS~S3, and Google Cloud Storage. The translation core integrates
-Google Cloud Translation~API~v3 with 44 custom glossary pairs spanning 10~languages: Vietnamese,
-Japanese, Simplified Chinese, Traditional Chinese, English, Thai, Bengali, Hindi, Indonesian,
-and Oriya. Five document formats are supported: DOCX, XLSX, PPTX, PDF (including scanned
-documents), and CSV/XLS.
+Google Cloud Translation~API~v3 with 45 custom glossary pairs spanning 10~initial languages
+(C(10,2)~=~45, dynamically extended as languages are added): Vietnamese, Japanese, Simplified
+Chinese, Traditional Chinese, English, Thai, Bengali, Hindi, Indonesian, and Oriya.
+Six document formats are supported: DOCX, XLSX, PPTX, PDF~(native-text), PDF~(scanned),
+and CSV/XLS.
 
 Three key technical contributions are reported: (1)~a multi-format translation pipeline with
 intelligent PDF classification, automatically routing native-text PDFs through a

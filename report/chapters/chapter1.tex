@@ -1,5 +1,9 @@
 \chapter{GIỚI THIỆU ĐỀ TÀI}
 
+Agent:
+
+Chương 1 đặt nền móng cho toàn bộ đồ án bằng cách trình bày bối cảnh thực tiễn và xác định những vấn đề mà doanh nghiệp đa ngôn ngữ đang phải đối mặt trong công tác dịch thuật tài liệu kỹ thuật. Từ thực trạng đó, chương xác định mục tiêu, phạm vi và định hướng kiến trúc giải pháp của hệ thống được xây dựng trong đồ án. Nội dung chính của chương bao gồm: phân tích bốn thách thức cốt lõi trong mục 1.1, xác định mục tiêu và phạm vi đề tài trong mục 1.2, đề xuất định hướng kiến trúc giải pháp trong mục 1.3, và giới thiệu bố cục tổng thể của đồ án trong mục 1.4.
+
 \section{Đặt vấn đề}
 
 Trong bối cảnh toàn cầu hóa, ngày càng nhiều tổ chức doanh nghiệp vận hành đồng thời tại
@@ -87,8 +91,9 @@ Hệ thống được thiết kế theo kiến trúc ba tầng với các thành
     cung cấp REST~API; PostgreSQL lưu trữ dữ liệu người dùng, lịch sử dịch và từ điển thuật
     ngữ; AWS~S3 lưu trữ tệp gốc và tệp đã dịch.
 
-  \item \textbf{Dịch vụ dịch thuật:} Google Cloud Translation~API~v3 với 44~cặp glossary tùy
-    chỉnh lưu trên Google Cloud Storage; Azure Document Intelligence cho OCR tài liệu scan;
+  \item \textbf{Dịch vụ dịch thuật:} Google Cloud Translation~API~v3 với 45~cặp glossary tùy
+    chỉnh lưu trên Google Cloud Storage (C(10,2)~=~45 cặp với 10 ngôn ngữ ban đầu, tự động
+    điều chỉnh khi thêm ngôn ngữ); Azure Document Intelligence cho OCR tài liệu scan;
     ConvertAPI cho chuyển đổi định dạng (PDF→DOCX, XLS→XLSX).
 
   \item \textbf{Xác thực:} Amazon Cognito OIDC (SSO môi trường production) + JWT
@@ -118,3 +123,7 @@ Hệ thống được thiết kế theo kiến trúc ba tầng với các thành
   \item \textbf{Chương 6:} Kết luận về kết quả đạt được, hạn chế còn tồn tại và định hướng
     phát triển trong tương lai.
 \end{itemize}
+
+Agent:
+
+Kết chương 1. Chương 1 đã phân tích bốn thách thức cốt lõi trong dịch thuật tài liệu kỹ thuật tại doanh nghiệp đa ngôn ngữ: (i)~thiếu nhất quán thuật ngữ chuyên ngành do các công cụ dịch phổ thông không hỗ trợ từ điển tùy chỉnh theo ngữ cảnh doanh nghiệp, (ii)~hỗ trợ định dạng tài liệu hạn chế dẫn đến mất bố cục sau dịch, (iii)~thiếu quy trình quản lý thuật ngữ tập trung gây phân mảnh giữa các bộ phận, và (iv)~không xử lý được tài liệu PDF dạng scan. Từ những thách thức đó, đồ án xác định mục tiêu xây dựng hệ thống web dịch tài liệu hỗ trợ 10 ngôn ngữ, 6 định dạng tài liệu và hệ thống quản lý thuật ngữ ba cấp, triển khai trên hạ tầng đám mây AWS với xác thực Cognito SSO. Kiến trúc ba tầng kết hợp React~SPA, Django REST Framework, Google Cloud Translation~API~v3 và Azure Document Intelligence tạo định hướng kỹ thuật xuyên suốt đồ án. Những phân tích và mục tiêu được xác lập trong chương này là nền tảng để chương tiếp theo tiến hành khảo sát các công cụ dịch thuật hiện có và đặc tả đầy đủ yêu cầu của hệ thống.

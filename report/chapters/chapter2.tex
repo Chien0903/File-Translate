@@ -1,5 +1,9 @@
 \chapter{KHẢO SÁT VÀ PHÂN TÍCH YÊU CẦU}
 
+Agent:
+
+Chương 1 đã xác định bốn thách thức cốt lõi và đặt ra mục tiêu xây dựng hệ thống dịch tài liệu đa ngôn ngữ cho doanh nghiệp. Để đưa ra thiết kế phù hợp, cần có sự hiểu biết đầy đủ về các giải pháp đang tồn tại trên thị trường và đặc tả rõ ràng các yêu cầu của hệ thống. Chương 2 thực hiện hai nhiệm vụ đó thông qua bốn nội dung chính: khảo sát và so sánh các công cụ dịch thuật phổ biến trong mục 2.1, tổng quan chức năng và mô hình hóa hệ thống bằng biểu đồ use case trong mục 2.2, đặc tả chi tiết bốn use case chính trong mục 2.3, và trình bày các yêu cầu phi chức năng về hiệu năng, bảo mật và khả năng mở rộng trong mục 2.4.
+
 \section{Khảo sát hiện trạng}
 
 \subsection{Các công cụ dịch thuật hiện có}
@@ -156,6 +160,38 @@ nếu là scan thì OCR pipeline.
 \label{fig:usecase_translate}
 \end{figure}
 
+Agent:
+\begin{lstlisting}[language=bash, caption={PlantUML source -- Use Case phan ra: Dich tai lieu}]
+@startuml
+left to right direction
+actor "Nguoi dung" as User
+
+rectangle "He thong Dich tai lieu" {
+  usecase "Tai tep len S3" as UC_UPLOAD
+  usecase "Chon ngon ngu nguon\n(co auto-detect)" as UC_SRCLANG
+  usecase "Chon ngon ngu dich\n(multi-select)" as UC_TGTLANG
+  usecase "Chon che do thu vien\n(Khong / Chung / Ca nhan)" as UC_MODE
+  usecase "Kich hoat dich" as UC_TRANS
+  usecase "Tai ket qua ve" as UC_DOWNLOAD
+
+  usecase "[ext] PDF native-text:\nConvertAPI -> DOCX" as UC_PDF_EDIT
+  usecase "[ext] PDF scan:\nAzure OCR pipeline" as UC_PDF_OCR
+  usecase "[ext] Kiem tra PDF" as UC_PDF_CHECK
+}
+
+User --> UC_UPLOAD
+User --> UC_SRCLANG
+User --> UC_TGTLANG
+User --> UC_MODE
+User --> UC_TRANS
+User --> UC_DOWNLOAD
+
+UC_TRANS ..> UC_PDF_CHECK : <<extend>> if PDF
+UC_PDF_CHECK ..> UC_PDF_EDIT : <<extend>> if native
+UC_PDF_CHECK ..> UC_PDF_OCR : <<extend>> if scan
+@enduml
+\end{lstlisting}
+
 \subsection{Biểu đồ use case phân rã: Quản lý thuật ngữ}
 
 Agent:
@@ -173,6 +209,45 @@ từng đề xuất, quản lý từ khóa đã được duyệt, cấu hình ng
 \label{fig:usecase_library}
 \end{figure}
 
+Agent:
+\begin{lstlisting}[language=bash, caption={PlantUML source -- Use Case phan ra: Quan ly thuat ngu}]
+@startuml
+left to right direction
+actor "Nguoi dung" as User
+actor "Library Keeper" as LK
+actor "Admin" as Admin
+
+Admin --|> LK : generalization
+LK --|> User : generalization
+
+rectangle "Thu vien Ca nhan" {
+  usecase "Them tu khoa ca nhan" as UC_P1
+  usecase "Sua tu khoa ca nhan" as UC_P2
+  usecase "Xoa tu khoa ca nhan" as UC_P3
+  usecase "De xuat len thu vien chung" as UC_P4
+}
+
+rectangle "Thu vien Chung" {
+  usecase "Xem danh sach de xuat (pending)" as UC_C1
+  usecase "Duyet de xuat" as UC_C2
+  usecase "Tu choi de xuat" as UC_C3
+  usecase "Quan ly tu khoa da duyet" as UC_C4
+  usecase "Cau hinh nguong de xuat" as UC_C5
+}
+
+User --> UC_P1
+User --> UC_P2
+User --> UC_P3
+User --> UC_P4
+
+LK --> UC_C1
+LK --> UC_C2
+LK --> UC_C3
+LK --> UC_C4
+LK --> UC_C5
+@enduml
+\end{lstlisting}
+
 \subsection{Quy trình nghiệp vụ: Đề xuất thuật ngữ vào thư viện chung}
 
 Agent:
@@ -186,11 +261,36 @@ vào Thư viện cá nhân → Người dùng nhấn ``Đề xuất lên thư vi
 KeywordQueue → Hệ thống đếm số lượt đề xuất duy nhất; nếu chưa đủ ngưỡng thì chờ; nếu đủ
 ngưỡng thì tạo KeywordSuggestion với status=pending và gửi thông báo cho Library Keeper →
 Library Keeper duyệt hoặc từ chối → Nếu duyệt: status=approved, cập nhật GCS và Google
-Translation glossary theo 44 cặp ngôn ngữ.
+Translation glossary theo 45 cặp ngôn ngữ (C(10,2) với 10 ngôn ngữ mặc định).
 \vspace{0.5cm}}}
 \caption{Quy trình nghiệp vụ đề xuất thuật ngữ vào thư viện chung}
 \label{fig:bpmn_suggest}
 \end{figure}
+
+Agent:
+\begin{lstlisting}[language=bash, caption={Mermaid source -- Quy trinh de xuat thuat ngu (BPMN-style)}]
+flowchart TD
+    START(["Nguoi dung them tu khoa\nvao Thu vien Ca nhan"])
+    START --> SUGGEST["Nguoi dung nhan\n'De xuat len thu vien chung'"]
+    SUGGEST --> SAVE_Q[("Luu KeywordQueue\nuser, translations, is_processed=False")]
+    SAVE_Q --> COUNT{"Background job:\nDem so unique users de xuat\n>= min_suggesters?"}
+
+    COUNT -->|"Chua du nguong"| WAIT["Cho them luot de xuat\ntich luy trong KeywordQueue"]
+    WAIT --> COUNT
+
+    COUNT -->|"Du nguong"| CREATE_S[("Tao KeywordSuggestion\nstatus=pending\nsuggestion_count, frequency_percentage")]
+    CREATE_S --> NOTIFY["Gui thong bao\ncho Library Keeper"]
+
+    NOTIFY --> LK_REVIEW{"Library Keeper\nxem xet"}
+    LK_REVIEW -->|"Duyet"| APPROVED[("KeywordSuggestion\nstatus=approved\napproved_by=LK")]
+    LK_REVIEW -->|"Tu choi"| REJECTED[("KeywordSuggestion\nstatus=rejected")]
+
+    APPROVED --> ASYNC["async_manage_common_glossaries()\nbackground thread"]
+    ASYNC --> CSV["Tao CSV pair rows\ntren 45 cap ngon ngu (C(10,2))"]
+    CSV --> GCS_UP["upload_csv_to_gcs()\n-> Google Cloud Storage"]
+    GCS_UP --> GCTA["manage_glossary()\ncreate / update\nGoogle Translation API"]
+    GCTA --> DONE(["Glossary cap nhat\nco hieu luc cho cac dich vu sau"])
+\end{lstlisting}
 
 \section{Đặc tả chức năng}
 
@@ -369,3 +469,7 @@ Khả năng mở rộng    & Ngôn ngữ              & Thêm ngôn ngữ mới 
 \hline
 \end{tabularx}
 \end{table}
+
+Agent:
+
+Kết chương 2. Chương 2 đã khảo sát năm công cụ dịch thuật đại diện --- Google Translate, DeepL, SDL Trados, Matecat và hệ thống đề xuất --- cho thấy không công cụ nào đáp ứng đồng thời bốn yêu cầu cốt lõi: hỗ trợ PDF scan, từ điển thuật ngữ ba cấp với quy trình duyệt cộng đồng, tích hợp SSO doanh nghiệp và giao diện web triển khai nội bộ. Chương cũng đặc tả hệ thống với 11 use case cho ba nhóm tác nhân (User, Library Keeper, Admin), trong đó bốn use case trọng tâm --- dịch tài liệu, dịch văn bản, quản lý thư viện cá nhân, quản lý thư viện chung --- được mô tả chi tiết kèm luồng chính và luồng thay thế. Các yêu cầu phi chức năng về hiệu năng (dịch DOCX 10~trang dưới 30 giây), bảo mật (JWT, Cognito SSO, phân quyền ba vai trò) và khả năng bảo trì (container hóa) cũng được xác định rõ. Những đặc tả đó tạo cơ sở vững chắc để chương tiếp theo lựa chọn và luận giải các công nghệ phù hợp nhằm đáp ứng toàn bộ yêu cầu đã đặt ra.

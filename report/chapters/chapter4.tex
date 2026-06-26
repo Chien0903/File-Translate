@@ -1,5 +1,9 @@
 \chapter{PHÂN TÍCH THIẾT KẾ, TRIỂN KHAI VÀ ĐÁNH GIÁ HỆ THỐNG}
 
+Agent:
+
+Chương 3 đã cung cấp nền tảng lý thuyết và luận giải lựa chọn công nghệ cho toàn bộ hệ thống. Dựa trên nền tảng đó, chương 4 trình bày quá trình phân tích thiết kế, xây dựng và đánh giá hệ thống theo quy trình kỹ thuật phần mềm hoàn chỉnh. Năm nội dung chính được trình bày bao gồm: thiết kế kiến trúc ba tầng và tổng quan thành phần hệ thống trong mục 4.1, thiết kế chi tiết giao diện, lớp phần mềm và cơ sở dữ liệu trong mục 4.2, thống kê kết quả xây dựng và minh họa các chức năng cốt lõi trong mục 4.3, kế hoạch và kết quả kiểm thử hộp đen trong mục 4.4, và cấu hình triển khai trên môi trường phát triển lẫn production AWS trong mục 4.5.
+
 \section{Thiết kế kiến trúc}
 
 \subsection{Lựa chọn kiến trúc phần mềm}
@@ -69,21 +73,90 @@ Agent:
 \newline
 (1) \textbf{Frontend} (React SPA): pages (HomePage, TextTranslation, TranslationResults,
 FileHistory, CommonLibraryManagement, PrivateLibrary, MyProfile, AccountManagement,
-KeywordStatsAdmin), components (UploadFileNew, LanguageSelector, KeywordDetailModal,
-KeywordFormModal), contexts (AuthContext).
+KeywordStatsAdmin, LanguageManagement, FormatConversionPage, ConversionResults),
+components (UploadFileNew, LanguageSelector, KeywordDetailModal, KeywordFormModal,
+Notifications, LibraryActionButtons), contexts (AuthContext),
+hooks (useCompanyLanguages, useLibraryLanguages),
+services (translationService, keywordService, languageService, userService, notificationService).
 \newline
 (2) \textbf{Backend} (Django REST): views (TranslateFileView, TranslateTextView, alb\_auth,
-keyword, translated\_file, notification, keyword\_stats, convert, user, health), models
-(CustomUser, TranslatedFile, PrivateKeyword, KeywordSuggestion, KeywordQueue,
-LibraryQueueSettings, Notification), services (glossary\_service, upload\_to\_s3, convert\_api),
-authentication (alb\_authentication), Translate\_v2 (translate\_docx, translate\_xlsx,
-translate\_pptx, translate\_pdf\_ocr, translate\_text).
+keyword, translated\_file, notification, keyword\_stats, convert, user, language),
+models (CustomUser, PasswordResetToken, Language, Company, CompanyLanguage,
+TranslatedFile, PrivateKeyword, KeywordSuggestion, KeywordQueue,
+LibraryQueueSettings, Notification, RefreshToken, LanguageAuditLog),
+services (glossary\_service, upload\_to\_s3, convert\_api),
+authentication (alb\_authentication),
+Translate\_v2 (translate\_docx, translate\_xlsx, translate\_pptx, translate\_pdf\_ocr,
+translate\_text, detect\_lang, xml\_process).
 \newline
-(3) \textbf{Data Layer}: PostgreSQL, AWS S3, Google Cloud Storage.
+(3) \textbf{Data Layer}: PostgreSQL, AWS S3, Google Cloud Storage (glossary CSV).
 \vspace{0.5cm}}}
 \caption{Biểu đồ UML Package}
 \label{fig:package}
 \end{figure}
+
+Agent:
+\begin{lstlisting}[language=bash, caption={PlantUML source -- Biểu đồ Package (dán vào https://www.plantuml.com/plantuml)}]
+@startuml
+skinparam packageStyle rectangle
+
+package "Frontend (React SPA)" {
+  package "pages" {
+    [HomePage] [TextTranslation] [TranslationResults]
+    [FileHistory] [CommonLibraryManagement] [PrivateLibrary]
+    [MyProfile] [AccountManagement] [KeywordStatsAdmin]
+    [LanguageManagement] [FormatConversionPage]
+  }
+  package "components" {
+    [UploadFileNew] [LanguageSelector] [KeywordDetailModal]
+    [LibraryActionButtons] [Notifications]
+  }
+  package "context & hooks" {
+    [AuthContext] [useCompanyLanguages] [useLibraryLanguages]
+  }
+  package "services-fe" {
+    [translationService] [keywordService]
+    [languageService] [userService] [notificationService]
+  }
+}
+
+package "Backend (Django REST)" {
+  package "views" {
+    [TranslateFileView] [TranslateTextView]
+    [keyword_views] [language_views] [user_views]
+    [notification_views] [keyword_stats_views]
+  }
+  package "models" {
+    [CustomUser] [Language] [Company] [CompanyLanguage]
+    [TranslatedFile] [PrivateKeyword] [KeywordSuggestion]
+    [KeywordQueue] [Notification] [RefreshToken] [LanguageAuditLog]
+  }
+  package "services-be" {
+    [glossary_service] [upload_to_s3] [convert_api]
+  }
+  package "Translate_v2" {
+    [translate_docx] [translate_xlsx] [translate_pptx]
+    [translate_pdf_ocr] [translate_text] [detect_lang]
+  }
+}
+
+package "Data Layer" {
+  database "PostgreSQL"
+  storage "AWS S3"
+  storage "Google Cloud Storage"
+}
+
+[translationService] --> [TranslateFileView]
+[keywordService] --> [keyword_views]
+[languageService] --> [language_views]
+[TranslateFileView] --> [translate_docx]
+[TranslateFileView] --> [translate_xlsx]
+[TranslateFileView] --> [translate_pdf_ocr]
+[views] --> "PostgreSQL"
+[upload_to_s3] --> "AWS S3"
+[glossary_service] --> "Google Cloud Storage"
+@enduml
+\end{lstlisting}
 
 \section{Thiết kế chi tiết}
 
@@ -93,15 +166,22 @@ Hệ thống giao diện web bao gồm các trang chính sau:
 
 \begin{enumerate}
   \item \textbf{Trang chủ / Upload tài liệu:} Widget tải tệp lên S3, chọn ngôn ngữ nguồn/đích
-    (dropdown 10 ngôn ngữ), chọn chế độ thư viện, nút dịch và danh sách kết quả.
+    (dropdown danh sách ngôn ngữ đã kích hoạt theo công ty, lấy động qua
+    \texttt{useCompanyLanguages}), chọn chế độ thư viện, nút dịch và danh sách kết quả.
   \item \textbf{Trang dịch văn bản:} Textarea nhập văn bản, chọn ngôn ngữ, hiển thị kết quả
     dịch.
   \item \textbf{Trang lịch sử dịch:} Bảng danh sách TranslatedFile với phân trang, tìm kiếm,
     lọc theo ngôn ngữ.
-  \item \textbf{Trang thư viện cá nhân:} Bảng PrivateKeyword với 10 cột ngôn ngữ, CRUD modal.
+  \item \textbf{Trang thư viện cá nhân:} Bảng PrivateKeyword với cột theo từng ngôn ngữ đang
+    kích hoạt của công ty (dùng \texttt{translations}~JSONField), CRUD modal.
   \item \textbf{Trang thư viện chung (Library Keeper/Admin):} Quản lý KeywordSuggestion, duyệt
     đề xuất, tab phân loại (đang chờ / đã duyệt / đã từ chối).
   \item \textbf{Trang quản lý người dùng (Admin):} Bảng danh sách CustomUser, thay đổi vai trò.
+  \item \textbf{Trang quản lý ngôn ngữ (Admin):} Bảng Language với tùy chọn kích hoạt/vô hiệu
+    hóa ngôn ngữ theo công ty (\texttt{CompanyLanguage}), đặt ngôn ngữ mặc định, và xem nhật ký
+    thay đổi (\texttt{LanguageAuditLog}).
+  \item \textbf{Trang chuyển đổi định dạng:} Upload tệp PDF, chọn định dạng đích (DOCX/XLSX/PPTX),
+    tải kết quả chuyển đổi về.
   \item \textbf{Trang thống kê từ khóa (Admin):} Biểu đồ recharts thống kê tần suất sử dụng
     từ khóa.
 \end{enumerate}
@@ -113,8 +193,8 @@ Agent:
 \fbox{\parbox{0.9\textwidth}{\centering\vspace{2cm}
 \textit{[Hình: Wireframe trang chủ Upload]}\\[0.5cm]
 \textbf{Image Description:} Màn hình trang chủ gồm: thanh điều hướng trên cùng (logo, menu),
-khu vực chính gồm widget kéo-thả tệp, dropdown chọn ngôn ngữ nguồn (auto-detect hoặc một
-trong 10 ngôn ngữ), danh sách checkbox chọn nhiều ngôn ngữ đích, radio chọn chế độ thư viện
+khu vực chính gồm widget kéo-thả tệp, dropdown chọn ngôn ngữ nguồn (auto-detect hoặc chọn
+từ danh sách ngôn ngữ đã kích hoạt của công ty), danh sách checkbox chọn nhiều ngôn ngữ đích, radio chọn chế độ thư viện
 (Không dùng / Thư viện chung / Thư viện cá nhân), nút ``Dịch tài liệu''. Phía dưới là khu vực
 kết quả hiển thị danh sách các tệp đã dịch với nút tải về.
 \vspace{1cm}}}
@@ -147,33 +227,191 @@ scan → \texttt{translate\_pdf\_ocr()}; docx → \texttt{translate\_docx()}; xl
 \label{fig:class_translate}
 \end{figure}
 
+Agent:
+\begin{lstlisting}[language=bash, caption={PlantUML source -- Class Diagram TranslateFileView}]
+@startuml
+class TranslateFileView {
+  +permission_classes: [IsAuthenticated]
+  +post(request: Request): Response
+  -_download_from_s3(url): str
+  -_upload_to_s3(path, lang): str
+}
+
+class translate_document {
+  +file_path: str
+  +target_lang: str
+  +source_lang: str
+  +library_mode: str
+  +is_pdf_truly_editable(pdf_path: str): bool
+}
+
+class set_translation_context {
+  +library_mode: str
+  +user_id: int
+}
+
+class clear_translation_context
+
+class translate_docx << (F,lightblue) function >>
+class translate_xlsx << (F,lightblue) function >>
+class translate_pptx << (F,lightblue) function >>
+class translate_pdf_ocr << (F,lightblue) function >>
+class convertapi_pdf_to_docx << (F,lightblue) function >>
+
+TranslateFileView --> set_translation_context : "1. set context"
+TranslateFileView --> translate_document : "2. per target lang"
+TranslateFileView --> clear_translation_context : "3. finally"
+translate_document --> translate_docx : "docx / pdf-editable"
+translate_document --> translate_xlsx : "xlsx / xls / csv"
+translate_document --> translate_pptx : "pptx"
+translate_document --> translate_pdf_ocr : "pdf scan"
+translate_document --> convertapi_pdf_to_docx : "pdf-editable pre-step"
+@enduml
+\end{lstlisting}
+
 \subsubsection{Lớp dữ liệu Model}
 
 \begin{figure}[H]
 \centering
 \fbox{\parbox{0.9\textwidth}{\centering\vspace{0.5cm}
 \textit{[Hình: Class Diagram các Model]}\\[0.3cm]
-\textbf{Image Description:} Class diagram các Django Model:
+\textbf{Image Description:} Class diagram 13 Django Model:
 \newline
-\textbf{CustomUser}: email (PK logic), first\_name, last\_name, department, role
-(User/Admin/Library Keeper), is\_active, cognito\_sub, auth\_provider.
+\textbf{CustomUser}: email (unique), first\_name, last\_name, department,
+role (User/Admin/Library Keeper), is\_active, FK(Company null), FK(Language preferred null), date\_joined.
+\newline
+\textbf{Language}: code (unique, e.g.\ ``vi'', ``ja'', ``zh-CN''), name, native\_name, flag\_emoji, is\_active, sort\_order.
+\newline
+\textbf{Company}: name (unique), slug (unique), is\_active, created\_at.
+\newline
+\textbf{CompanyLanguage}: FK(Company), FK(Language), is\_enabled, is\_default, enabled\_at.
+UNIQUE(company, language). Partial unique index on is\_default (migration 0032).
 \newline
 \textbf{TranslatedFile}: FK(CustomUser), original\_file\_url, original\_file\_name,
 translated\_file\_url, original\_language, target\_language, file\_type, created\_at.
 \newline
-\textbf{PrivateKeyword}: FK(CustomUser), japanese, english, vietnamese, chinese\_traditional,
-chinese\_simplified, thai, bengali, hindi, indonesian, oriya, note, FK(KeywordSuggestion null).
+\textbf{PrivateKeyword}: FK(CustomUser), translations (JSONField, default=dict),
+note, FK(KeywordSuggestion null), created\_at, updated\_at.
 \newline
-\textbf{KeywordSuggestion}: FK(CustomUser), [10 language fields], suggestion\_count,
-frequency\_percentage, status (pending/approved/rejected), FK(approved\_by User null).
+\textbf{KeywordSuggestion}: FK(CustomUser), translations (JSONField), suggestion\_count,
+frequency\_percentage, status (pending/approved/rejected), FK(approved\_by null), created\_at, updated\_at.
 \newline
-\textbf{KeywordQueue}: FK(CustomUser), [10 language fields], is\_processed.
+\textbf{KeywordQueue}: FK(CustomUser), translations (JSONField), is\_processed (db\_index), processed\_at, created\_at.
 \newline
-\textbf{Notification}: FK(CustomUser), title, message, read, details, keyword\_details (JSON).
+\textbf{Notification}: FK(CustomUser), title, message, read, details, keyword\_details (JSONField), created\_at.
+\newline
+\textbf{RefreshToken}: FK(CustomUser), token\_hash (SHA-256, unique, db\_index), expires\_at, created\_at.
+\newline
+\textbf{LanguageAuditLog}: FK(actor=CustomUser), FK(Company), FK(Language),
+action (enable/disable/set\_default/add\_language), note, created\_at.
+\newline
+\textbf{LibraryQueueSettings}: pk=1 (singleton), min\_suggesters\_for\_queue, updated\_at.
+\newline
+\textbf{PasswordResetToken}: email, token (OTP 6 chữ số), created\_at, expires\_at (TTL 10 phút).
 \vspace{0.5cm}}}
 \caption{Class diagram -- Django Models}
 \label{fig:class_models}
 \end{figure}
+
+Agent:
+\begin{lstlisting}[language=bash, caption={PlantUML source -- Class Diagram Django Models}]
+@startuml
+class CustomUser {
+  +email: EmailField (unique)
+  +first_name: CharField
+  +last_name: CharField
+  +department: CharField
+  +role: CharField [User|Admin|Library Keeper]
+  +is_active: BooleanField
+  +company: FK(Company, null)
+  +preferred_language: FK(Language, null)
+  +date_joined: DateTimeField
+}
+class Language {
+  +code: CharField (unique)  -- vi, ja, zh-CN ...
+  +name: CharField
+  +native_name: CharField
+  +flag_emoji: CharField
+  +is_active: BooleanField
+  +sort_order: PositiveSmallIntegerField
+}
+class Company {
+  +name: CharField (unique)
+  +slug: SlugField (unique)
+  +is_active: BooleanField
+}
+class CompanyLanguage {
+  +company: FK(Company)
+  +language: FK(Language)
+  +is_enabled: BooleanField
+  +is_default: BooleanField
+  -- UNIQUE(company, language)
+}
+class TranslatedFile {
+  +user: FK(CustomUser)
+  +original_file_url: URLField
+  +original_file_name: CharField
+  +translated_file_url: URLField
+  +original_language: CharField
+  +target_language: CharField
+  +file_type: CharField
+}
+class PrivateKeyword {
+  +user: FK(CustomUser)
+  +translations: JSONField  -- {en:..,ja:..,vi:..}
+  +note: TextField
+  +suggestion: FK(KeywordSuggestion, null)
+}
+class KeywordSuggestion {
+  +user: FK(CustomUser)
+  +translations: JSONField
+  +suggestion_count: IntegerField
+  +status: CharField [pending|approved|rejected]
+  +approved_by: FK(CustomUser, null)
+}
+class KeywordQueue {
+  +user: FK(CustomUser)
+  +translations: JSONField
+  +is_processed: BooleanField (db_index)
+  +processed_at: DateTimeField
+}
+class Notification {
+  +user: FK(CustomUser)
+  +title: CharField
+  +message: TextField
+  +read: BooleanField
+  +keyword_details: JSONField
+}
+class RefreshToken {
+  +user: FK(CustomUser)
+  +token_hash: CharField (SHA-256, unique)
+  +expires_at: DateTimeField
+}
+class LanguageAuditLog {
+  +actor: FK(CustomUser)
+  +company: FK(Company)
+  +language: FK(Language)
+  +action: CharField [enable|disable|set_default|add_language]
+  +note: TextField
+}
+class LibraryQueueSettings {
+  +pk: 1 (singleton)
+  +min_suggesters_for_queue: PositiveIntegerField
+}
+
+CustomUser "N" --> "1" Company
+CustomUser "N" --> "0..1" Language : preferred
+Company "1" --> "N" CompanyLanguage
+Language "1" --> "N" CompanyLanguage
+CustomUser "1" --> "N" TranslatedFile
+CustomUser "1" --> "N" PrivateKeyword
+CustomUser "1" --> "N" KeywordQueue
+CustomUser "1" --> "N" KeywordSuggestion
+KeywordSuggestion "1" --> "N" PrivateKeyword : linked
+CustomUser "1" --> "N" RefreshToken
+CustomUser "1" --> "N" Notification
+@enduml
+\end{lstlisting}
 
 \subsubsection{Lớp GlossaryService}
 
@@ -198,9 +436,53 @@ ghi CSV tạm.
 \label{fig:class_glossary}
 \end{figure}
 
+Agent:
+\begin{lstlisting}[language=bash, caption={PlantUML source -- Class Diagram GlossaryService}]
+@startuml
+package "glossary_service (module)" {
+  class create_pair_csv_file << (F,lightblue) >> {
+    +user: CustomUser
+    +source_lang: str
+    +target_lang: str
+    -- queries KeywordSuggestion(approved) --
+    -- builds pair rows -> writes CSV temp --
+    +return: csv_path: str
+  }
+  class upload_csv_to_gcs << (F,lightblue) >> {
+    +csv_path: str
+    -- storage.Client().bucket().blob().upload() --
+    +return: gcs_uri: str
+  }
+  class manage_glossary << (F,lightblue) >> {
+    +glossary_id: str
+    +src: str
+    +tgt: str
+    +mode: int  -- 0=create, 1=update
+    -- TranslationServiceClient().create_glossary() --
+    -- or update_glossary() --
+  }
+  class async_manage_common_glossaries << (F,lightblue) >> {
+    -- background Thread --
+    -- iterates 45 language pairs (C(10,2) via generate_pairs_from_db()) --
+    -- calls create_pair_csv_file + upload + manage_glossary --
+  }
+  class async_manage_user_glossaries << (F,lightblue) >> {
+    +user: CustomUser
+    -- background Thread --
+    -- private glossary: toray_glossary_A_B_user_ID --
+  }
+}
+
+create_pair_csv_file --> upload_csv_to_gcs
+upload_csv_to_gcs --> manage_glossary
+async_manage_common_glossaries --> create_pair_csv_file
+async_manage_user_glossaries --> create_pair_csv_file
+@enduml
+\end{lstlisting}
+
 \subsection{Thiết kế cơ sở dữ liệu}
 
-Hệ thống sử dụng sáu bảng chính trong PostgreSQL:
+Hệ thống sử dụng 12 bảng chính trong PostgreSQL:
 
 Agent:
 
@@ -298,20 +580,148 @@ Agent:
 %     CUSTOM_USER ||--o{ NOTIFICATION : "nhận"
 %     KEYWORD_SUGGESTION ||--o{ PRIVATE_KEYWORD : "liên kết"
 %     CUSTOM_USER ||--o{ KEYWORD_SUGGESTION : "duyệt (approved_by)"
-\textbf{Image Description:} Biểu đồ ERD Mermaid với 7 thực thể: CUSTOM\_USER (id, email unique,
-first\_name, last\_name, department, role, cognito\_sub, auth\_provider), TRANSLATED\_FILE
-(FK user, original/translated url, language pair, file\_type), PRIVATE\_KEYWORD (FK user,
-FK suggestion null, 10 language text fields, note), KEYWORD\_SUGGESTION (FK user, FK
-approved\_by null, 10 language fields, suggestion\_count, status), KEYWORD\_QUEUE (FK user,
-10 language fields, is\_processed), NOTIFICATION (FK user, title, message, read, JSON
-keyword\_details), LIBRARY\_QUEUE\_SETTINGS (singleton pk=1, min\_suggesters\_for\_queue).
-Quan hệ: CUSTOM\_USER 1-N TRANSLATED\_FILE; CUSTOM\_USER 1-N PRIVATE\_KEYWORD; CUSTOM\_USER
-1-N KEYWORD\_QUEUE; CUSTOM\_USER 1-N KEYWORD\_SUGGESTION; KEYWORD\_SUGGESTION 1-N
-PRIVATE\_KEYWORD.
+\textbf{Image Description:} Biểu đồ ERD với 12 thực thể:
+CUSTOM\_USER (id, email unique, first\_name, last\_name, department, role, FK company null, FK preferred\_language null, is\_active, date\_joined);
+LANGUAGE (id, code unique, name, native\_name, flag\_emoji, is\_active, sort\_order);
+COMPANY (id, name unique, slug unique, is\_active, created\_at);
+COMPANY\_LANGUAGE (id, FK company, FK language, is\_enabled, is\_default, enabled\_at --- UNIQUE company+language);
+TRANSLATED\_FILE (id, FK user, original\_file\_url, original\_file\_name, translated\_file\_url, original\_language, target\_language, file\_type, created\_at);
+PRIVATE\_KEYWORD (id, FK user, FK suggestion null, translations JSONField, note, created\_at, updated\_at);
+KEYWORD\_SUGGESTION (id, FK user, FK approved\_by null, translations JSONField, suggestion\_count, frequency\_percentage, status, created\_at, updated\_at);
+KEYWORD\_QUEUE (id, FK user, translations JSONField, is\_processed, processed\_at, created\_at);
+NOTIFICATION (id, FK user, title, message, read, details, keyword\_details JSONField, created\_at);
+REFRESH\_TOKEN (id, FK user, token\_hash SHA-256 unique, expires\_at, created\_at);
+LANGUAGE\_AUDIT\_LOG (id, FK actor, FK company, FK language, action, note, created\_at);
+LIBRARY\_QUEUE\_SETTINGS (pk=1 singleton, min\_suggesters\_for\_queue, updated\_at).
+Quan hệ chính: CUSTOM\_USER N-1 COMPANY; CUSTOM\_USER N-1 LANGUAGE (preferred);
+COMPANY N-N LANGUAGE qua COMPANY\_LANGUAGE; CUSTOM\_USER 1-N TRANSLATED\_FILE;
+CUSTOM\_USER 1-N PRIVATE\_KEYWORD; CUSTOM\_USER 1-N KEYWORD\_QUEUE;
+CUSTOM\_USER 1-N KEYWORD\_SUGGESTION; KEYWORD\_SUGGESTION 1-N PRIVATE\_KEYWORD;
+CUSTOM\_USER 1-N REFRESH\_TOKEN; CUSTOM\_USER 1-N LANGUAGE\_AUDIT\_LOG.
 \vspace{0.5cm}}}
 \caption{Biểu đồ ERD cơ sở dữ liệu}
 \label{fig:erd}
 \end{figure}
+
+Agent:
+\begin{lstlisting}[language=bash, caption={Mermaid ERD source -- 12 entities (dán vào https://mermaid.live)}]
+erDiagram
+    CUSTOM_USER {
+        int id PK
+        varchar email UK
+        varchar first_name
+        varchar last_name
+        varchar department
+        varchar role
+        bool is_active
+        int company_id FK
+        int preferred_language_id FK
+        datetime date_joined
+    }
+    LANGUAGE {
+        int id PK
+        varchar code UK
+        varchar name
+        varchar native_name
+        varchar flag_emoji
+        bool is_active
+        int sort_order
+    }
+    COMPANY {
+        int id PK
+        varchar name UK
+        varchar slug UK
+        bool is_active
+    }
+    COMPANY_LANGUAGE {
+        int id PK
+        int company_id FK
+        int language_id FK
+        bool is_enabled
+        bool is_default
+        datetime enabled_at
+    }
+    TRANSLATED_FILE {
+        int id PK
+        int user_id FK
+        varchar original_file_url
+        varchar original_file_name
+        varchar translated_file_url
+        varchar original_language
+        varchar target_language
+        varchar file_type
+        datetime created_at
+    }
+    PRIVATE_KEYWORD {
+        int id PK
+        int user_id FK
+        int suggestion_id FK
+        json translations
+        text note
+        datetime created_at
+        datetime updated_at
+    }
+    KEYWORD_SUGGESTION {
+        int id PK
+        int user_id FK
+        int approved_by_id FK
+        json translations
+        int suggestion_count
+        float frequency_percentage
+        varchar status
+        datetime created_at
+    }
+    KEYWORD_QUEUE {
+        int id PK
+        int user_id FK
+        json translations
+        bool is_processed
+        datetime processed_at
+        datetime created_at
+    }
+    NOTIFICATION {
+        int id PK
+        int user_id FK
+        varchar title
+        text message
+        bool read
+        json keyword_details
+        datetime created_at
+    }
+    REFRESH_TOKEN {
+        int id PK
+        int user_id FK
+        varchar token_hash UK
+        datetime expires_at
+        datetime created_at
+    }
+    LANGUAGE_AUDIT_LOG {
+        int id PK
+        int actor_id FK
+        int company_id FK
+        int language_id FK
+        varchar action
+        text note
+        datetime created_at
+    }
+    LIBRARY_QUEUE_SETTINGS {
+        int id PK
+        int min_suggesters_for_queue
+        datetime updated_at
+    }
+
+    CUSTOM_USER }o--|| COMPANY : "belongs to"
+    CUSTOM_USER }o--o| LANGUAGE : "prefers"
+    COMPANY ||--o{ COMPANY_LANGUAGE : "activates"
+    LANGUAGE ||--o{ COMPANY_LANGUAGE : "activated in"
+    CUSTOM_USER ||--o{ TRANSLATED_FILE : "translates"
+    CUSTOM_USER ||--o{ PRIVATE_KEYWORD : "owns"
+    CUSTOM_USER ||--o{ KEYWORD_QUEUE : "queues"
+    CUSTOM_USER ||--o{ KEYWORD_SUGGESTION : "suggests"
+    CUSTOM_USER ||--o{ NOTIFICATION : "receives"
+    CUSTOM_USER ||--o{ REFRESH_TOKEN : "holds"
+    KEYWORD_SUGGESTION ||--o{ PRIVATE_KEYWORD : "linked to"
+\end{lstlisting}
 
 \section{Xây dựng ứng dụng}
 
@@ -370,21 +780,21 @@ boto3                  & --    & Upload/download S3 \\
 \hline
 Backend views           & 12 view files \\
 \hline
-Backend models          & 6 model files (7 Django model class) \\
+Backend models          & 10 model files (13 Django model class) \\
 \hline
 Backend services        & 3 service modules (glossary, S3, ConvertAPI) \\
 \hline
-Backend migrations      & 21 migration files \\
+Backend migrations      & 35 migration files \\
 \hline
-Frontend pages (routes) & 14 routes \\
+Frontend pages (routes) & 15 routes \\
 \hline
-Frontend components     & 20+ component files \\
+Frontend components     & 34 component files \\
 \hline
 Translation modules     & 6 format modules (docx, xlsx, pptx, pdf, pdf\_ocr, text) \\
 \hline
-Glossary pairs          & 44 cặp ngôn ngữ (language\_pair) \\
+Glossary pairs          & 45 cặp ngôn ngữ (C(10,2), \texttt{generate\_pairs\_from\_db()}) \\
 \hline
-Ngôn ngữ hỗ trợ         & 10 ngôn ngữ \\
+Ngôn ngữ hỗ trợ         & 10 ngôn ngữ (seed ban đầu; cấu hình động qua LanguageManagement) \\
 \hline
 Định dạng tài liệu      & 6 (DOCX, XLSX, PPTX, PDF, XLS/XLSM/XLSB, CSV) \\
 \hline
@@ -534,6 +944,28 @@ Azure Document Intelligence (HTTPS), ConvertAPI (HTTPS). Biến môi trường �
 \label{fig:deployment}
 \end{figure}
 
+Agent:
+\begin{lstlisting}[language=bash, caption={Mermaid source -- Sơ đồ triển khai production (dán vào https://mermaid.live)}]
+graph TB
+    Browser["Trình duyệt (HTTPS)"]
+    Browser --> ALB["AWS Application\nLoad Balancer\n(Cognito OIDC auth action)"]
+
+    ALB --> Nginx["Nginx Container\n(ports 80/443)"]
+
+    subgraph Docker["Docker Compose — EC2/ECS"]
+        Nginx --> FE["Frontend Container\n(Nginx + React build\nport 80 internal)"]
+        Nginx --> BE["Backend Container\n(Django + Gunicorn\nport 8000 internal)"]
+    end
+
+    BE --> PG[("RDS PostgreSQL")]
+    BE --> S3[("AWS S3\noriginal + translated files")]
+    BE --> GCT["Google Cloud\nTranslation API v3\n(45 glossary pairs, dynamic)"]
+    GCT --> GCS[("Google Cloud Storage\nCSV glossary files")]
+    BE --> AZR["Azure Document\nIntelligence (OCR)"]
+    BE --> CAPI["ConvertAPI\n(PDF→DOCX)"]
+    BE --> SM["AWS Secrets Manager\n(env variables)"]
+\end{lstlisting}
+
 Hệ thống production được triển khai trên AWS với:
 \begin{itemize}
   \item \textbf{Xác thực:} AWS ALB tích hợp Amazon Cognito OIDC, inject header
@@ -545,3 +977,7 @@ Hệ thống production được triển khai trên AWS với:
   \item \textbf{Container:} Dockerfile riêng cho backend (Python + pip) và frontend
     (Node build + Nginx serve). Frontend Nginx cấu hình \texttt{try\_files} cho SPA routing.
 \end{itemize}
+
+Agent:
+
+Kết chương 4. Chương 4 đã trình bày đầy đủ toàn bộ quá trình phân tích, thiết kế, xây dựng và đánh giá hệ thống. Kiến trúc ba tầng --- SPA React, Django REST Framework và lớp dữ liệu PostgreSQL/S3/GCS --- đảm bảo tính tách biệt rõ ràng và khả năng mở rộng độc lập của từng tầng. Cơ sở dữ liệu 12 bảng được thiết kế bao phủ toàn bộ nghiệp vụ: quản lý người dùng và công ty, cấu hình ngôn ngữ theo công ty (Language/Company/CompanyLanguage), tệp dịch, thuật ngữ ba cấp (PrivateKeyword/KeywordQueue/KeywordSuggestion), thông báo, token xác thực và nhật ký kiểm tra ngôn ngữ, trong khi lớp GlossaryService chịu trách nhiệm đồng bộ 45 cặp glossary lên Google Translation API tự động qua background thread (C(10,2)~=~45 với 10 ngôn ngữ mặc định, tự động mở rộng theo \texttt{generate\_pairs\_from\_db()}). Kết quả kiểm thử 18 ca kiểm thử hộp đen bao phủ toàn bộ nhóm chức năng --- xác thực, dịch tài liệu, dịch văn bản, quản lý thuật ngữ và quản trị hệ thống --- đều đạt yêu cầu đề ra. Hệ thống được triển khai production trên AWS với Cognito SSO, ALB và Docker container hóa, đáp ứng các yêu cầu phi chức năng về bảo mật và khả năng mở rộng. Chương tiếp theo sẽ tách riêng và phân tích chuyên sâu ba đóng góp kỹ thuật nổi bật nhất của đồ án trong quá trình xây dựng hệ thống.
