@@ -1,0 +1,25 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+% Agent: BEGIN
+\textbf{Tổng quan Chương 6.} Chương 5 đã trình bày chi tiết năm đóng góp kỹ thuật nổi bật của đồ án. Chương 6 này tổng kết toàn bộ quá trình thực hiện, đánh giá những gì đã đạt được và chưa đạt được, rồi đề xuất các hướng phát triển tiếp theo. Kết luận tập trung vào tính hoàn chỉnh của hệ thống đã xây dựng và các bài học rút ra trong quá trình thiết kế, triển khai.
+% Agent: END
+
+\section{Kết luận}
+Sinh viên so sánh kết quả nghiên cứu hoặc sản phẩm của mình với các nghiên cứu hoặc sản phẩm tương tự.
+
+Sinh viên phân tích trong suốt quá trình thực hiện ĐATN, mình đã làm được gì, chưa làm được gì, các đóng góp nổi bật là gì, và tổng hợp những bài học kinh nghiệm rút ra nếu có.
+
+Agent:
+
+Đồ án đã xây dựng được một hệ thống web dịch đa ngôn ngữ gồm giao diện React/Vite, backend Django REST Framework, khối xử lý tài liệu, lưu trữ S3, glossary trên Google Cloud và triển khai Docker/Nginx. Các chức năng chính gồm xác thực JWT, quản lý người dùng theo vai trò, dịch văn bản, dịch tài liệu DOCX/XLSX/PPTX/PDF, chuyển đổi PDF, lưu lịch sử file dịch, quản lý thư viện thuật ngữ chung và riêng, phê duyệt đề xuất thuật ngữ, thống kê từ khóa, thông báo và quản lý ngôn ngữ theo công ty. Đóng góp nổi bật là tích hợp dịch tài liệu đa định dạng với quản trị glossary, cho phép hệ thống hỗ trợ cả thuật ngữ chung của doanh nghiệp và thuật ngữ riêng của từng người dùng. Hạn chế còn lại là cần bổ sung kiểm thử toàn diện, benchmark hiệu năng, ảnh minh họa giao diện, dữ liệu khảo sát người dùng và tài liệu giám sát vận hành production.
+
+\section{Hướng phát triển}
+Trong phần này, sinh viên trình bày định hướng công việc trong tương lai để hoàn thiện sản phẩm hoặc nghiên cứu của mình.
+
+Trước tiên, sinh viên trình bày các công việc cần thiết để hoàn thiện các chức năng/nhiệm vụ đã làm. Sau đó sinh viên phân tích các hướng đi mới cho phép cải thiện và nâng cấp các chức năng/nhiệm vụ đã làm.
+
+Agent:
+
+Hướng phát triển trước mắt là hoàn thiện bộ test tự động, bổ sung test tích hợp cho luồng dịch file, upload S3, ConvertAPI, glossary và các màn hình frontend. Hệ thống cũng cần bổ sung logging/monitoring có cấu trúc, cơ chế hàng đợi nền cho các file lớn, giới hạn kích thước và loại file ở cả frontend lẫn backend, cùng dashboard theo dõi lỗi dịch và thời gian xử lý. Về nghiệp vụ, có thể mở rộng kiểm soát chất lượng thuật ngữ bằng versioning glossary, lịch sử thay đổi từ khóa, quy trình review nhiều cấp và chức năng xuất báo cáo thống kê. Về triển khai, cần bổ sung tài liệu cấu hình production, backup database, quy trình rotate secret, kiểm thử tải và kịch bản khôi phục khi dịch vụ bên ngoài như Google Cloud Translation, S3 hoặc ConvertAPI gặp lỗi.
+\end{document}

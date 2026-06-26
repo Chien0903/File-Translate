@@ -1,0 +1,45 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+% Agent: BEGIN
+\textbf{Tổng quan Chương 3.} Chương 2 đã xác định các yêu cầu chức năng và phi chức năng của hệ thống dịch đa ngôn ngữ. Chương 3 này trình bày nền tảng lý thuyết và công nghệ được lựa chọn để đáp ứng các yêu cầu đó. Mỗi công nghệ được phân tích dưới góc độ vai trò giải quyết yêu cầu cụ thể, bao gồm lý do lựa chọn so với các phương án thay thế. Các nhóm công nghệ được trình bày gồm backend, xác thực, frontend, dịch máy, quản lý glossary, lưu trữ file, chuyển đổi định dạng và triển khai.
+% Agent: END
+
+% Chương này có độ dài không quá 10 trang.
+
+Agent:
+
+Backend của hệ thống sử dụng Python, Django, Django REST Framework và SimpleJWT. Django REST Framework được dùng để xây dựng các API cho xác thực, dịch văn bản, dịch tệp, chuyển đổi định dạng, quản lý file dịch, người dùng, thông báo, ngôn ngữ và thư viện thuật ngữ. SimpleJWT được dùng cho access token và refresh token; riêng refresh token được lưu dạng hash, giúp backend có thể thu hồi token khi logout hoặc khi token hết hạn.
+
+Frontend được tổ chức theo React với Vite. React Router được dùng để định tuyến các trang login, home, dịch văn bản, kết quả dịch, chuyển đổi định dạng, lịch sử file, thư viện riêng và các màn hình admin. Axios được dùng để gửi request tới backend, gắn Bearer token vào request, tự refresh token khi gặp lỗi xác thực và chuyển về trang login khi phiên không còn hợp lệ. Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung bảng phiên bản chính xác của các thư viện JavaScript khi hoàn thiện tài liệu kỹ thuật.
+
+Nền tảng dịch máy của hệ thống là Google Cloud Translation API. Quy trình dịch hỗ trợ dịch văn bản đơn lẻ, dịch theo batch, cấu hình glossary và fallback sang dịch thường nếu glossary lỗi. Glossary được quản lý bằng Google Cloud Storage và Google Cloud Translation; các cặp ngôn ngữ được tạo theo danh sách ngôn ngữ đang được kích hoạt trong hệ thống.
+
+Đối với xử lý tài liệu, đồ án sử dụng các thư viện đọc và ghi tài liệu văn phòng, bảng tính, trình chiếu, PDF, ảnh và OCR. Các thư viện này tương ứng với nhu cầu đọc, trích xuất, dịch và đóng gói lại DOCX, XLSX, PPTX, PDF và ảnh trong tài liệu. Với PDF có thể chỉnh sửa, hệ thống dùng ConvertAPI để chuyển PDF sang DOCX trước khi dịch; với PDF scan hoặc OCR-overlay, hệ thống chuyển sang luồng OCR.
+
+Về lưu trữ và triển khai, backend sử dụng Amazon S3 để lưu file upload và file kết quả. Hệ thống được triển khai theo mô hình container gồm backend, frontend và Nginx. Reverse proxy định tuyến các request API về backend, các request giao diện về frontend, đồng thời cấu hình HTTPS, giới hạn kích thước upload và timeout phù hợp cho tác vụ dịch dài.
+
+\begin{table}[H]
+\centering{}
+\begin{tabular}{p{4cm} p{5cm} p{6cm}}
+\hline
+\textbf{Mục đích} & \textbf{Công nghệ} & \textbf{Vai trò trong hệ thống} \\ \hline
+Backend API & Python, Django, DRF & Xây dựng API nghiệp vụ và quản lý dữ liệu \\ \hline
+Xác thực & SimpleJWT, JWT refresh token hash & Xác thực người dùng và quản lý phiên đăng nhập \\ \hline
+Frontend & React/Vite, React Router, Axios & Xây dựng giao diện, định tuyến trang và gọi API \\ \hline
+Dịch máy & Google Cloud Translation API & Dịch văn bản và nội dung trích xuất từ tài liệu \\ \hline
+Glossary & Google Cloud Storage và Translation Glossary & Lưu và áp dụng thuật ngữ chuyên ngành \\ \hline
+Lưu trữ file & Amazon S3 & Lưu file gốc và file kết quả \\ \hline
+Chuyển đổi file & ConvertAPI & Chuyển đổi PDF hoặc bảng tính trước khi dịch \\ \hline
+Triển khai & Docker, Nginx & Đóng gói và reverse proxy cho hệ thống web \\ \hline
+\end{tabular}
+\caption{Các công nghệ sử dụng trong hệ thống}
+\label{table:agent_tech_stack}
+\end{table}
+
+% Agent: BEGIN
+\medskip
+\textbf{Kết chương 3.} Chương này đã trình bày lý do lựa chọn và vai trò của từng nhóm công nghệ trong hệ thống dịch đa ngôn ngữ. Backend dựa trên Django REST Framework kết hợp SimpleJWT đảm bảo an toàn xác thực và phân quyền. Frontend React/Vite với Axios cung cấp giao diện người dùng tương tác và tích hợp tự động gia hạn token. Google Cloud Translation kết hợp với cơ chế glossary trên Google Cloud Storage là nền tảng để đạt nhất quán thuật ngữ. Amazon S3 giải quyết bài toán lưu trữ file không gắn với local disk của server. ConvertAPI giúp chuẩn hóa định dạng đầu vào trước khi dịch, trong khi Docker và Nginx đảm bảo môi trường triển khai đồng nhất. Với nền tảng công nghệ đã xác định, Chương 4 sẽ trình bày thiết kế chi tiết kiến trúc, cơ sở dữ liệu, API và quá trình xây dựng hệ thống.
+% Agent: END
+
+\end{document}

@@ -1,0 +1,43 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+% Agent: BEGIN
+\textbf{Tổng quan Chương 5.} Chương 4 đã mô tả quá trình thiết kế, xây dựng và triển khai hệ thống. Chương 5 này tập trung phân tích các đóng góp kỹ thuật nổi bật, là những giải pháp được thiết kế riêng để giải quyết các bài toán đặc thù của hệ thống dịch tài liệu đa ngôn ngữ. Năm đóng góp chính được trình bày gồm: tích hợp quy trình dịch tài liệu đa định dạng, quản lý glossary chung và riêng theo ngữ cảnh dịch, quy trình đề xuất và phê duyệt thuật ngữ, xử lý PDF theo đặc tính tài liệu, và tích hợp triển khai web với lưu trữ cloud.
+% Agent: END
+
+% Chương này có độ dài tối thiểu 5 trang, tối đa không giới hạn.
+
+% Ví dụ, trong Chương 4, sinh viên có thiết kế được kiến trúc đáng lưu ý gì đó, là sự kết hợp của các kiến trúc MVC, MVP, SOA, v.v. Khi đó, sinh viên sẽ chỉ mô tả ngắn gọn kiến trúc đó ở Chương 4, rồi thêm các câu có dạng: ``Chi tiết về kiến trúc này sẽ được trình bày trong phần 5.1". 
+
+Agent:
+
+\textbf{Đóng góp 1: Tích hợp quy trình dịch tài liệu đa định dạng.}
+
+Bài toán đặt ra là người dùng không chỉ dịch văn bản thuần mà còn cần dịch tài liệu văn phòng có cấu trúc. Giải pháp tách bộ điều phối dịch tệp khỏi các bộ xử lý định dạng riêng. Với DOCX, hệ thống dùng luồng xử lý tài liệu văn bản; với XLSX, hệ thống dùng luồng xử lý bảng tính; với PPTX, hệ thống dùng luồng xử lý trình chiếu; với PDF, hệ thống kiểm tra khả năng chỉnh sửa trước khi chọn luồng ConvertAPI sang DOCX hoặc luồng OCR. Kết quả dịch được upload lên S3 và lưu vào lịch sử dịch. Đóng góp của giải pháp là gom nhiều luồng xử lý tài liệu vào một API thống nhất, giúp giao diện người dùng chỉ cần gửi tệp, danh sách ngôn ngữ đích và chế độ thư viện.
+
+\textbf{Đóng góp 2: Quản lý glossary chung và riêng theo ngữ cảnh dịch.}
+
+Một khó khăn của dịch tài liệu chuyên ngành là cùng một thuật ngữ cần được dịch nhất quán theo ngữ cảnh doanh nghiệp. Hệ thống xử lý bằng hai lớp thư viện thuật ngữ: thư viện chung dựa trên các đề xuất đã được phê duyệt và thư viện riêng theo từng người dùng. Ngữ cảnh dịch lưu chế độ thư viện và thông tin người dùng để các bước dịch có thể chọn glossary chung, glossary riêng hoặc không dùng glossary. Cách thiết kế này tránh phải truyền thêm tham số qua toàn bộ chuỗi xử lý tài liệu, đồng thời vẫn cho phép backend kiểm soát quyền và dữ liệu người dùng.
+
+\textbf{Đóng góp 3: Quy trình đề xuất và phê duyệt thuật ngữ.}
+
+Hệ thống không chỉ dùng glossary tĩnh mà có cơ chế cập nhật thuật ngữ từ đóng góp của người dùng. Người dùng có thể tạo thuật ngữ riêng, gửi đề xuất lên thư viện chung, còn Admin hoặc Library Keeper có thể phê duyệt, từ chối hoặc xử lý trùng lặp. Quy trình này kiểm tra trùng theo cặp ngôn ngữ, tự động phê duyệt khi số người đề xuất đạt ngưỡng, gửi thông báo khi có thuật ngữ mới và cập nhật glossary sau khi dữ liệu được duyệt. Đây là đóng góp quan trọng vì nó biến glossary từ dữ liệu nhập thủ công thành một quy trình quản trị có trạng thái và phân quyền.
+
+\textbf{Đóng góp 4: Xử lý PDF theo đặc tính tài liệu.}
+
+PDF là định dạng khó vì có thể là văn bản gốc, ảnh scan hoặc OCR-overlay. Hệ thống phân loại PDF bằng cách kiểm tra nội dung văn bản, ảnh toàn trang và dấu hiệu OCR trong metadata. Nếu PDF có văn bản gốc, hệ thống chuyển PDF sang DOCX bằng ConvertAPI rồi dịch như tài liệu DOCX; nếu không, hệ thống chuyển sang pipeline OCR. Cách phân nhánh này làm rõ trách nhiệm xử lý của từng luồng và giảm rủi ro áp dụng một chiến lược duy nhất cho mọi loại PDF.
+
+\textbf{Đóng góp 5: Tích hợp triển khai web và lưu trữ cloud.}
+
+Hệ thống được triển khai theo mô hình container cho backend, frontend và Nginx, kèm reverse proxy HTTPS. File gốc và file dịch được lưu qua S3, còn glossary được lưu trên Google Cloud Storage. Việc tách file ra object storage giúp backend không phụ thuộc vào local disk sau khi request kết thúc; đồng thời các file tạm được dọn dẹp sau luồng dịch. Đóng góp này nằm ở việc ghép các thành phần web, xử lý tài liệu và lưu trữ cloud thành một quy trình vận hành tương đối hoàn chỉnh.
+
+\textbf{Các giới hạn cần rà soát thêm.}
+
+Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung benchmark hiệu năng, kết quả chạy test, quy trình giám sát production, dữ liệu khảo sát người dùng và ảnh chụp màn hình sản phẩm bằng kết quả thực nghiệm hoặc tài liệu vận hành trước khi nộp báo cáo cuối cùng.
+
+% Agent: BEGIN
+\medskip
+\textbf{Kết chương 5.} Chương này đã phân tích năm đóng góp kỹ thuật nổi bật của đồ án. Đóng góp về tích hợp quy trình dịch đa định dạng thể hiện ở việc gom nhiều luồng xử lý tài liệu vào một API thống nhất với bộ điều phối trung tâm. Đóng góp về glossary thể hiện ở cơ chế ngữ cảnh dịch theo luồng xử lý, cho phép ba chế độ glossary hoạt động nhất quán từ backend qua toàn bộ khối xử lý tài liệu. Quy trình phê duyệt thuật ngữ biến glossary từ dữ liệu tĩnh thành một quy trình quản trị có trạng thái và phân quyền. Xử lý PDF theo đặc tính tài liệu giải quyết sự không đồng nhất của định dạng PDF bằng cách phân nhánh luồng dựa trên đặc tính nội dung. Cuối cùng, tích hợp triển khai cloud ghép các thành phần lại thành một hệ thống vận hành hoàn chỉnh. Chương 6 sẽ tổng kết kết quả đạt được và các hướng phát triển tiếp theo.
+% Agent: END
+
+\end{document}

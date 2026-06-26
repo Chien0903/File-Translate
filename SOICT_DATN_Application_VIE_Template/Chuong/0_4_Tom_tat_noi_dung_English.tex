@@ -1,0 +1,16 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\begin{center}
+    \Large{\textbf{ABSTRACT}}\\
+\end{center}
+\vspace{1cm}
+In the context of international economic integration, enterprises frequently process documents in multiple languages to communicate with partners, customers, or branches across different countries. These documents exist in various formats such as DOCX, XLSX, PPTX, PDF, images, and plain text, and must be translated accurately while preserving their original structure. Using scattered translation tools or manual translation makes it difficult to maintain a centralized history, ensure consistent terminology across departments, and enforce company-level language policies.
+
+To address these problems, this project builds a web-based multilingual translation system for enterprise text and office documents. The system consists of three main components: a client-side user interface, a backend service responsible for business logic and access control, and a specialized document-processing pipeline that handles translation workflows for each file format. The goal is to integrate document translation, terminology management, user management, and result storage into a unified platform.
+
+The system provides functions including user authentication, text translation, file translation, file upload to external S3 storage, PDF format conversion, translated-file history management, user management, company language configuration, notifications, and terminology library management. The translation pipeline uses Google Cloud Translation, glossaries stored on Google Cloud Storage, and ConvertAPI for PDF conversion. Document processing libraries handle reading, extracting, translating, and reconstructing DOCX, XLSX, PPTX, PDF, image, and OCR content. Users can translate into multiple target languages in a single request and choose between common glossary, private glossary, or no-glossary mode. Translation results are stored and available for download.
+
+For administrative roles, the system supports reviewing terminology suggestions, automatic approval when a threshold of users propose the same term, duplicate detection, glossary updates, keyword contribution statistics, and language configuration per company. The main contribution of this project is an integrated system that combines multi-format document translation, terminology governance, role-based access control, and cloud storage into a single operational platform deployed with Docker and Nginx. Some content such as large-scale performance benchmarks and real user acceptance data should be added before the final report submission.
+
+\end{document}

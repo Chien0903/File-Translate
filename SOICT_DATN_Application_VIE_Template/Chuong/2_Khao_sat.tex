@@ -1,0 +1,151 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+% Agent: BEGIN
+\textbf{Tổng quan Chương 2.} Chương 1 đã trình bày bài toán dịch tài liệu đa ngôn ngữ trong môi trường doanh nghiệp, xác định mục tiêu và định hướng giải pháp của đồ án. Chương 2 này tiến hành khảo sát và phân tích yêu cầu của hệ thống, là cơ sở để thiết kế và xây dựng trong các chương sau. Nội dung bao gồm khảo sát hiện trạng nhu cầu dịch thuật trong tổ chức, tổng quan chức năng với biểu đồ use case, đặc tả các use case quan trọng nhất và yêu cầu phi chức năng. Các yêu cầu xác định trong chương này là đầu vào trực tiếp cho việc lựa chọn công nghệ ở Chương 3 và thiết kế hệ thống ở Chương 4.
+% Agent: END
+
+% Chương này có độ dài từ 9 đến 11 trang.
+
+\textbf{Lưu ý}: Mỗi chương nên có thêm 1 đoạn mở đầu chương và kết thúc chương, mở đầu giới thiệu những nội dung sẽ trình bày trong chương, kết thúc tổng kết lại các nội dung đã trình bày
+
+\section{Khảo sát hiện trạng}
+\label{section:2.1}
+Thông thường, khảo sát chi tiết về hiện trạng và yêu cầu của phần mềm sẽ được lấy từ ba nguồn chính, đó là (i) người dùng/khách hàng, (ii) các hệ thống đã có, (iii) và các ứng dụng tương tự.
+Sinh viên cần tiến hành phân tích, so sánh, đánh giá chi tiết ưu nhược điểm của các sản phẩm/nghiên cứu hiện có. Sinh viên có thể lập bảng so sánh nếu cần thiết. Kết hợp với khảo sát người dùng/khách hàng (nếu có), sinh viên nêu và mô tả sơ lược các tính năng phần mềm quan trọng cần phát triển.
+
+Agent:
+
+Bài toán đặt ra yêu cầu hệ thống xử lý nhiều loại đầu vào và nhiều vai trò người dùng. Người dùng cuối cần tải tệp, dịch văn bản, xem kết quả dịch, chuyển đổi định dạng, tra cứu lịch sử file và quản lý thư viện thuật ngữ riêng. Người quản trị cần quản lý tài khoản, quản lý thư viện thuật ngữ chung, theo dõi thống kê từ khóa và cấu hình ngôn ngữ. So với việc dùng trực tiếp một công cụ dịch máy thông thường, hệ thống bổ sung các yêu cầu đặc thù: lưu lịch sử kết quả dịch, chọn chế độ glossary, quản lý thuật ngữ chung và riêng, phê duyệt đề xuất từ khóa, lưu file trên S3 và phân quyền theo vai trò. Các số liệu khảo sát định lượng và so sánh thị trường cần được bổ sung bằng khảo sát riêng nếu báo cáo yêu cầu.
+
+\section{Tổng quan chức năng}
+\label{section:2.2}
+Phần \ref{section:2.2} này có nhiệm vụ tóm tắt các chức năng của phần mềm. Trong phần này, sinh viên lưu ý chỉ mô tả chức năng mức cao (tổng quan) mà không đặc tả chi tiết cho từng chức năng. Đặc tả chi tiết được trình bày trong phần \ref{section:2.3}.
+
+\subsection{Biểu đồ use case tổng quát}
+\label{subsection:2.2.1}
+Sinh viên vẽ biểu đồ use case tổng quan và giải thích các tác nhân tham gia là gì, nêu vai trò của từng tác nhân, và mô tả ngắn gọn các use case chính.
+
+Agent:
+
+Các tác nhân chính được xác định từ model \texttt{CustomUser} và các điều kiện phân quyền trong backend gồm User, Admin và Library Keeper. User sử dụng các chức năng dịch văn bản, dịch tệp, xem lịch sử, quản lý thư viện thuật ngữ riêng và gửi đề xuất thuật ngữ. Admin quản lý tài khoản, ngôn ngữ, thống kê từ khóa và có quyền với các thao tác quản trị thư viện. Library Keeper được backend cho phép thực hiện một số thao tác liên quan đến thư viện thuật ngữ như phê duyệt, cập nhật glossary và xử lý hàng đợi đề xuất.
+
+\begin{verbatim}
+@startuml
+left to right direction
+actor User
+actor Admin
+actor "Library Keeper" as Keeper
+
+User --> (Login)
+User --> (Translate Text)
+User --> (Translate File)
+User --> (Convert PDF)
+User --> (View Translation History)
+User --> (Manage Private Library)
+User --> (Suggest Keyword)
+
+Admin --> (Manage Users)
+Admin --> (Manage Company Languages)
+Admin --> (View Keyword Statistics)
+Admin --> (Review Keyword Suggestions)
+Admin --> (Upload Glossary to GCS)
+
+Keeper --> (Review Keyword Suggestions)
+Keeper --> (Process Keyword Queue)
+Keeper --> (Upload Glossary to GCS)
+@enduml
+\end{verbatim}
+
+\subsection{Biểu đồ use case phân rã XYZ}
+\label{subsection:2.2.2}
+Với mỗi use case mức cao trong biểu đồ use case tổng quan, sinh viên tạo một mục riêng như mục \ref{subsection:2.2.2} và tiến hành phân rã use case đó. Lưu ý tên use case cần phân rã trong biểu đồ use case tổng quan phải khớp với tên đề mục.
+
+Trong mỗi mục như vậy, sinh viên vẽ và giải thích ngắn gọn các use case phân rã.
+
+Agent:
+
+Use case dịch tệp được phân rã thành các bước tải tệp lên S3, gửi yêu cầu dịch, tải file tạm về backend, phát hiện hoặc nhận ngôn ngữ nguồn, chọn luồng xử lý theo định dạng file, gọi module dịch, upload file kết quả lên S3 và lưu lịch sử vào bảng \texttt{TranslatedFile}. Use case quản lý thư viện thuật ngữ được phân rã thành tạo thuật ngữ riêng, gửi đề xuất từ thư viện riêng, duyệt đề xuất, kiểm tra trùng lặp, tự động phê duyệt khi đạt ngưỡng và cập nhật glossary trên GCS.
+
+\begin{verbatim}
+@startuml
+left to right direction
+actor User
+actor Admin
+actor "Library Keeper" as Keeper
+
+User --> (Upload File to S3)
+User --> (Choose Source and Target Languages)
+User --> (Choose Library Mode)
+User --> (Request File Translation)
+(Request File Translation) --> (Store Translated File History)
+
+User --> (Create Private Keyword)
+User --> (Submit Keyword Suggestion)
+Admin --> (Approve or Reject Suggestion)
+Keeper --> (Approve or Reject Suggestion)
+(Approve or Reject Suggestion) --> (Update Common Glossary)
+@enduml
+\end{verbatim}
+
+\subsection{Quy trình nghiệp vụ}
+\label{subsection:2.2.3}
+Nếu sản phẩm/hệ thống cần xây dựng có quy trình nghiệp vụ quan trọng/đáng chú ý, sinh viên cần mô tả và vẽ biểu đồ hoạt động minh họa quy trình nghiệp vụ đó. Sinh viên lưu ý đây không phải là luồng sự kiện của từng use case, mà là luồng hoạt động kết hợp nhiều use case để thực hiện một nghiệp vụ nào đó.
+
+Ví dụ, một hệ thống quản lý thư viện có quy trình nghiệp vụ mượn trả với mô tả sơ bộ như sau: Sinh viên làm thẻ mượn, sau đó sinh viên đăng ký mượn sách, thủ thư cho mượn, và cuối cùng sinh viên trả lại sách cho thư viện. Một hệ thống có thể có một vài quy trình nghiệp vụ quan trọng như vậy.
+
+Agent:
+
+Quy trình nghiệp vụ quan trọng nhất của hệ thống là dịch tài liệu có quản lý glossary. Người dùng đăng nhập, upload file lên S3, frontend nhận URL file, người dùng chọn ngôn ngữ và chế độ thư viện, backend tải file về thư mục tạm, đặt translation context theo chế độ thư viện, xử lý tài liệu bằng module phù hợp, upload file dịch lên S3, tạo bản ghi lịch sử và trả danh sách URL kết quả về frontend.
+
+\begin{verbatim}
+flowchart LR
+    A[User uploads file] --> B[S3 stores original file]
+    B --> C[Frontend sends file URL and options]
+    C --> D[Django TranslateFileView]
+    D --> E{File type}
+    E -->|DOCX| F[translate_docx]
+    E -->|XLSX/CSV/XLS| G[Convert to XLSX if needed, then translate_xlsx]
+    E -->|PPTX| H[translate_pptx]
+    E -->|PDF editable| I[ConvertAPI PDF to DOCX, then translate_docx]
+    E -->|PDF scan/OCR| J[translate_pdf_ocr]
+    F --> K[Upload translated file to S3]
+    G --> K
+    H --> K
+    I --> K
+    J --> K
+    K --> L[Create TranslatedFile history]
+    L --> M[Return download URLs]
+\end{verbatim}
+\section{Đặc tả chức năng}
+\label{section:2.3}
+Sinh viên lựa chọn từ 4 đến 7 use case quan trọng nhất của đồ án để đặc tả chi tiết. Mỗi đặc tả bao gồm ít nhất các thông tin sau: (i) Tên use case, (ii) Luồng sự kiện (chính và phát sinh), (iii) Tiền điều kiện, và (iv) Hậu điều kiện. Sinh viên chỉ vẽ bổ sung biểu đồ hoạt động khi đặc tả use case phức tạp.
+\subsection{Đặc tả use case A}
+\hfill
+
+Agent:
+
+\textbf{Đặc tả use case dịch tệp.} Tác nhân chính là User đã đăng nhập. Tiền điều kiện là người dùng có phiên đăng nhập hợp lệ và tệp đầu vào đã được tải lên hệ thống. Luồng chính gồm: người dùng chọn tệp, chọn ngôn ngữ đích, chọn ngôn ngữ nguồn nếu cần, chọn chế độ thư viện thuật ngữ, hệ thống tải file về vùng xử lý tạm, kiểm tra chế độ thư viện, dịch từng ngôn ngữ đích, upload file kết quả lên S3, lưu lịch sử dịch, rồi trả danh sách file dịch. Luồng phát sinh gồm thiếu thông tin tệp hoặc ngôn ngữ đích, chế độ thư viện không hợp lệ, chọn thư viện riêng nhưng chưa có dữ liệu thuật ngữ, định dạng không hỗ trợ, lỗi chuyển đổi định dạng hoặc lỗi upload S3. Hậu điều kiện khi thành công là người dùng nhận được URL tải file và lịch sử dịch được lưu.
+
+\subsection{Đặc tả use case B}
+\hfill
+
+Agent:
+
+\textbf{Đặc tả use case quản lý đề xuất thuật ngữ.} Tác nhân chính là User, Admin và Library Keeper. Tiền điều kiện là người dùng đã đăng nhập; với thao tác phê duyệt hoặc xử lý hàng đợi, tài khoản phải có quyền Admin hoặc Library Keeper. Luồng chính gồm: User tạo đề xuất thuật ngữ hoặc gửi thuật ngữ từ thư viện riêng; hệ thống lưu bản ghi \texttt{KeywordSuggestion} ở trạng thái \texttt{pending}; Admin hoặc Library Keeper duyệt, kiểm tra trùng lặp, phê duyệt hoặc từ chối; khi phê duyệt, hệ thống cập nhật trạng thái, tạo thông báo và gọi quy trình cập nhật glossary chung. Luồng phát sinh gồm phát hiện trùng lặp với thư viện chung, đề xuất đã được xử lý trước đó, hoặc tài khoản không đủ quyền. Hậu điều kiện là đề xuất được phản ánh trong trạng thái dữ liệu và glossary được cập nhật khi có thay đổi được phê duyệt.
+
+\section{Yêu cầu phi chức năng}
+\label{section:2.4}
+Trong phần này, sinh viên đưa ra các yêu cầu khác nếu có, bao gồm các yêu cầu phi chức năng như hiệu năng, độ tin cậy, tính dễ dùng, tính dễ bảo trì, hoặc các yêu cầu về mặt kỹ thuật như về CSDL, công nghệ sử dụng, v.v.
+
+Agent:
+
+Các yêu cầu phi chức năng gồm bảo mật xác thực bằng JWT, phân quyền dựa trên vai trò, lưu refresh token dạng hash, cấu hình CORS và biến môi trường, giới hạn kích thước upload qua reverse proxy, timeout đủ dài cho tác vụ dịch file, và tách frontend/backend khi triển khai. Về khả năng bảo trì, hệ thống cần được chia theo các lớp giao diện, API, dịch vụ nghiệp vụ, xử lý tài liệu và dữ liệu. Về độ tin cậy, hệ thống cần xử lý file tạm và dọn dẹp sau dịch, retry với một số lỗi upload tạm thời, và fallback sang dịch thường nếu glossary không khả dụng. Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung số liệu hiệu năng, kiểm thử tải hoặc chỉ số độ sẵn sàng production.
+
+% Agent: BEGIN
+\medskip
+\textbf{Kết chương 2.} Chương này đã phân tích hiện trạng nhu cầu, xác định các tác nhân sử dụng hệ thống và đặc tả các chức năng theo phương pháp hướng use case. Ba tác nhân chính gồm User, Admin và Library Keeper tham gia vào các use case từ dịch văn bản, dịch tệp, đến quản lý thuật ngữ và phê duyệt đề xuất. Quy trình nghiệp vụ dịch tài liệu có quản lý glossary là luồng trung tâm của hệ thống, liên kết S3, backend, khối xử lý tài liệu và Google Cloud Translation. Yêu cầu phi chức năng gồm bảo mật, phân quyền, tính dễ bảo trì, độ tin cậy và khả năng xử lý file tạm. Các yêu cầu này là nền tảng cho việc lựa chọn và phân tích công nghệ được trình bày trong Chương 3.
+% Agent: END
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}

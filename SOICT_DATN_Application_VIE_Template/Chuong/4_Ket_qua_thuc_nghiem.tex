@@ -1,0 +1,187 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+% Agent: BEGIN
+\textbf{Tổng quan Chương 4.} Chương 3 đã trình bày lý do lựa chọn và vai trò của từng nhóm công nghệ. Chương 4 này áp dụng những công nghệ đó vào việc phân tích, thiết kế và xây dựng hệ thống dịch đa ngôn ngữ. Nội dung trình bày theo trình tự từ kiến trúc tổng thể, thiết kế chi tiết giao diện và cơ sở dữ liệu, đến kết quả xây dựng, kiểm thử và triển khai. Hệ thống được thiết kế theo kiến trúc phân tầng, trong đó giao diện, backend API, khối xử lý tài liệu và dịch vụ hạ tầng cloud có vai trò và trách nhiệm tách biệt rõ ràng.
+% Agent: END
+
+\section{Thiết kế kiến trúc}
+\subsection{Lựa chọn kiến trúc phần mềm}
+Mục này có độ dài từ một đến ba trang. Sinh viên cần lựa chọn kiến trúc phần mềm cho ứng dụng của mình như: kiến trúc ba lớp MVC, MVP, SOA, Microservice, v.v. rồi giải thích sơ bộ về kiến trúc đó (không giải thích chi tiết/dài dòng).
+Sử dụng kiến trúc phần mềm đã chọn ở trên, sinh viên mô tả kiến trúc cụ thể cho ứng dụng của mình. Gợi ý: sinh viên áp dụng lý thuyết chung vào hệ thống/sản phẩm của mình như thế nào, có thay đổi, bổ sung hoặc cải tiến gì không. Ví dụ, thành phần M trong kiến trúc lý thuyết MVC sẽ là những thành phần cụ thể nào (ví dụ: là interface I + class C1 + class C2, v.v.) trong kiến trúc phần mềm của sinh viên.
+
+Agent:
+
+Kiến trúc thực tế của hệ thống là kiến trúc web phân tầng tách giao diện người dùng, backend, khối xử lý dịch và dịch vụ hạ tầng bên ngoài. Tầng giao diện cung cấp các màn hình thao tác, thành phần hiển thị và dịch vụ gọi API. Tầng backend cung cấp API nghiệp vụ, xác thực, phân quyền, quản lý dữ liệu và điều phối luồng dịch. Tầng xử lý dịch đảm nhiệm các thao tác đặc thù với DOCX, XLSX, PPTX, PDF, ảnh và OCR. Các dịch vụ ngoài gồm Google Cloud Translation, Google Cloud Storage, Amazon S3 và ConvertAPI. Nginx đóng vai trò reverse proxy, định tuyến request giao diện và API.
+
+\subsection{Thiết kế tổng quan}
+Sinh viên vẽ biểu đồ gói UML (UML package diagram), nêu rõ sự phụ thuộc giữa các gói (package). SV cần vẽ các gói sao cho chúng được phân theo các tầng rõ ràng, không được sắp đặt package lộn xộn trong hình vẽ. Sinh viên chú ý các quy tắc thiết kế (Các gói không phụ thuộc lẫn nhau, gói tầng dưới không phụ thuộc gói tầng trên, không phụ thuộc bỏ qua tầng, v.v.) và cần giải thích sơ lược về mục đích/nhiệm vụ của từng package. SV tham khảo ví dụ minh họa trong Hình \ref{fig:Fig1}
+
+Agent:
+
+\begin{verbatim}
+flowchart TB
+    Browser[Browser / React UI]
+    FE[Frontend services and routes]
+    API[Django REST API]
+    Models[Django models and serializers]
+    Translate[Document processing pipeline]
+    S3[Amazon S3]
+    GCT[Google Cloud Translation]
+    GCS[Google Cloud Storage Glossaries]
+    Convert[ConvertAPI]
+    DB[(SQLite or PostgreSQL)]
+    Nginx[Nginx reverse proxy]
+
+    Browser --> Nginx
+    Nginx --> FE
+    Nginx --> API
+    FE --> API
+    API --> Models
+    Models --> DB
+    API --> Translate
+    API --> S3
+    Translate --> GCT
+    Translate --> GCS
+    API --> Convert
+    API --> GCS
+\end{verbatim}
+
+Trong sơ đồ trên, frontend không truy cập trực tiếp database hoặc dịch vụ dịch máy mà luôn đi qua backend API. Backend là điểm kiểm soát xác thực, phân quyền, lưu lịch sử và điều phối dịch vụ. Khối xử lý tài liệu không quản lý người dùng mà nhận ngữ cảnh dịch từ backend. Cách tách này giúp phần xử lý tài liệu có thể tập trung vào định dạng và thuật ngữ, còn backend chịu trách nhiệm nghiệp vụ web.
+\begin{figure}[H]
+    \centering
+    \includegraphics{Hinhve/Picture1.png}
+    \caption{Ví dụ biểu đồ phụ thuộc gói}
+    \label{fig:Fig1}
+\end{figure}
+\subsection{Thiết kế chi tiết gói}
+Sinh viên thiết kế và lần lượt vẽ biểu đồ thiết kế cho từng package, hoặc một nhóm các package liên quan để giải quyết một vấn đề gì đó. Khi vẽ thiết kế gói, sinh viên chỉ cần đưa tên lớp, không cần chỉ ra các thành viên phương thức và thuộc tính. SV tham khảo ví dụ minh họa trong Hình \ref{fig:Fig2}.
+
+Sinh viên cần vẽ rõ ràng quan hệ giữa các lớp trong biểu đồ. Các quan hệ bao gồm: phụ thuộc (dependency), kết hợp (association), kết tập (aggregation), hợp thành (composition), kế thừa (inheritance), và thực thi (implementation). Các quan hệ này đều đã được minh họa trong \ref{fig:Fig2}.
+
+Sau khi vẽ hình minh họa, sinh viên cần giải thích ngắn gọn về thiết kế của mình. 
+
+Agent:
+
+Các gói backend quan trọng gồm gói mô hình dữ liệu, gói chuyển đổi dữ liệu, gói xử lý request, gói định tuyến API và gói dịch vụ tích hợp bên ngoài. Frontend gồm nhóm màn hình, nhóm thành phần giao diện, nhóm dịch vụ gọi API, nhóm hook và nhóm quản lý trạng thái xác thực. Các thành phần chủ đạo trong luồng dịch gồm bộ điều phối dịch tệp, bộ điều phối dịch văn bản, thực thể lịch sử file dịch, thực thể thuật ngữ riêng, thực thể đề xuất thuật ngữ, dịch vụ glossary, dịch vụ lưu trữ S3 và các bộ xử lý DOCX, XLSX, PPTX, PDF/OCR.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics{Hinhve/Picture2.png}
+    \caption{Ví dụ thiết kế gói}
+    \label{fig:Fig2}
+\end{figure}
+
+\section{Thiết kế chi tiết}
+\subsection{Thiết kế giao diện}
+Phần này có độ dài từ hai đến ba trang. Sinh viên đặc tả thông tin về màn hình mà ứng dụng của mình hướng tới, bao gồm độ phân giải màn hình, kích thước màn hình, số lượng màu sắc hỗ trợ, v.v. Tiếp đến, sinh viên đưa ra các thống nhất/chuẩn hóa của mình khi thiết kế giao diện như thiết kế nút, điều khiển, vị trí hiển thị thông điệp phản hồi, phối màu, v.v. Sau cùng sinh viên đưa ra một số hình ảnh minh họa thiết kế giao diện cho các chức năng quan trọng nhất. Lưu ý, sinh viên không nhầm lẫn giao diện thiết kế với giao diện của sản phẩm sau cùng.
+
+Agent:
+
+Giao diện frontend được tổ chức theo các màn hình nghiệp vụ chính: đăng nhập, tải và dịch file, dịch văn bản, xem kết quả dịch, chuyển đổi định dạng, xem kết quả chuyển đổi, lịch sử file, thư viện thuật ngữ riêng, thư viện thuật ngữ chung, quản trị tài khoản, thống kê từ khóa và quản lý ngôn ngữ. Bố cục chung gồm thanh điều hướng, vùng nội dung và khu vực thông báo phản hồi. Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung ảnh chụp màn hình giao diện thực tế hoặc ảnh thiết kế khi hoàn thiện báo cáo.
+\subsection{Thiết kế lớp}
+Phần này có độ dài từ ba đến bốn trang. Sinh viên trình bày thiết kế chi tiết các thuộc tính và phương thức cho một số lớp chủ đạo/quan trọng nhất của ứng dụng (từ 2-4 lớp). Thiết kế chi tiết cho các lớp khác, nếu muốn trình bày, sinh viên đưa vào phần phụ lục.
+
+Để minh họa thiết kế lớp, sinh viên thiết kế luồng truyền thông điệp giữa các đối tượng tham gia cho 2 đến 3 use case quan trọng nào đó bằng biểu đồ trình tự (hoặc biểu đồ giao tiếp).
+
+Agent:
+
+Các lớp dữ liệu chủ đạo của hệ thống gồm người dùng, file đã dịch, đề xuất thuật ngữ, thuật ngữ riêng, ngôn ngữ, công ty, cấu hình ngôn ngữ theo công ty và refresh token. Lớp người dùng dùng email làm định danh đăng nhập, có vai trò User, Admin hoặc Library Keeper, đồng thời liên kết tới công ty và ngôn ngữ ưa thích. Lớp file đã dịch lưu URL file gốc, tên file, URL file dịch, ngôn ngữ nguồn, ngôn ngữ đích, loại file và thời gian tạo. Lớp đề xuất thuật ngữ lưu bản dịch đa ngôn ngữ, trạng thái pending/approved/rejected và người phê duyệt. Lớp thuật ngữ riêng lưu thuật ngữ theo người dùng và có thể liên kết tới một đề xuất chung.
+
+\begin{verbatim}
+@startuml
+participant Frontend
+participant FileTranslationService
+participant S3Service
+participant DocumentProcessor
+participant GoogleTranslation
+participant Database
+
+Frontend -> FileTranslationService: request file translation
+FileTranslationService -> S3Service: download original file
+FileTranslationService -> DocumentProcessor: set context and translate document
+DocumentProcessor -> GoogleTranslation: translate text with optional glossary
+DocumentProcessor --> FileTranslationService: translated local file
+FileTranslationService -> S3Service: upload translated file
+FileTranslationService -> Database: save translation history
+FileTranslationService --> Frontend: translated file URLs
+@enduml
+\end{verbatim}
+\subsection{Thiết kế cơ sở dữ liệu}
+Phần này có độ dài từ hai đến bốn trang. Sinh viên thiết kế, vẽ và giải thích biểu đồ thực thể liên kết (E-R diagram). Từ đó, sinh viên thiết kế cơ sở dữ liệu tùy theo hệ quản trị cơ sở dữ liệu mà mình sử dụng (SQL, NoSQL, Firebase, v.v.)
+
+Agent:
+
+Cơ sở dữ liệu có thể dùng SQLite cho môi trường phát triển và PostgreSQL cho môi trường triển khai. Các thực thể chính gồm người dùng, token làm mới, file dịch, thuật ngữ riêng, đề xuất thuật ngữ, thiết lập hàng đợi thư viện, ngôn ngữ, công ty, ngôn ngữ theo công ty, thông báo và nhật ký thao tác ngôn ngữ. Quan hệ dữ liệu nổi bật gồm một người dùng có nhiều file dịch, nhiều từ khóa riêng, nhiều đề xuất thuật ngữ và nhiều refresh token; một công ty có nhiều người dùng và nhiều cấu hình ngôn ngữ; một cấu hình ngôn ngữ theo công ty liên kết một công ty với một ngôn ngữ; một nhật ký thao tác ghi lại người thực hiện, công ty, ngôn ngữ và hành động.
+
+\begin{verbatim}
+erDiagram
+    CustomUser ||--o{ TranslatedFile : owns
+    CustomUser ||--o{ PrivateKeyword : owns
+    CustomUser ||--o{ KeywordSuggestion : submits
+    CustomUser ||--o{ RefreshToken : has
+    Company ||--o{ CustomUser : includes
+    Company ||--o{ CompanyLanguage : configures
+    Language ||--o{ CompanyLanguage : enabled_as
+    KeywordSuggestion ||--o{ PrivateKeyword : linked_from
+    CustomUser ||--o{ LanguageAuditLog : acts
+    Company ||--o{ LanguageAuditLog : audited
+    Language ||--o{ LanguageAuditLog : audited
+\end{verbatim}
+
+\section{Xây dựng ứng dụng}
+\subsection{Thư viện và công cụ sử dụng}
+Sinh viên liệt kê các công cụ, ngôn ngữ lập trình, API, thư viện, IDE, công cụ kiểm thử, v.v. mà mình sử dụng để phát triển ứng dụng. Mỗi công cụ phải được chỉ rõ phiên bản sử dụng. SV nên kẻ bảng mô tả tương tự như Bảng \ref{table:my_label}. Nếu có nhiều nội dung trình bày, sinh viên cần xoay ngang bảng.
+
+Agent:
+
+Danh sách công cụ và thư viện chính gồm Python, Node.js, Nginx, Django, Django REST Framework, SimpleJWT, boto3, Google Cloud Translation, Google Cloud Storage, các thư viện xử lý PDF, DOCX, XLSX, PPTX, ảnh, dữ liệu bảng và ConvertAPI. Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung bảng phiên bản chính xác của các thư viện khi hoàn thiện tài liệu kỹ thuật.
+
+\begin{table}[H]
+\centering{}
+    \begin{tabular}{lll}
+        \hline
+        \textbf{Mục đích} & \textbf{Công cụ}       & \textbf{Địa chỉ URL}    \\ \hline
+        IDE lập trình     & Eclipse Oxygen a64 bit & http://www.eclipse.org/ \\ \hline
+        v.v.              & v.v.                   & v.v.                    \\ \hline
+        \end{tabular}
+    \caption{Danh sách thư viện và công cụ sử dụng}
+    \label{fig:my_label}
+\end{table}
+
+\subsection{Kết quả đạt được}
+Sinh viên trước tiên mô tả kết quả đạt được của mình là gì, ví dụ như các sản phẩm được đóng gói là gì, bao gồm những thành phần nào, ý nghĩa, vai trò?
+
+Sinh viên cần thống kê các thông tin về ứng dụng của mình như: số dòng code, số lớp, số gói, dung lượng toàn bộ mã nguồn, dung lượng của từng sản phẩm đóng gói, v.v. Tương tự như phần liệt kê về công cụ sử dụng, sinh viên cũng nên dùng bảng để mô tả phần thông tin thống kê này.
+
+Agent:
+
+Kết quả xây dựng thể hiện qua ba nhóm sản phẩm chính: giao diện web, backend API và khối dịch tài liệu. Backend cung cấp API cho dịch văn bản, dịch file, upload S3, chuyển đổi PDF, lịch sử file, thông báo, thuật ngữ, người dùng, ngôn ngữ, health check và thống kê. Frontend có các màn hình nghiệp vụ tương ứng. Khối dịch tài liệu xử lý DOCX, XLSX, PPTX, PDF/OCR, ảnh, phát hiện ngôn ngữ và tạo glossary. Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung thống kê chính thức về số dòng mã, số module và dung lượng sản phẩm đóng gói nếu báo cáo yêu cầu.
+
+\subsection{Minh họa các chức năng chính}
+Sinh viên lựa chọn và đưa ra màn hình cho các chức năng chính, quan trọng, và thú vị nhất. Mỗi giao diện cần phải có lời giải thích ngắn gọn. Khi giải thích, sinh viên có thể kết hợp với các chú thích ở trong hình ảnh giao diện.
+
+Agent:
+
+Các chức năng chính cần minh họa bằng ảnh giao diện khi hoàn thiện báo cáo gồm màn hình upload và dịch file, màn hình dịch văn bản, màn hình kết quả dịch, màn hình lịch sử file, màn hình thư viện thuật ngữ riêng, màn hình quản trị thư viện chung, màn hình thống kê từ khóa và màn hình quản lý ngôn ngữ. Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung ảnh chụp màn hình các chức năng này.
+
+\section{Kiểm thử}
+Phần này có độ dài từ hai đến ba trang. Sinh viên thiết kế các trường hợp kiểm thử cho hai đến ba chức năng quan trọng nhất. Sinh viên cần chỉ rõ các kỹ thuật kiểm thử đã sử dụng. Chi tiết các trường hợp kiểm thử khác, nếu muốn trình bày, sinh viên đưa vào phần phụ lục.
+Sinh viên sau cùng tổng kết về số lượng các trường hợp kiểm thử và kết quả kiểm thử. Sinh viên cần phân tích lý do nếu kết quả kiểm thử không đạt.
+
+Agent:
+
+Kế hoạch kiểm thử cần tập trung vào các chức năng quan trọng gồm thống kê từ khóa, dịch file, upload S3, chuyển đổi định dạng, quản lý glossary và xác thực người dùng. Với API thống kê từ khóa, các trường hợp kiểm thử cần bao gồm quyền truy cập của admin, chặn người dùng thường và người chưa xác thực, kiểm tra tham số ngày bắt buộc, định dạng ngày, thứ tự ngày bắt đầu/kết thúc, và cấu trúc dữ liệu trả về. Agent: [NEED\_MANUAL\_REVIEW] Cần rà soát và cập nhật bộ test tự động trước khi kết luận toàn bộ test pass.
+\section{Triển khai}
+Sinh viên trình bày mô hình và/hoặc cách thức triển khai thử nghiệm/thực tế. Ứng dụng của sinh viên được triển khai trên server/thiết bị gì, cấu hình như thế nào. Kết quả triển khai thử nghiệm nếu có (số lượng người dùng, số lượng truy cập, thời gian phản hồi, phản hồi người dùng, khả năng chịu tải, các thống kê, v.v.)
+
+Agent:
+
+Hệ thống được triển khai theo mô hình container gồm backend, frontend và Nginx. Backend chạy ở cổng nội bộ, frontend được build thành tài nguyên tĩnh và phục vụ qua Nginx, còn reverse proxy chính mở cổng HTTP/HTTPS, dùng chứng chỉ TLS, chuyển HTTP sang HTTPS, định tuyến request API tới backend và các request còn lại tới frontend. Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung log triển khai, số lượng người dùng, thời gian phản hồi hoặc kết quả kiểm thử tải.
+
+% Agent: BEGIN
+\medskip
+\textbf{Kết chương 4.} Chương này đã trình bày thiết kế kiến trúc phân tầng của hệ thống, bao gồm tầng giao diện React/Vite, tầng backend Django REST Framework, tầng xử lý tài liệu chuyên biệt và các dịch vụ hạ tầng cloud. Thiết kế cơ sở dữ liệu xác định mười một thực thể chính với quan hệ rõ ràng, trong đó người dùng là trung tâm liên kết tới file dịch, thuật ngữ riêng, đề xuất thuật ngữ và cấu hình công ty. Quá trình xây dựng tạo ra ba thành phần có thể triển khai độc lập là giao diện web, backend API và hệ thống container. Quy trình dịch file được kiểm thử qua luồng API thống kê từ khóa, xác thực phân quyền và xử lý tham số đầu vào. Hệ thống được triển khai theo mô hình container Nginx trên tên miền có HTTPS. Các đóng góp kỹ thuật nổi bật sẽ được phân tích chi tiết trong Chương 5.
+% Agent: END
+
+\end{document}
