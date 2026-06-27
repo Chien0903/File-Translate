@@ -47,12 +47,14 @@ export function QueueThresholdModal({
         </div>
         <div className="p-5 bg-white">
           <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-            Default is <strong>2</strong>: a suggestion is{" "}
-            <strong>automatically added to the library</strong> when at least{" "}
+            Default is <strong>2</strong>: when at least{" "}
             <strong>n different users</strong> submit the{" "}
             <strong>same language pair</strong> (same two cells, e.g. English +
-            Japanese). If it duplicates an existing entry, admin/keeper will be
-            notified instead. Minimum value is <strong>2</strong>.
+            Japanese), the suggestion is{" "}
+            <strong>added to the review queue</strong> and Library Keepers are
+            notified to approve or reject it. If it duplicates an existing
+            library entry, a duplicate alert is sent instead. Minimum value is{" "}
+            <strong>2</strong>.
           </p>
           <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
             Minimum suggesters
@@ -180,62 +182,9 @@ export function SuggestionQueueModal({
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min(page * pageSize, total);
   const searchInputRef = React.useRef(null);
-  const [userQuery, setUserQuery] = React.useState("");
-  const [selectedUser, setSelectedUser] = React.useState("");
-  const [keywordQuery, setKeywordQuery] = React.useState("");
 
-  const candidateUsers = React.useMemo(() => {
-    const map = new Map();
-    (items || []).forEach((row) => {
-      const key = (row.user_display || row.user_email || "").trim();
-      if (!key) return;
-      if (!map.has(key)) {
-        map.set(key, {
-          key,
-          label: row.user_display || row.user_email,
-          email: row.user_email || "",
-        });
-      }
-    });
-    return Array.from(map.values());
-  }, [items]);
-
-  const filteredUsers = React.useMemo(() => {
-    const q = userQuery.trim().toLowerCase();
-    if (!q) return candidateUsers;
-    return candidateUsers.filter((u) => {
-      const label = String(u.label || "").toLowerCase();
-      const email = String(u.email || "").toLowerCase();
-      return label.includes(q) || email.includes(q);
-    });
-  }, [candidateUsers, userQuery]);
-
-  const composedSearch = React.useMemo(() => {
-    // Step 1 (no selected user): allow backend query by user text
-    // so we can discover matching users, but UI still stays in "select user" mode.
-    if (!selectedUser) return userQuery.trim();
-    return keywordQuery.trim()
-      ? `${selectedUser}, ${keywordQuery.trim()}`
-      : selectedUser;
-  }, [selectedUser, userQuery, keywordQuery]);
-
-  React.useEffect(() => {
-    onSearchChange(composedSearch);
-  }, [composedSearch, onSearchChange]);
-
-  // Restore focus to search input after loading finishes
-  React.useEffect(() => {
-    if (!loading) {
-      searchInputRef.current?.focus();
-    }
-  }, [loading]);
-
-  // Auto-focus input when modal opens
   React.useEffect(() => {
     if (isOpen) {
-      setUserQuery("");
-      setSelectedUser("");
-      setKeywordQuery("");
       setTimeout(() => searchInputRef.current?.focus(), 50);
     }
   }, [isOpen]);
@@ -244,18 +193,15 @@ export function SuggestionQueueModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
-      <div
-        className={`${modalShell} max-w-5xl w-full h-[90vh] min-h-0`}
-      >
+      <div className={`${modalShell} max-w-5xl w-full h-[90vh] min-h-0`}>
         <div className="flex justify-between items-start gap-3 px-5 py-4 bg-indigo-700 text-white shrink-0">
           <div>
             <h3 className="text-base font-semibold tracking-tight">
-              Suggestion search
+              Suggestion Queue
             </h3>
             <p className="text-sm text-white/85 mt-1">
-              Step 1: search/chọn <strong className="text-white">user</strong>. Step 2: dùng cùng ô search để lọc{" "}
-              <strong className="text-white">keyword</strong> của user đó.
-              Words that meet the queue threshold are auto-added to the library.
+              Pending suggestions awaiting Library Keeper review. Approve to add to the
+              Common Library (updates GCS glossary), or reject to remove.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -288,188 +234,109 @@ export function SuggestionQueueModal({
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="shrink-0 px-5 pt-4 pb-3 border-b border-gray-200 bg-[#f8fafc]">
-            <div className="max-w-lg">
-              <div className="relative">
-                {loading ? (
-                  <div className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2">
-                    <div className="h-[18px] w-[18px] animate-spin rounded-full border-2 border-gray-300 border-t-indigo-500" />
-                  </div>
-                ) : (
-                  <FiSearch
-                    className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-400"
-                    size={18}
-                    aria-hidden
-                  />
-                )}
-                <input
-                  ref={searchInputRef}
-                  type="search"
-                  placeholder={
-                    selectedUser
-                      ? "Step 2: Search keyword for selected user"
-                      : "Step 1: Search user name or email"
-                  }
-                  className={`w-full border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 ${
-                    !selectedUser && filteredUsers.length > 0 ? "rounded-t-2xl rounded-b-md" : "rounded-full"
-                  }`}
-                  value={selectedUser ? keywordQuery : userQuery}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    if (selectedUser) setKeywordQuery(v);
-                    else setUserQuery(v);
-                  }}
-                />
-              </div>
-
-              {!selectedUser && filteredUsers.length > 0 && (
-                <div className="-mt-px max-h-64 overflow-auto rounded-b-2xl border border-t-0 border-gray-200 bg-white shadow-sm">
-                  <ul className="divide-y divide-gray-100">
-                    {filteredUsers.slice(0, 30).map((u) => (
-                      <li key={u.key}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedUser(u.key);
-                            setKeywordQuery("");
-                            setUserQuery("");
-                            setTimeout(() => searchInputRef.current?.focus(), 0);
-                          }}
-                          className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-gray-50 focus:bg-gray-50"
-                          title={u.email || u.label}
-                        >
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-gray-700">
-                            {String(u.label || "?").trim().charAt(0).toUpperCase() || "U"}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-medium text-gray-800">
-                              {u.label}
-                            </span>
-                            {u.email && (
-                              <span className="block truncate text-xs text-gray-500">
-                                {u.email}
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-gray-300">›</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+            <div className="relative max-w-lg">
+              {loading ? (
+                <div className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2">
+                  <div className="h-[18px] w-[18px] animate-spin rounded-full border-2 border-gray-300 border-t-indigo-500" />
                 </div>
+              ) : (
+                <FiSearch
+                  className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-400"
+                  size={18}
+                  aria-hidden
+                />
               )}
+              <input
+                ref={searchInputRef}
+                type="search"
+                placeholder="Filter by user name, email, or keyword…"
+                className="w-full rounded-full border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25"
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
             </div>
 
-            {selectedUser && (
-              <div className="mt-3 flex items-center gap-2 text-xs">
-                <span className="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-medium">
-                  User: {selectedUser}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedUser("");
-                    setKeywordQuery("");
-                    setUserQuery("");
-                    setTimeout(() => searchInputRef.current?.focus(), 0);
-                  }}
-                  className="px-2 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-100"
-                >
-                  Change user
-                </button>
-              </div>
+            {!loading && (
+              <p className="mt-2 text-xs text-gray-500">
+                {total > 0 ? (
+                  <>
+                    Rows <strong className="text-gray-700">{rangeStart}</strong>–
+                    <strong className="text-gray-700">{rangeEnd}</strong> of{" "}
+                    <strong className="text-gray-700">{total}</strong> pending
+                    · Page <strong className="text-gray-700">{page}</strong> / {totalPages}
+                  </>
+                ) : (
+                  <span>{searchQuery.trim() ? "No pending suggestions match your filter." : "No pending suggestions in the queue."}</span>
+                )}
+              </p>
             )}
-
-            {(() => {
-              const activeQuery = composedSearch.trim();
-              if (!activeQuery || loading) return null;
-              return (
-                <p className="mt-2 text-xs text-gray-500">
-                  {total > 0 ? (
-                    <>
-                      Rows <strong className="text-gray-700">{rangeStart}</strong>–
-                      <strong className="text-gray-700">{rangeEnd}</strong> of{" "}
-                      <strong className="text-gray-700">{total}</strong> matching
-                      · Page <strong className="text-gray-700">{page}</strong> / {totalPages}
-                    </>
-                  ) : (
-                    <span>No pending suggestions found.</span>
-                  )}
-                </p>
-              );
-            })()}
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8fafc]">
             <div className="flex-1 p-5">
               <div className="h-[360px] overflow-auto">
-              {!selectedUser ? (
-                <div className="text-center py-16 text-gray-400 text-sm border border-dashed border-gray-300 rounded-xl bg-white">
-                  <FiSearch size={28} className="mx-auto mb-3 text-gray-300" />
-                  {userQuery.trim()
-                    ? "No matching user found. Try another name/email."
-                    : "Step 1: Enter and select a user to start searching suggestions."}
-                </div>
-              ) : loading ? (
-                <div className="text-center py-16 text-gray-500 text-sm">
-                  Loading…
-                </div>
-              ) : total === 0 ? (
-                <div className="text-center py-16 text-gray-500 text-sm border border-dashed border-amber-200 rounded-xl bg-amber-50/80">
-                  No pending suggestions found matching &ldquo;{composedSearch.trim()}&rdquo;.
-                </div>
-              ) : items.length === 0 ? (
-                <div className="text-center py-16 text-gray-500 text-sm border border-dashed border-amber-200 rounded-xl bg-amber-50/80">
-                  No results on this page. Try another page.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {items.map((row) => {
-                    const busy = approvingId === row.id;
-                    return (
-                      <div
-                        key={row.id}
-                        className="border border-gray-200 rounded-xl p-4 flex flex-col lg:flex-row gap-4 bg-white shadow-sm"
-                      >
-                        <div className="flex shrink-0 flex-col gap-2 text-sm lg:w-[11rem]">
-                          <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                            <FiUsers className="shrink-0" size={14} />
-                            {row.user_display || row.user_email || "Unknown"}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            Suggestion #{row.id}
-                          </span>
-                          {row.created_at && (
-                            <span className="text-[11px] text-gray-400">
-                              {new Date(row.created_at).toLocaleDateString()}
+                {loading ? (
+                  <div className="text-center py-16 text-gray-500 text-sm">Loading…</div>
+                ) : total === 0 ? (
+                  <div className="text-center py-16 text-gray-400 text-sm border border-dashed border-gray-300 rounded-xl bg-white">
+                    <FiSearch size={28} className="mx-auto mb-3 text-gray-300" />
+                    {searchQuery.trim()
+                      ? "No pending suggestions match your filter."
+                      : "The suggestion queue is empty. Suggestions appear here when users submit terms for review."}
+                  </div>
+                ) : items.length === 0 ? (
+                  <div className="text-center py-16 text-gray-500 text-sm border border-dashed border-amber-200 rounded-xl bg-amber-50/80">
+                    No results on this page. Try another page.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {items.map((row) => {
+                      const busy = approvingId === row.id;
+                      return (
+                        <div
+                          key={row.id}
+                          className="border border-gray-200 rounded-xl p-4 flex flex-col lg:flex-row gap-4 bg-white shadow-sm"
+                        >
+                          <div className="flex shrink-0 flex-col gap-2 text-sm lg:w-[11rem]">
+                            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
+                              <FiUsers className="shrink-0" size={14} />
+                              {row.user_display || row.user_email || "Unknown"}
                             </span>
-                          )}
+                            <span className="text-xs text-gray-500">
+                              Suggestion #{row.id}
+                            </span>
+                            {row.created_at && (
+                              <span className="text-[11px] text-gray-400">
+                                {new Date(row.created_at).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <LangTable data={row} />
+                          </div>
+                          <div className="flex shrink-0 flex-row justify-end gap-2 lg:flex-col">
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => onApprove(row.id)}
+                              className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-[#359740] text-white text-sm font-medium hover:bg-[#2e8237] disabled:opacity-50 transition-colors"
+                            >
+                              <FiCheck size={16} /> Approve
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => onReject(row.id)}
+                              className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-full border border-red-200 text-red-700 text-sm font-medium hover:bg-red-50 disabled:opacity-50 transition-colors"
+                            >
+                              <FiTrash2 size={16} /> Reject
+                            </button>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <LangTable data={row} />
-                        </div>
-                        <div className="flex shrink-0 flex-row justify-end gap-2 lg:flex-col">
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => onApprove(row.id)}
-                            className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-[#359740] text-white text-sm font-medium hover:bg-[#2e8237] disabled:opacity-50 transition-colors"
-                          >
-                            <FiCheck size={16} /> Approve
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => onReject(row.id)}
-                            className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-full border border-red-200 text-red-700 text-sm font-medium hover:bg-red-50 disabled:opacity-50 transition-colors"
-                          >
-                            <FiTrash2 size={16} /> Reject
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

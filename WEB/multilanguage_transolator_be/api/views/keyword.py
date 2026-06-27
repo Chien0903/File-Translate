@@ -163,11 +163,39 @@ def _notify_admins_about_duplicate_suggestion(suggestion, duplicates):
     for admin in admins:
         Notification.objects.create(
             user=admin,
-            title="Duplicate Suggestion Detected",
+            title=DUPLICATE_ALERT_TITLE,
             message=(
-                f"A suggestion reached the auto-approve threshold but conflicts "
+                f"A suggestion reached the review threshold but conflicts "
                 f"with an existing library entry. Overlapping: {dup_fields}. "
-                f"Please review manually in 'Suggestion search'."
+                f"Please review manually in the Suggestion Queue."
+            ),
+            details=True,
+            keyword_details=[{
+                "suggestion_id": suggestion.id,
+                "translations": suggestion.translations,
+            }],
+        )
+
+
+def _notify_threshold_reached(suggestion):
+    """Notify Library Keepers/Admins that a suggestion has reached the review threshold."""
+    User = get_user_model()
+    keepers = User.objects.filter(Q(is_staff=True) | Q(role__in=['Admin', 'Library Keeper']))
+    if not keepers.exists():
+        return
+    already_notified = Notification.objects.filter(
+        title=THRESHOLD_REACHED_TITLE,
+        keyword_details__contains=[{"suggestion_id": suggestion.id}],
+    ).exists()
+    if already_notified:
+        return
+    for keeper in keepers:
+        Notification.objects.create(
+            user=keeper,
+            title=THRESHOLD_REACHED_TITLE,
+            message=(
+                "A keyword suggestion has reached the configured threshold and is "
+                "ready for your review in the Suggestion Queue."
             ),
             details=True,
             keyword_details=[{
@@ -191,6 +219,11 @@ def _check_full_duplicate_for_auto_approve(suggestion):
 
 
 def _try_auto_approve_on_threshold():
+    """
+    When enough distinct users suggest the same translation pair (>= min_suggesters_for_queue),
+    notify Library Keepers/Admins to review the suggestion rather than auto-approving.
+    Returns a list of suggestion IDs that reached the threshold this call.
+    """
     settings = LibraryQueueSettings.load()
     min_n = settings.min_suggesters_for_queue
     pending = list(KeywordSuggestion.objects.filter(status='pending').select_related('user'))
@@ -198,13 +231,11 @@ def _try_auto_approve_on_threshold():
         return []
 
     codes = _get_active_language_codes()
-    approved_ids = set()
+    notified_ids = set()
 
     for ca, cb in combinations(codes, 2):
         groups = {}
         for s in pending:
-            if s.id in approved_ids:
-                continue
             t = s.translations or {}
             va = _normalize_queue_text(t.get(ca, ""))
             vb = _normalize_queue_text(t.get(cb, ""))
@@ -222,7 +253,7 @@ def _try_auto_approve_on_threshold():
 
             group.sort(key=lambda x: x.id)
             rep = group[0]
-            if rep.status != 'pending' or rep.id in approved_ids:
+            if rep.status != 'pending':
                 continue
 
             duplicates = _check_full_duplicate_for_auto_approve(rep)
@@ -230,24 +261,10 @@ def _try_auto_approve_on_threshold():
                 _notify_admins_about_duplicate_suggestion(rep, duplicates)
                 continue
 
-            rep.status = 'approved'
-            rep.save(update_fields=['status', 'updated_at'])
-            approved_ids.add(rep.id)
-            _reject_other_pending_same_content(rep)
+            _notify_threshold_reached(rep)
+            notified_ids.add(rep.id)
 
-            User = get_user_model()
-            for user in User.objects.all():
-                Notification.objects.create(
-                    user=user,
-                    title="New Keyword Added",
-                    message="A keyword has been automatically added to the library (threshold reached).",
-                    details=True,
-                    keyword_details=[{"translations": rep.translations}],
-                )
-
-    if approved_ids:
-        async_manage_common_glossaries()
-    return list(approved_ids)
+    return list(notified_ids)
 
 
 # ======= Keyword CRUD Views =======
@@ -457,10 +474,10 @@ def keyword_suggestions_list_create(request):
             serializer = KeywordSuggestionSerializer(data=payload, context={'request': request})
             if serializer.is_valid():
                 suggestion = serializer.save()
-                auto_approved = _try_auto_approve_on_threshold()
+                threshold_notified = _try_auto_approve_on_threshold()
                 data = serializer.data
-                if auto_approved:
-                    data['auto_approved_ids'] = auto_approved
+                if threshold_notified:
+                    data['threshold_notified_ids'] = threshold_notified
                 return Response(data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=400)
         except Exception as e:
@@ -508,6 +525,7 @@ def upload_keywords_to_gcs(request):
 
 
 DUPLICATE_ALERT_TITLE = "Duplicate Suggestion Detected"
+THRESHOLD_REACHED_TITLE = "Keyword Ready for Review"
 
 
 @api_view(['GET'])
@@ -615,11 +633,11 @@ def suggestion_queue_settings(request):
         return Response({'error': 'min_suggesters_for_queue must be between 2 and 9999'}, status=400)
     settings.min_suggesters_for_queue = v
     settings.save()
-    auto_approved_ids = _try_auto_approve_on_threshold()
+    threshold_notified_ids = _try_auto_approve_on_threshold()
     return Response({
         'min_suggesters_for_queue': settings.min_suggesters_for_queue,
-        'auto_approved_ids': auto_approved_ids,
-        'auto_approved_count': len(auto_approved_ids),
+        'threshold_notified_ids': threshold_notified_ids,
+        'threshold_notified_count': len(threshold_notified_ids),
     })
 
 
@@ -630,44 +648,41 @@ def suggestion_queue_list(request):
         return Response({'error': 'Permission denied.'}, status=403)
 
     search = (request.GET.get('search') or '').strip()
-    if not search:
-        return Response({'suggestions': [], 'total': 0, 'page': 1, 'page_size': 8, 'total_pages': 1})
 
-    tokens = [t.strip() for t in search.split(',') if t.strip()]
-    if not tokens:
-        return Response({'suggestions': [], 'total': 0, 'page': 1, 'page_size': 8, 'total_pages': 1})
+    base_qs = KeywordSuggestion.objects.filter(status='pending').select_related('user')
 
-    def _user_q(token):
-        return (
-            Q(user__first_name__icontains=token)
-            | Q(user__last_name__icontains=token)
-            | Q(user__email__icontains=token)
-            | Q(full_name__icontains=token)
-        )
+    if search:
+        tokens = [t.strip() for t in search.split(',') if t.strip()]
+        if tokens:
+            def _user_q(token):
+                return (
+                    Q(user__first_name__icontains=token)
+                    | Q(user__last_name__icontains=token)
+                    | Q(user__email__icontains=token)
+                )
 
-    queryset = KeywordSuggestion.objects.filter(status='pending').select_related('user').annotate(
-        full_name=Concat('user__first_name', Value(' '), 'user__last_name', output_field=CharField())
-    )
-    for token in tokens:
-        queryset = queryset.filter(_user_q(token))
-    queryset = queryset.order_by('-created_at')
+            user_matched_ids = set()
+            for token in tokens:
+                user_matched_ids.update(
+                    base_qs.filter(_user_q(token)).values_list('id', flat=True)
+                )
 
-    # Also search translation content in Python
-    if tokens:
-        matched_ids = [
-            obj.id for obj in queryset.only('id', 'translations', 'full_name')
-            if any(
-                any(t.lower() in str(v).lower() for v in (obj.translations or {}).values())
-                or t.lower() in (obj.full_name or '').lower()
-                for t in tokens
-            )
-        ]
-        # Union: user match OR content match
-        user_matched = list(queryset.values_list('id', flat=True))
-        all_ids = list(set(user_matched) | set(matched_ids))
-        queryset = KeywordSuggestion.objects.filter(
-            status='pending', id__in=all_ids
-        ).select_related('user').order_by('-created_at')
+            content_matched_ids = {
+                obj.id for obj in base_qs.only('id', 'translations')
+                if any(
+                    any(t.lower() in str(v).lower() for v in (obj.translations or {}).values())
+                    for t in tokens
+                )
+            }
+
+            all_ids = user_matched_ids | content_matched_ids
+            queryset = KeywordSuggestion.objects.filter(
+                status='pending', id__in=all_ids
+            ).select_related('user').order_by('-created_at')
+        else:
+            queryset = base_qs.order_by('-created_at')
+    else:
+        queryset = base_qs.order_by('-created_at')
 
     total = queryset.count()
     try:
@@ -904,13 +919,13 @@ class PrivateKeywordSuggestView(APIView):
             kw.save(update_fields=['suggestion'])
             created.append(suggestion.id)
 
-        auto_approved = _try_auto_approve_on_threshold() if created else []
+        threshold_notified = _try_auto_approve_on_threshold() if created else []
 
         messages = []
         if created:
             messages.append(f'{len(created)} keyword(s) submitted for review.')
-        if auto_approved:
-            messages.append(f'{len(auto_approved)} keyword(s) auto-added to the library.')
+        if threshold_notified:
+            messages.append(f'{len(threshold_notified)} keyword(s) reached the threshold and sent to Library Keeper queue.')
         if skipped_pending:
             messages.append(f'{len(skipped_pending)} keyword(s) already pending review.')
         if skipped_approved:
@@ -919,7 +934,7 @@ class PrivateKeywordSuggestView(APIView):
         return Response({
             'message': ' '.join(messages) or 'No action taken.',
             'suggested_ids': created,
-            'auto_approved_ids': auto_approved,
+            'threshold_notified_ids': threshold_notified,
             'skipped_pending': skipped_pending,
             'skipped_approved': skipped_approved,
         }, status=201 if created else 200)

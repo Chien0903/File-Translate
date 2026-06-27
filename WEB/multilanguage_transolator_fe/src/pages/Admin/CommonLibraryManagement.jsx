@@ -259,9 +259,9 @@ const CommonLibraryManagement = () => {
   useEffect(() => {
     const t = setTimeout(() => {
       setQueueSearch((prev) => {
-        if (queueSearchInput === prev) return prev;
+        if (queueSearchInput.trim() === prev) return prev;
         setQueuePage(1);
-        return queueSearchInput;
+        return queueSearchInput.trim();
       });
     }, 400);
     return () => clearTimeout(t);
@@ -394,10 +394,10 @@ const CommonLibraryManagement = () => {
     try {
       const res = await keywordService.patchSuggestionQueueSettings(v);
       setQueueMinSuggesters(v);
-      const autoApprovedCount = res?.data?.auto_approved_count ?? 0;
+      const notifiedCount = res?.data?.threshold_notified_count ?? 0;
       toast.success(
-        autoApprovedCount > 0
-          ? `Queue threshold saved. ${autoApprovedCount} keyword(s) auto-added.`
+        notifiedCount > 0
+          ? `Queue threshold saved. ${notifiedCount} suggestion(s) sent to the review queue.`
           : "Queue threshold saved.",
         {
           style: { backgroundColor: "green", color: "white" },
