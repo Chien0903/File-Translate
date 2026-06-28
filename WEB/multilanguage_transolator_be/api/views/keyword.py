@@ -11,7 +11,6 @@ from ..models.keyword import KeywordSuggestion, KeywordQueue, PrivateKeyword, Li
 from ..models.notification import Notification
 from ..serializers.keyword import KeywordSuggestionSerializer, KeywordQueueSerializer, PrivateKeywordSerializer
 from django.contrib.auth import get_user_model
-from rest_framework.decorators import api_view, permission_classes
 from django.db.models import Q, Value, CharField
 from django.db.models.functions import Concat
 from django.views.decorators.csrf import csrf_exempt
@@ -417,10 +416,10 @@ class UpdateKeywordView(APIView):
 
 # ======= Keyword List/Create =======
 
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def keyword_suggestions_list_create(request):
-    if request.method == 'GET':
+class KeywordSuggestionListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
         try:
             queryset = KeywordSuggestion.objects.all().order_by('-created_at')
 
@@ -459,7 +458,7 @@ def keyword_suggestions_list_create(request):
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
-    elif request.method == 'POST':
+    def post(self, request):
         try:
             translations = request.data.get('translations', {})
             if not translations or not any(v.strip() for v in translations.values() if isinstance(v, str)):
@@ -473,7 +472,7 @@ def keyword_suggestions_list_create(request):
             }
             serializer = KeywordSuggestionSerializer(data=payload, context={'request': request})
             if serializer.is_valid():
-                suggestion = serializer.save()
+                serializer.save()
                 threshold_notified = _try_auto_approve_on_threshold()
                 data = serializer.data
                 if threshold_notified:
@@ -486,294 +485,265 @@ def keyword_suggestions_list_create(request):
 
 # ======= GCS Upload Endpoints =======
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def upload_keywords_to_gcs(request):
-    csv_file_path = None
-    try:
-        if not _check_admin_or_keeper(request.user):
-            return Response({'error': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
+class UploadKeywordsToGCSView(APIView):
+    permission_classes = [IsAuthenticated]
 
-        csv_file_path = create_glossary_csv_file()
-        if not csv_file_path:
-            return Response({'error': 'No approved keywords found to upload'}, status=400)
+    def post(self, request):
+        csv_file_path = None
+        try:
+            if not _check_admin_or_keeper(request.user):
+                return Response({'error': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
 
-        gcs_url = upload_csv_to_gcs(csv_file_path)
-        results, errors = manage_all_glossaries(mode=1)
-        approved_count = KeywordSuggestion.objects.filter(status='approved').count()
+            csv_file_path = create_glossary_csv_file()
+            if not csv_file_path:
+                return Response({'error': 'No approved keywords found to upload'}, status=400)
 
-        return Response({
-            'message': 'Keywords extracted, uploaded to GCS and glossaries updated.',
-            'details': {
-                'gcs_url': gcs_url,
-                'approved_keywords_count': approved_count,
-                'glossary_updates': {
-                    'successful': len(results),
-                    'failed': len(errors),
-                    'errors': errors or None,
+            gcs_url = upload_csv_to_gcs(csv_file_path)
+            results, errors = manage_all_glossaries(mode=1)
+            approved_count = KeywordSuggestion.objects.filter(status='approved').count()
+
+            return Response({
+                'message': 'Keywords extracted, uploaded to GCS and glossaries updated.',
+                'details': {
+                    'gcs_url': gcs_url,
+                    'approved_keywords_count': approved_count,
+                    'glossary_updates': {
+                        'successful': len(results),
+                        'failed': len(errors),
+                        'errors': errors or None,
+                    },
                 },
-            },
-        })
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)
-    finally:
-        if csv_file_path and os.path.exists(csv_file_path):
-            try:
-                os.unlink(csv_file_path)
-            except Exception:
-                pass
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+        finally:
+            if csv_file_path and os.path.exists(csv_file_path):
+                try:
+                    os.unlink(csv_file_path)
+                except Exception:
+                    pass
 
 
 DUPLICATE_ALERT_TITLE = "Duplicate Suggestion Detected"
 THRESHOLD_REACHED_TITLE = "Keyword Ready for Review"
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def duplicate_alerts_list(request):
-    if not _check_admin_or_keeper(request.user):
-        return Response({'error': 'Permission denied.'}, status=403)
+class DuplicateAlertsListView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    notifs = Notification.objects.filter(
-        user=request.user, title=DUPLICATE_ALERT_TITLE, read=False
-    ).order_by('-created_at')
+    def get(self, request):
+        if not _check_admin_or_keeper(request.user):
+            return Response({'error': 'Permission denied.'}, status=403)
 
-    results = []
-    for n in notifs:
-        kd = (n.keyword_details or [{}])[0] if n.keyword_details else {}
-        suggestion_id = kd.get('suggestion_id')
-        suggestion_data = existing_data = None
+        notifs = Notification.objects.filter(
+            user=request.user, title=DUPLICATE_ALERT_TITLE, read=False
+        ).order_by('-created_at')
 
-        if suggestion_id:
-            try:
-                s = KeywordSuggestion.objects.get(id=suggestion_id)
-                suggestion_data = {'id': s.id, 'status': s.status, 'translations': s.translations}
-                dups = _check_keyword_duplicates(s)
-                if dups:
-                    try:
-                        ex = KeywordSuggestion.objects.get(id=dups[0]['conflict_ids'][0], status='approved')
-                        existing_data = {'id': ex.id, 'translations': ex.translations}
-                    except KeywordSuggestion.DoesNotExist:
-                        pass
-            except KeywordSuggestion.DoesNotExist:
-                pass
+        results = []
+        for n in notifs:
+            kd = (n.keyword_details or [{}])[0] if n.keyword_details else {}
+            suggestion_id = kd.get('suggestion_id')
+            suggestion_data = existing_data = None
 
-        results.append({
-            'notification_id': n.id,
-            'message': n.message,
-            'created_at': n.created_at.isoformat() if n.created_at else None,
-            'suggestion': suggestion_data,
-            'existing_library': existing_data,
-        })
+            if suggestion_id:
+                try:
+                    s = KeywordSuggestion.objects.get(id=suggestion_id)
+                    suggestion_data = {'id': s.id, 'status': s.status, 'translations': s.translations}
+                    dups = _check_keyword_duplicates(s)
+                    if dups:
+                        try:
+                            ex = KeywordSuggestion.objects.get(id=dups[0]['conflict_ids'][0], status='approved')
+                            existing_data = {'id': ex.id, 'translations': ex.translations}
+                        except KeywordSuggestion.DoesNotExist:
+                            pass
+                except KeywordSuggestion.DoesNotExist:
+                    pass
 
-    return Response({'alerts': results, 'total': len(results)})
+            results.append({
+                'notification_id': n.id,
+                'message': n.message,
+                'created_at': n.created_at.isoformat() if n.created_at else None,
+                'suggestion': suggestion_data,
+                'existing_library': existing_data,
+            })
 
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def duplicate_alert_dismiss(request, pk):
-    if not _check_admin_or_keeper(request.user):
-        return Response({'error': 'Permission denied.'}, status=403)
-    try:
-        n = Notification.objects.get(id=pk, user=request.user, title=DUPLICATE_ALERT_TITLE)
-    except Notification.DoesNotExist:
-        return Response({'error': 'Not found.'}, status=404)
-    n.read = True
-    n.save(update_fields=['read'])
-    return Response({'message': 'Dismissed.'})
+        return Response({'alerts': results, 'total': len(results)})
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_gcs_upload_status(request):
-    try:
-        total = KeywordSuggestion.objects.count()
-        approved = KeywordSuggestion.objects.filter(status='approved').count()
-        pending = KeywordSuggestion.objects.filter(status='pending').count()
+class DuplicateAlertDismissView(APIView):
+    permission_classes = [IsAuthenticated]
 
-        bucket_name = os.getenv("BUCKET_NAME", "toray-buckets")
-        gcs_info = None
+    def post(self, request, pk):
+        if not _check_admin_or_keeper(request.user):
+            return Response({'error': 'Permission denied.'}, status=403)
         try:
-            sc = storage.Client()
-            blob = sc.bucket(bucket_name).blob("glossary_term.csv")
-            if blob.exists():
-                blob.reload()
-                gcs_info = {'exists': True, 'size': blob.size, 'updated': blob.updated.isoformat() if blob.updated else None}
-            else:
-                gcs_info = {'exists': False}
+            n = Notification.objects.get(id=pk, user=request.user, title=DUPLICATE_ALERT_TITLE)
+        except Notification.DoesNotExist:
+            return Response({'error': 'Not found.'}, status=404)
+        n.read = True
+        n.save(update_fields=['read'])
+        return Response({'message': 'Dismissed.'})
+
+
+class GCSUploadStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            total = KeywordSuggestion.objects.count()
+            approved = KeywordSuggestion.objects.filter(status='approved').count()
+            pending = KeywordSuggestion.objects.filter(status='pending').count()
+
+            bucket_name = os.getenv("BUCKET_NAME", "toray-buckets")
+            gcs_info = None
+            try:
+                sc = storage.Client()
+                blob = sc.bucket(bucket_name).blob("glossary_term.csv")
+                if blob.exists():
+                    blob.reload()
+                    gcs_info = {'exists': True, 'size': blob.size, 'updated': blob.updated.isoformat() if blob.updated else None}
+                else:
+                    gcs_info = {'exists': False}
+            except Exception as e:
+                gcs_info = {'error': str(e)}
+
+            return Response({
+                'keywords_stats': {'total': total, 'approved': approved, 'pending': pending},
+                'gcs_file': gcs_info,
+                'can_upload': approved > 0,
+                'user_permissions': {'can_upload': _check_admin_or_keeper(request.user)},
+            })
         except Exception as e:
-            gcs_info = {'error': str(e)}
-
-        return Response({
-            'keywords_stats': {'total': total, 'approved': approved, 'pending': pending},
-            'gcs_file': gcs_info,
-            'can_upload': approved > 0,
-            'user_permissions': {'can_upload': _check_admin_or_keeper(request.user)},
-        })
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)
+            return Response({'error': str(e)}, status=500)
 
 
-@api_view(['GET', 'PATCH'])
-@permission_classes([IsAuthenticated])
-def suggestion_queue_settings(request):
-    settings = LibraryQueueSettings.load()
-    if request.method == 'GET':
+class SuggestionQueueSettingsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        settings = LibraryQueueSettings.load()
         return Response({'min_suggesters_for_queue': settings.min_suggesters_for_queue})
-    if not _check_admin_or_keeper(request.user):
-        return Response({'error': 'Permission denied.'}, status=403)
-    val = request.data.get('min_suggesters_for_queue')
-    if val is None:
-        return Response({'error': 'min_suggesters_for_queue is required'}, status=400)
-    try:
-        v = int(val)
-        if v < 2 or v > 9999:
-            raise ValueError()
-    except (TypeError, ValueError):
-        return Response({'error': 'min_suggesters_for_queue must be between 2 and 9999'}, status=400)
-    settings.min_suggesters_for_queue = v
-    settings.save()
-    threshold_notified_ids = _try_auto_approve_on_threshold()
-    return Response({
-        'min_suggesters_for_queue': settings.min_suggesters_for_queue,
-        'threshold_notified_ids': threshold_notified_ids,
-        'threshold_notified_count': len(threshold_notified_ids),
-    })
+
+    def patch(self, request):
+        settings = LibraryQueueSettings.load()
+        if not _check_admin_or_keeper(request.user):
+            return Response({'error': 'Permission denied.'}, status=403)
+        val = request.data.get('min_suggesters_for_queue')
+        if val is None:
+            return Response({'error': 'min_suggesters_for_queue is required'}, status=400)
+        try:
+            v = int(val)
+            if v < 2 or v > 9999:
+                raise ValueError()
+        except (TypeError, ValueError):
+            return Response({'error': 'min_suggesters_for_queue must be between 2 and 9999'}, status=400)
+        settings.min_suggesters_for_queue = v
+        settings.save()
+        threshold_notified_ids = _try_auto_approve_on_threshold()
+        return Response({
+            'min_suggesters_for_queue': settings.min_suggesters_for_queue,
+            'threshold_notified_ids': threshold_notified_ids,
+            'threshold_notified_count': len(threshold_notified_ids),
+        })
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def suggestion_queue_list(request):
-    if not _check_admin_or_keeper(request.user):
-        return Response({'error': 'Permission denied.'}, status=403)
+class SuggestionQueueListView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    search = (request.GET.get('search') or '').strip()
+    def get(self, request):
+        if not _check_admin_or_keeper(request.user):
+            return Response({'error': 'Permission denied.'}, status=403)
 
-    base_qs = KeywordSuggestion.objects.filter(status='pending').select_related('user')
+        search = (request.GET.get('search') or '').strip()
+        base_qs = KeywordSuggestion.objects.filter(status='pending').select_related('user')
 
-    if search:
-        tokens = [t.strip() for t in search.split(',') if t.strip()]
-        if tokens:
-            def _user_q(token):
-                return (
-                    Q(user__first_name__icontains=token)
-                    | Q(user__last_name__icontains=token)
-                    | Q(user__email__icontains=token)
-                )
+        if search:
+            tokens = [t.strip() for t in search.split(',') if t.strip()]
+            if tokens:
+                def _user_q(token):
+                    return (
+                        Q(user__first_name__icontains=token)
+                        | Q(user__last_name__icontains=token)
+                        | Q(user__email__icontains=token)
+                    )
 
-            user_matched_ids = set()
-            for token in tokens:
-                user_matched_ids.update(
-                    base_qs.filter(_user_q(token)).values_list('id', flat=True)
-                )
+                user_matched_ids = set()
+                for token in tokens:
+                    user_matched_ids.update(
+                        base_qs.filter(_user_q(token)).values_list('id', flat=True)
+                    )
 
-            content_matched_ids = {
-                obj.id for obj in base_qs.only('id', 'translations')
-                if any(
-                    any(t.lower() in str(v).lower() for v in (obj.translations or {}).values())
-                    for t in tokens
-                )
-            }
+                content_matched_ids = {
+                    obj.id for obj in base_qs.only('id', 'translations')
+                    if any(
+                        any(t.lower() in str(v).lower() for v in (obj.translations or {}).values())
+                        for t in tokens
+                    )
+                }
 
-            all_ids = user_matched_ids | content_matched_ids
-            queryset = KeywordSuggestion.objects.filter(
-                status='pending', id__in=all_ids
-            ).select_related('user').order_by('-created_at')
+                all_ids = user_matched_ids | content_matched_ids
+                queryset = KeywordSuggestion.objects.filter(
+                    status='pending', id__in=all_ids
+                ).select_related('user').order_by('-created_at')
+            else:
+                queryset = base_qs.order_by('-created_at')
         else:
             queryset = base_qs.order_by('-created_at')
-    else:
-        queryset = base_qs.order_by('-created_at')
 
-    total = queryset.count()
-    try:
-        page_size = max(1, min(int(request.GET.get('page_size', 8)), 50))
-    except (TypeError, ValueError):
-        page_size = 8
-    try:
-        page = max(1, int(request.GET.get('page', 1)))
-    except (TypeError, ValueError):
-        page = 1
-    total_pages = max(1, (total + page_size - 1) // page_size)
-    page = min(page, total_pages)
+        total = queryset.count()
+        try:
+            page_size = max(1, min(int(request.GET.get('page_size', 8)), 50))
+        except (TypeError, ValueError):
+            page_size = 8
+        try:
+            page = max(1, int(request.GET.get('page', 1)))
+        except (TypeError, ValueError):
+            page = 1
+        total_pages = max(1, (total + page_size - 1) // page_size)
+        page = min(page, total_pages)
 
-    start = (page - 1) * page_size
-    result = []
-    for s in queryset[start:start + page_size]:
-        user_display = ''
-        if s.user:
-            full = f"{s.user.first_name or ''} {s.user.last_name or ''}".strip()
-            user_display = full or s.user.email
-        result.append({
-            'id': s.id,
-            'user_id': s.user_id,
-            'user_display': user_display,
-            'user_email': s.user.email if s.user else None,
-            'translations': s.translations or {},
-            'status': s.status,
-            'created_at': s.created_at.isoformat() if s.created_at else None,
-        })
+        start = (page - 1) * page_size
+        result = []
+        for s in queryset[start:start + page_size]:
+            user_display = ''
+            if s.user:
+                full = f"{s.user.first_name or ''} {s.user.last_name or ''}".strip()
+                user_display = full or s.user.email
+            result.append({
+                'id': s.id,
+                'user_id': s.user_id,
+                'user_display': user_display,
+                'user_email': s.user.email if s.user else None,
+                'translations': s.translations or {},
+                'status': s.status,
+                'created_at': s.created_at.isoformat() if s.created_at else None,
+            })
 
-    return Response({'suggestions': result, 'total': total, 'page': page, 'page_size': page_size, 'total_pages': total_pages})
+        return Response({'suggestions': result, 'total': total, 'page': page, 'page_size': page_size, 'total_pages': total_pages})
 
 
 # ======= Queue Management =======
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def process_keyword_queue_api(request):
-    try:
-        if not _check_admin_or_keeper(request.user):
-            return Response({'error': 'Permission denied.'}, status=403)
-        min_frequency = float(request.data.get('min_frequency', 2.0))
-        dry_run = request.data.get('dry_run', False)
-        from django.core.management import call_command
-        from io import StringIO
-        import sys
-        old_stdout = sys.stdout
-        sys.stdout = output = StringIO()
+class ProcessKeywordQueueView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
         try:
-            call_command('process_keyword_queue', min_frequency=min_frequency, dry_run=dry_run)
-            command_output = output.getvalue()
-        finally:
-            sys.stdout = old_stdout
+            if not _check_admin_or_keeper(request.user):
+                return Response({'error': 'Permission denied.'}, status=403)
+            min_frequency = float(request.data.get('min_frequency', 2.0))
+            dry_run = request.data.get('dry_run', False)
+            from django.core.management import call_command
+            from io import StringIO
+            import sys
+            old_stdout = sys.stdout
+            sys.stdout = output = StringIO()
+            try:
+                call_command('process_keyword_queue', min_frequency=min_frequency, dry_run=dry_run)
+                command_output = output.getvalue()
+            finally:
+                sys.stdout = old_stdout
 
-        queue_stats = {
-            'total_queue_items': KeywordQueue.objects.count(),
-            'unprocessed_items': KeywordQueue.objects.filter(is_processed=False).count(),
-            'processed_items': KeywordQueue.objects.filter(is_processed=True).count(),
-            'total_suggestions': KeywordSuggestion.objects.count(),
-            'pending_suggestions': KeywordSuggestion.objects.filter(status='pending').count(),
-            'approved_suggestions': KeywordSuggestion.objects.filter(status='approved').count(),
-        }
-        return Response({'message': 'Queue processing completed.', 'details': {'command_output': command_output, 'statistics': queue_stats}})
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_queue_status(request):
-    try:
-        user_only = request.GET.get('user_only', '').lower() == 'true'
-        page = int(request.GET.get('page', 1))
-        page_size = int(request.GET.get('page_size', 50))
-        start = (page - 1) * page_size
-
-        if user_only:
-            total = KeywordSuggestion.objects.filter(user=request.user).count()
-            pending = KeywordSuggestion.objects.filter(user=request.user, status='pending').count()
-            approved = KeywordSuggestion.objects.filter(user=request.user, status='approved').count()
-            queue_stats = {'total_queue_items': total, 'unprocessed_items': pending, 'processed_items': approved,
-                           'total_suggestions': total, 'pending_suggestions': pending, 'approved_suggestions': approved}
-            user_suggestions = KeywordSuggestion.objects.filter(user=request.user).order_by('-created_at')[start:start + page_size]
-            queue_items = [{
-                'id': s.id, 'user': s.user_id, 'translations': s.translations or {},
-                'is_processed': s.status == 'approved',
-                'processed_at': s.updated_at if s.status == 'approved' else None,
-                'created_at': s.created_at,
-            } for s in user_suggestions]
-            recent_suggestions = KeywordSuggestion.objects.filter(user=request.user, status='pending').order_by('-created_at')[:10]
-        else:
             queue_stats = {
                 'total_queue_items': KeywordQueue.objects.count(),
                 'unprocessed_items': KeywordQueue.objects.filter(is_processed=False).count(),
@@ -782,19 +752,57 @@ def get_queue_status(request):
                 'pending_suggestions': KeywordSuggestion.objects.filter(status='pending').count(),
                 'approved_suggestions': KeywordSuggestion.objects.filter(status='approved').count(),
             }
-            queue_items = KeywordQueueSerializer(KeywordQueue.objects.all().order_by('-created_at')[start:start + page_size], many=True).data
-            recent_suggestions = KeywordSuggestion.objects.filter(status='pending').order_by('-created_at')[:10]
+            return Response({'message': 'Queue processing completed.', 'details': {'command_output': command_output, 'statistics': queue_stats}})
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
 
-        return Response({
-            'statistics': queue_stats,
-            'queue_items': queue_items,
-            'total_queue_items': queue_stats['total_queue_items'],
-            'recent_suggestions': KeywordSuggestionSerializer(recent_suggestions, many=True).data,
-            'can_process': queue_stats['unprocessed_items'] > 0,
-            'user_permissions': {'can_process_queue': _check_admin_or_keeper(request.user)},
-        })
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)
+
+class QueueStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            user_only = request.GET.get('user_only', '').lower() == 'true'
+            page = int(request.GET.get('page', 1))
+            page_size = int(request.GET.get('page_size', 50))
+            start = (page - 1) * page_size
+
+            if user_only:
+                total = KeywordSuggestion.objects.filter(user=request.user).count()
+                pending = KeywordSuggestion.objects.filter(user=request.user, status='pending').count()
+                approved = KeywordSuggestion.objects.filter(user=request.user, status='approved').count()
+                queue_stats = {'total_queue_items': total, 'unprocessed_items': pending, 'processed_items': approved,
+                               'total_suggestions': total, 'pending_suggestions': pending, 'approved_suggestions': approved}
+                user_suggestions = KeywordSuggestion.objects.filter(user=request.user).order_by('-created_at')[start:start + page_size]
+                queue_items = [{
+                    'id': s.id, 'user': s.user_id, 'translations': s.translations or {},
+                    'is_processed': s.status == 'approved',
+                    'processed_at': s.updated_at if s.status == 'approved' else None,
+                    'created_at': s.created_at,
+                } for s in user_suggestions]
+                recent_suggestions = KeywordSuggestion.objects.filter(user=request.user, status='pending').order_by('-created_at')[:10]
+            else:
+                queue_stats = {
+                    'total_queue_items': KeywordQueue.objects.count(),
+                    'unprocessed_items': KeywordQueue.objects.filter(is_processed=False).count(),
+                    'processed_items': KeywordQueue.objects.filter(is_processed=True).count(),
+                    'total_suggestions': KeywordSuggestion.objects.count(),
+                    'pending_suggestions': KeywordSuggestion.objects.filter(status='pending').count(),
+                    'approved_suggestions': KeywordSuggestion.objects.filter(status='approved').count(),
+                }
+                queue_items = KeywordQueueSerializer(KeywordQueue.objects.all().order_by('-created_at')[start:start + page_size], many=True).data
+                recent_suggestions = KeywordSuggestion.objects.filter(status='pending').order_by('-created_at')[:10]
+
+            return Response({
+                'statistics': queue_stats,
+                'queue_items': queue_items,
+                'total_queue_items': queue_stats['total_queue_items'],
+                'recent_suggestions': KeywordSuggestionSerializer(recent_suggestions, many=True).data,
+                'can_process': queue_stats['unprocessed_items'] > 0,
+                'user_permissions': {'can_process_queue': _check_admin_or_keeper(request.user)},
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
 
 
 # ===== Private Library Views =====
