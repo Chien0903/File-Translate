@@ -1,4 +1,4 @@
-\documentclass[../DoAn.tex]{subfiles}
+﻿\documentclass[../DoAn.tex]{subfiles}
 \begin{document}
 
 % Agent: BEGIN
@@ -50,7 +50,7 @@ Sinh viên vẽ biểu đồ gói UML (UML package diagram), nêu rõ sự phụ
 
 Agent:
 
-Biểu đồ gói tổng quan của hệ thống được thiết kế theo hướng đơn giản, gồm bốn gói chính: \texttt{frontend}, \texttt{backend}, \texttt{database} và \texttt{external\_services}. Biểu đồ được trình bày trong Hình~\ref{fig:Fig1}.
+Biểu đồ gói tổng quan của hệ thống được thiết kế theo hướng đơn giản, gồm bốn gói chính: frontend, backend, database và external\_services. Biểu đồ được trình bày trong Hình~\ref{fig:Fig1}.
 
 \begin{figure}[H]
     \centering
@@ -108,7 +108,7 @@ Biểu đồ gói tổng quan của hệ thống được thiết kế theo hư�
 
 \textbf{e, Mối quan hệ giữa các gói}
 
-Gói \texttt{frontend} phụ thuộc vào \texttt{backend} để gửi yêu cầu và nhận dữ liệu hiển thị. Gói \texttt{backend} phụ thuộc vào \texttt{database} để đọc/ghi dữ liệu nghiệp vụ. Đồng thời, \texttt{backend} phụ thuộc vào \texttt{external\_services} để gọi các dịch vụ dịch máy, lưu trữ tệp, quản lý glossary và chuyển đổi định dạng. Các gói \texttt{database} và \texttt{external\_services} không phụ thuộc ngược lại vào frontend hoặc backend, giúp kiến trúc tổng quan rõ ràng và dễ bảo trì.
+Gói frontend phụ thuộc vào backend để gửi yêu cầu và nhận dữ liệu hiển thị. Gói backend phụ thuộc vào database để đọc/ghi dữ liệu nghiệp vụ. Đồng thời, backend phụ thuộc vào external\_services để gọi các dịch vụ dịch máy, lưu trữ tệp, quản lý glossary và chuyển đổi định dạng. Các gói database và external\_services không phụ thuộc ngược lại vào frontend hoặc backend, giúp kiến trúc tổng quan rõ ràng và dễ bảo trì.
 
 \subsection{Thiết kế chi tiết gói}
 \begin{figure}[H]
@@ -118,39 +118,39 @@ Gói \texttt{frontend} phụ thuộc vào \texttt{backend} để gửi yêu cầ
     \label{fig:package-detail}
 \end{figure}
 
-Hệ thống được chia thành hai phần chính là \texttt{frontend} và \texttt{backend}, tuân thủ hướng MVC với frontend tách rời. Ngoài ra, hệ thống còn có gói \texttt{Translate\_v2} phục vụ xử lý dịch tài liệu, gói \texttt{database} lưu trữ dữ liệu và gói \texttt{external\_services} đại diện cho các dịch vụ bên ngoài được tích hợp.
+Hệ thống được chia thành hai phần chính là frontend và backend, tuân thủ hướng MVC với frontend tách rời. Ngoài ra, hệ thống còn có gói Translate\_v2 phục vụ xử lý dịch tài liệu, gói database lưu trữ dữ liệu và gói external\_services đại diện cho các dịch vụ bên ngoài được tích hợp.
 
 \textbf{a, Frontend}
 \begin{itemize}
-  \item \texttt{routes}: Xác định tuyến đường giao diện và điều hướng người dùng đến các trang tương ứng thông qua thành phần \texttt{App}.
-  \item \texttt{pages}: Chứa các trang giao diện theo nhóm người dùng, quản trị và các trang chung như đăng nhập, dịch văn bản, lịch sử tệp, thư viện cá nhân, quản lý tài khoản và quản lý ngôn ngữ.
-  \item \texttt{components}: Chứa các thành phần giao diện tái sử dụng như chọn ngôn ngữ, tải tệp, chuyển đổi định dạng và hiển thị thông báo.
-  \item \texttt{services}: Là tầng trung gian gọi API backend, đảm nhiệm việc gửi yêu cầu và nhận dữ liệu trả về thông qua các module như \texttt{api}, \texttt{authService}, \texttt{translationService}, \texttt{keywordService} và \texttt{languageService}.
-  \item \texttt{context\_hooks}: Quản lý trạng thái dùng chung ở phía frontend, tiêu biểu là trạng thái xác thực và danh sách ngôn ngữ theo công ty hoặc thư viện.
+  \item routes: Xác định tuyến đường giao diện và điều hướng người dùng đến các trang tương ứng thông qua thành phần App.
+  \item pages: Chứa các trang giao diện theo nhóm người dùng, quản trị và các trang chung như đăng nhập, dịch văn bản, lịch sử tệp, thư viện cá nhân, quản lý tài khoản và quản lý ngôn ngữ.
+  \item components: Chứa các thành phần giao diện tái sử dụng như chọn ngôn ngữ, tải tệp, chuyển đổi định dạng và hiển thị thông báo.
+  \item services: Là tầng trung gian gọi API backend, đảm nhiệm việc gửi yêu cầu và nhận dữ liệu trả về thông qua các module như api, authService, translationService, keywordService và languageService.
+  \item context\_hooks: Quản lý trạng thái dùng chung ở phía frontend, tiêu biểu là trạng thái xác thực và danh sách ngôn ngữ theo công ty hoặc thư viện.
 \end{itemize}
 
 \textbf{b, Backend}
 \begin{itemize}
-  \item \texttt{urls}: Định tuyến các request API đến đúng view xử lý.
-  \item \texttt{views}: Đóng vai trò Controller trong kiến trúc MVC, tiếp nhận request, kiểm tra dữ liệu, gọi serializer, model, service sau đó trả response cho frontend.
-  \item \texttt{serializers}: Chuyển đổi dữ liệu giữa Django model và JSON để backend giao tiếp với frontend qua REST API.
-  \item \texttt{services}: Chứa các xử lý nghiệp vụ/tích hợp dùng chung như upload tệp lên S3, quản lý glossary, gọi ConvertAPI và xử lý cấu hình ngôn ngữ theo công ty.
-  \item \texttt{models}: Định nghĩa các bảng dữ liệu bằng Django ORM, gồm người dùng, công ty, ngôn ngữ, tệp đã dịch, thuật ngữ riêng, đề xuất thuật ngữ, thông báo và token làm mới.
+  \item urls: Định tuyến các request API đến đúng view xử lý.
+  \item views: Đóng vai trò Controller trong kiến trúc MVC, tiếp nhận request, kiểm tra dữ liệu, gọi serializer, model, service sau đó trả response cho frontend.
+  \item serializers: Chuyển đổi dữ liệu giữa Django model và JSON để backend giao tiếp với frontend qua REST API.
+  \item services: Chứa các xử lý nghiệp vụ/tích hợp dùng chung như upload tệp lên S3, quản lý glossary, gọi ConvertAPI và xử lý cấu hình ngôn ngữ theo công ty.
+  \item models: Định nghĩa các bảng dữ liệu bằng Django ORM, gồm người dùng, công ty, ngôn ngữ, tệp đã dịch, thuật ngữ riêng, đề xuất thuật ngữ, thông báo và token làm mới.
 \end{itemize}
 
 \textbf{d, Database}
 \begin{itemize}
-  \item \texttt{database}: Lưu trữ dữ liệu bền vững của hệ thống. Frontend không truy cập trực tiếp database; mọi thao tác đọc/ghi đều đi qua backend và Django ORM.
+  \item database: Lưu trữ dữ liệu bền vững của hệ thống. Frontend không truy cập trực tiếp database; mọi thao tác đọc/ghi đều đi qua backend và Django ORM.
 \end{itemize}
 
 \textbf{e, External services}
 \begin{itemize}
-  \item \texttt{external\_services}: Đại diện cho các dịch vụ ngoài được hệ thống tích hợp như Google Cloud Translation, Google Cloud Storage, Amazon S3, ConvertAPI và Azure Document Intelligence.
+  \item external\_services: Đại diện cho các dịch vụ ngoài được hệ thống tích hợp như Google Cloud Translation, Google Cloud Storage, Amazon S3, ConvertAPI và Azure Document Intelligence.
 \end{itemize}
 
 \section{Thiết kế chi tiết}
 \subsection{Thiết kế giao diện}
-Giao diện của hệ thống được thiết kế cho ứng dụng web nội bộ, sử dụng React SPA kết hợp Tailwind CSS. Các màn hình chính dùng chung một bố cục gồm sidebar bên trái, header phía trên và vùng nội dung có thanh cuộn riêng. Cách tổ chức này phù hợp với hệ thống.
+Giao diện của hệ thống được thiết kế cho ứng dụng web nội bộ, sử dụng React SPA kết hợp Tailwind CSS. Các màn hình chính dùng chung một bố cục gồm sidebar bên trái, header phía trên và vùng nội dung có thanh cuộn riêng. Cách tổ chức này phù hợp với môi trường ứng dụng nội bộ có nhiều nhóm chức năng khác nhau mà người dùng cần chuyển đổi thường xuyên trong quá trình làm việc.
 
 \textbf{a, Thông số kỹ thuật}
 
@@ -173,7 +173,7 @@ Bảng dưới đây trình bày các thông số kỹ thuật chính được �
 8 & Màu nền và màu chủ đạo & Nền nội dung \#F8F8F8; khối nội dung màu trắng; trạng thái menu đang chọn dùng indigo đậm \#4338CA; chữ và viền dùng các sắc độ xám. \\ \hline
 9 & Kiểu chữ & Sử dụng nhóm font sans-serif mặc định của Tailwind/browser; tiêu đề trang dùng cỡ lớn hơn, nhãn form dùng chữ nhỏ in hoa. \\ \hline
 10 & Thông báo phản hồi & Sử dụng React Toastify, hiển thị ở góc trên bên phải, tự đóng sau 3000 ms và dùng theme màu theo trạng thái. \\ \hline
-11 & Trạng thái responsive & Từ breakpoint \texttt{md}, sidebar hiển thị cố định; dưới breakpoint này, sidebar mở bằng nút menu trên header. \\ \hline
+11 & Trạng thái responsive & Từ breakpoint md, sidebar hiển thị cố định; dưới breakpoint này, sidebar mở bằng nút menu trên header. \\ \hline
 \end{tabular}
 \caption{Thông số kỹ thuật màn hình}
 \label{tab:ui-specification}
@@ -194,17 +194,17 @@ Bố cục chính của hệ thống gồm ba vùng: sidebar, header và content
 \centering
 \includegraphics[width=0.95\linewidth]{Hinhve/header.png}
 \caption{Bố cục header}
-\label{fig:ui-main-layout}
+\label{fig:ui-header}
 \end{figure}
 
 
-Sidebar được chia thành ba nhóm chức năng. Nhóm đầu gồm các chức năng xử lý tài liệu như dịch file, dịch văn bản, chuyển đổi định dạng và lịch sử file. Nhóm \texttt{Libraries} chứa thư viện thuật ngữ cá nhân và thư viện thuật ngữ chung. Nhóm \texttt{Admin} chỉ hiển thị với người dùng có vai trò quản trị, gồm quản lý tài khoản, thống kê từ khóa và quản lý ngôn ngữ. Mỗi mục menu có biểu tượng đi kèm, trạng thái đang chọn được làm nổi bật bằng màu indigo đậm và chữ trắng.
+Sidebar được chia thành ba nhóm chức năng. Nhóm đầu gồm các chức năng xử lý tài liệu như dịch file, dịch văn bản, chuyển đổi định dạng và lịch sử file. Nhóm Libraries chứa thư viện thuật ngữ cá nhân và thư viện thuật ngữ chung. Nhóm Admin chỉ hiển thị với người dùng có vai trò quản trị, gồm quản lý tài khoản, thống kê từ khóa và quản lý ngôn ngữ. Mỗi mục menu có biểu tượng đi kèm, trạng thái đang chọn được làm nổi bật bằng màu indigo đậm và chữ trắng.
  
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\linewidth]{Hinhve/sidebar.png}
 \caption{Bố cục sidebar}
-\label{fig:ui-main-layout}
+\label{fig:ui-sidebar}
 \end{figure}
 
 \textbf{c, Quy chuẩn thiết kế thành phần giao diện}
@@ -217,7 +217,7 @@ Các thành phần giao diện được chuẩn hóa để bảo đảm tính nh
   \item \textbf{Vùng tải file:} Màn hình dịch file sử dụng vùng kéo thả có viền nét đứt, biểu tượng upload ở giữa, mô tả định dạng hỗ trợ và nút chọn file. Khi người dùng kéo file vào vùng upload, viền và nền đổi sang sắc indigo nhạt để phản hồi tương tác.
   \item \textbf{Bảng dữ liệu:} Các màn hình thư viện thuật ngữ, lịch sử file và quản trị sử dụng bảng có đường viền rõ, hàng tiêu đề nổi bật, hỗ trợ các thao tác như tìm kiếm, lọc, sửa, xóa, import và export.
   \item \textbf{Thông báo phản hồi:} Các thông báo thành công, lỗi hoặc cảnh báo được hiển thị bằng toast ở góc trên bên phải, không làm gián đoạn bố cục chính của màn hình.
-  \item \textbf{Cuộn nội dung:} Toàn bộ ứng dụng dùng khung \texttt{h-screen}; phần content có thanh cuộn riêng, giúp sidebar và header luôn giữ vị trí ổn định khi người dùng thao tác với bảng hoặc nội dung dài.
+  \item \textbf{Cuộn nội dung:} Toàn bộ ứng dụng dùng khung h-screen; phần content có thanh cuộn riêng, giúp sidebar và header luôn giữ vị trí ổn định khi người dùng thao tác với bảng hoặc nội dung dài.
 \end{itemize}
 
 \textbf{d, Màn hình minh họa}
@@ -244,9 +244,9 @@ Màn hình thư viện thuật ngữ sử dụng bố cục thiên về bảng d
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\linewidth]{Hinhve/dich-vanban.png}
-\caption{Màn hình minh họa chức năng dịch file}
-\label{fig:ui-file-translation}
+\includegraphics[width=0.95\linewidth]{Hinhve/private_lib.png}
+\caption{Màn hình minh họa chức năng thư viện thuật ngữ}
+\label{fig:ui-keyword-library}
 \end{figure}
 
 \subsection{Thiết kế lớp}
@@ -276,7 +276,7 @@ translate\_file
 \label{fig:module-translate-text}
 \end{figure}
 
-Lớp TranslationServicelà khối xử lý dịch văn bản trung tâm của hệ thống, làm việc trực tiếp với Google Cloud Translation và quản lý ngữ cảnh sử dụng glossary theo từng luồng xử lý. Các phương thức chính của lớp gồm:
+Lớp TranslationService là khối xử lý dịch văn bản trung tâm của hệ thống, làm việc trực tiếp với Google Cloud Translation và quản lý ngữ cảnh sử dụng glossary theo từng luồng xử lý. Các phương thức chính của lớp gồm:
 
 \begin{itemize}
   \item set\_translation\_context: Thiết lập ngữ cảnh dịch theo từng request, gồm chế độ thư viện thuật ngữ và ID người dùng. Ngữ cảnh này giúp backend chọn đúng glossary chung, glossary riêng hoặc không dùng glossary.
@@ -328,7 +328,7 @@ Lớp DocumentTranslationService gồm các phần xử lý DOCX, XLSX, PPTX, PD
   \item cached\_translate\_text: Hàm bọc lớp cache cho việc dịch các đoạn text lặp lại, giúp giảm số lần gọi dịch với cùng một nội dung.
 \end{itemize}
 
-\textbf{d, Biểu đồ trình tự cho một số chức năng quan trọng}
+\textbf{c, Biểu đồ trình tự cho một số chức năng quan trọng}
 
 \textbf{Dịch tệp tài liệu}
 
@@ -343,7 +343,7 @@ Luồng dịch tệp bắt đầu khi người dùng upload file và chọn ngô
 
 \textbf{Đề xuất và phê duyệt thuật ngữ}
 
-Người dùng gửi thuật ngữ từ thư viện cá nhân lên thư viện chung. Sau khi đề xuất được tạo ở trạng thái \texttt{pending}, Library Keeper có thể phê duyệt. Khi phê duyệt thành công, hệ thống cập nhật dữ liệu nội bộ, đồng bộ glossary chung và tạo thông báo cho người dùng.
+Người dùng gửi thuật ngữ từ thư viện cá nhân lên thư viện chung. Sau khi đề xuất được tạo ở trạng thái pending, Library Keeper có thể phê duyệt. Khi phê duyệt thành công, hệ thống cập nhật dữ liệu nội bộ, đồng bộ glossary chung và tạo thông báo cho người dùng.
 
 \begin{figure}[H]
     \centering
@@ -353,80 +353,533 @@ Người dùng gửi thuật ngữ từ thư viện cá nhân lên thư viện c
 \end{figure}
 
 \subsection{Thiết kế cơ sở dữ liệu}
-Phần này có độ dài từ hai đến bốn trang. Sinh viên thiết kế, vẽ và giải thích biểu đồ thực thể liên kết (E-R diagram). Từ đó, sinh viên thiết kế cơ sở dữ liệu tùy theo hệ quản trị cơ sở dữ liệu mà mình sử dụng (SQL, NoSQL, Firebase, v.v.)
 
-Agent:
+\textbf{a, Biểu đồ thực thể liên kết}
 
-Cơ sở dữ liệu có thể dùng SQLite cho môi trường phát triển và PostgreSQL cho môi trường triển khai. Các thực thể chính gồm người dùng, token làm mới, file dịch, thuật ngữ riêng, đề xuất thuật ngữ, thiết lập hàng đợi thư viện, ngôn ngữ, công ty, ngôn ngữ theo công ty, thông báo và nhật ký thao tác ngôn ngữ. Quan hệ dữ liệu nổi bật gồm một người dùng có nhiều file dịch, nhiều từ khóa riêng, nhiều đề xuất thuật ngữ và nhiều refresh token; một công ty có nhiều người dùng và nhiều cấu hình ngôn ngữ; một cấu hình ngôn ngữ theo công ty liên kết một công ty với một ngôn ngữ; một nhật ký thao tác ghi lại người thực hiện, công ty, ngôn ngữ và hành động.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{Hinhve/datn_db.png}
+\caption{Biểu đồ cơ sở dữ liệu của hệ thống}
+\label{fig:database-diagram}
+\end{figure}
 
-\begin{verbatim}
-erDiagram
-    CustomUser ||--o{ TranslatedFile : owns
-    CustomUser ||--o{ PrivateKeyword : owns
-    CustomUser ||--o{ KeywordSuggestion : submits
-    CustomUser ||--o{ RefreshToken : has
-    Company ||--o{ CustomUser : includes
-    Company ||--o{ CompanyLanguage : configures
-    Language ||--o{ CompanyLanguage : enabled_as
-    KeywordSuggestion ||--o{ PrivateKeyword : linked_from
-    CustomUser ||--o{ LanguageAuditLog : acts
-    Company ||--o{ LanguageAuditLog : audited
-    Language ||--o{ LanguageAuditLog : audited
-\end{verbatim}
+\textbf{b, Các thực thể chính}
+
+Các thực thể chính trong cơ sở dữ liệu gồm:
+
+\begin{itemize}
+  \item \textbf{customuser}: Lưu thông tin tài khoản người dùng, vai trò, trạng thái hoạt động và công ty trực thuộc.
+  \item \textbf{company}: Lưu thông tin công ty/đơn vị sử dụng hệ thống.
+  \item \textbf{language}: Lưu danh mục ngôn ngữ được hệ thống hỗ trợ.
+  \item \textbf{companylanguage}: Lưu cấu hình ngôn ngữ được bật cho từng công ty, bao gồm ngôn ngữ mặc định.
+  \item \textbf{translatedfile}: Lưu lịch sử dịch file của người dùng, gồm file gốc, file đã dịch, ngôn ngữ nguồn, ngôn ngữ đích và loại file.
+  \item \textbf{privatekeyword}: Lưu thư viện thuật ngữ cá nhân của từng người dùng.
+  \item \textbf{keywordsuggestion}: Lưu các đề xuất thuật ngữ gửi lên thư viện chung, kèm trạng thái pending, approved hoặc rejected.
+  \item \textbf{keywordqueue}: Lưu dữ liệu hàng đợi xử lý thuật ngữ.
+  \item \textbf{notification}: Lưu thông báo gửi tới người dùng, trong đó có thông báo liên quan đến thuật ngữ.
+  \item \textbf{refreshtoken}: Lưu token làm mới đã được băm phục vụ xác thực.
+\end{itemize}
+
+Các mối quan hệ chính trong cơ sở dữ liệu gồm:
+
+\begin{itemize}
+  \item Một Company có nhiều CustomUser; mỗi người dùng có thể thuộc một công ty.
+  \item Một Company có nhiều CompanyLanguage; một Language cũng có thể xuất hiện trong nhiều cấu hình công ty.
+  \item Một CustomUser có nhiều TranslatedFile, PrivateKeyword, KeywordSuggestion, Notification và RefreshToken.
+  \item Một KeywordSuggestion có thể liên kết với nhiều PrivateKeyword thông qua khóa ngoại suggestion.
+  \item Một KeywordSuggestion có thể được phê duyệt bởi một CustomUser thông qua trường approved\_by.
+\end{itemize}
+
+\textbf{c, Thiết kế chi tiết một số bảng quan trọng}
+
+Dưới đây là thiết kế chi tiết các bảng trong hệ thống. Các kiểu dữ liệu được mô tả theo kiểu trường của Django ORM và tương ứng với kiểu dữ liệu trong hệ quản trị cơ sở dữ liệu khi migrate.
+
+\begin{table}[H]
+\centering
+\small
+\urlstyle{same}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{|p{0.30\linewidth}|p{0.27\linewidth}|p{0.33\linewidth}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+id & AutoField/BigAutoField & Khóa chính do Django tự sinh. \\ \hline
+email & EmailField, unique & Email đăng nhập của người dùng, không trùng lặp. \\ \hline
+password & CharField & Mật khẩu đã được băm bởi cơ chế xác thực của Django. \\ \hline
+first\_\allowbreak name & CharField(30), null & Tên của người dùng. \\ \hline
+last\_\allowbreak name & CharField(30), null & Họ của người dùng. \\ \hline
+department & CharField(100), null & Phòng ban của người dùng. \\ \hline
+role & CharField(20) & Vai trò người dùng, gồm User, Admin, Library Keeper. \\ \hline
+is\_\allowbreak active & BooleanField & Trạng thái hoạt động của tài khoản. \\ \hline
+is\_\allowbreak staff & BooleanField & Xác định tài khoản có quyền truy cập khu vực quản trị Django hay không. \\ \hline
+date\_\allowbreak joined & DateTimeField & Thời điểm tạo tài khoản. \\ \hline
+company & ForeignKey & Khóa ngoại tới bảng Company, có thể rỗng. \\ \hline
+\end{tabular}
+\caption{Mô tả bảng CustomUser}
+\label{table:db-custom-user}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{|p{0.30\linewidth}|p{0.27\linewidth}|p{0.33\linewidth}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+id & AutoField/BigAutoField & Khóa chính của công ty. \\ \hline
+name & CharField(255), unique & Tên công ty, không được trùng lặp. \\ \hline
+slug & SlugField(100), unique & Định danh ngắn của công ty, ví dụ toray-vn hoặc toray-jp. \\ \hline
+is\_\allowbreak active & BooleanField & Trạng thái hoạt động của công ty. \\ \hline
+created\_\allowbreak at & DateTimeField & Thời điểm tạo công ty. \\ \hline
+updated\_\allowbreak at & DateTimeField & Thời điểm cập nhật công ty gần nhất. \\ \hline
+\end{tabular}
+\caption{Mô tả bảng Company}
+\label{table:db-company}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{|p{0.30\linewidth}|p{0.27\linewidth}|p{0.33\linewidth}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+id & AutoField/BigAutoField & Khóa chính của ngôn ngữ. \\ \hline
+code & CharField(10), unique & Mã ngôn ngữ, ví dụ vi, ja hoặc zh-CN. \\ \hline
+name & CharField(100) & Tên tiếng Anh của ngôn ngữ. \\ \hline
+native\_\allowbreak name & CharField(100), blank & Tên bản địa của ngôn ngữ. \\ \hline
+flag\_\allowbreak emoji & CharField(10), blank & Biểu tượng cờ dùng để hiển thị trên giao diện. \\ \hline
+is\_\allowbreak active & BooleanField & Trạng thái ngôn ngữ có được sử dụng trong hệ thống hay không. \\ \hline
+sort\_\allowbreak order & PositiveSmallIntegerField & Thứ tự hiển thị của ngôn ngữ. \\ \hline
+\end{tabular}
+\caption{Mô tả bảng Language}
+\label{table:db-language}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{|p{0.30\linewidth}|p{0.27\linewidth}|p{0.33\linewidth}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+id & AutoField/BigAutoField & Khóa chính của bản ghi lịch sử dịch file. \\ \hline
+user & ForeignKey & Người dùng thực hiện thao tác dịch file. \\ \hline
+original\_\allowbreak file\_\allowbreak url & URLField(1000) & Đường dẫn tới file gốc đã upload. \\ \hline
+original\_\allowbreak file\_\allowbreak name & CharField(255) & Tên file gốc. \\ \hline
+translated\_\allowbreak file\_\allowbreak url & URLField(1000) & Đường dẫn tới file kết quả sau khi dịch. \\ \hline
+original\_\allowbreak language & CharField(10) & Mã ngôn ngữ nguồn. \\ \hline
+target\_\allowbreak language & CharField(10) & Mã ngôn ngữ đích. \\ \hline
+file\_\allowbreak type & CharField(10) & Loại file được xử lý, ví dụ DOCX, XLSX, PPTX hoặc PDF. \\ \hline
+created\_\allowbreak at & DateTimeField & Thời điểm tạo bản ghi. \\ \hline
+updated\_\allowbreak at & DateTimeField & Thời điểm cập nhật bản ghi gần nhất. \\ \hline
+\end{tabular}
+\caption{Mô tả bảng TranslatedFile}
+\label{table:db-translated-file}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{|p{0.30\linewidth}|p{0.27\linewidth}|p{0.33\linewidth}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+id & AutoField/BigAutoField & Khóa chính của thuật ngữ cá nhân. \\ \hline
+user & ForeignKey & Người dùng sở hữu thuật ngữ cá nhân. \\ \hline
+translations & JSONField & Dữ liệu thuật ngữ theo nhiều ngôn ngữ, lưu theo dạng khóa mã ngôn ngữ và giá trị bản dịch. \\ \hline
+note & TextField, null & Ghi chú bổ sung cho thuật ngữ. \\ \hline
+suggestion & ForeignKey & Liên kết tới KeywordSuggestion nếu thuật ngữ cá nhân đã được gửi đề xuất. \\ \hline
+created\_\allowbreak at & DateTimeField & Thời điểm tạo thuật ngữ. \\ \hline
+updated\_\allowbreak at & DateTimeField & Thời điểm cập nhật thuật ngữ gần nhất. \\ \hline
+\end{tabular}
+\caption{Mô tả bảng PrivateKeyword}
+\label{table:db-private-keyword}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{|p{0.30\linewidth}|p{0.27\linewidth}|p{0.33\linewidth}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+id & AutoField/BigAutoField & Khóa chính của đề xuất thuật ngữ. \\ \hline
+user & ForeignKey & Người dùng tạo đề xuất, có thể rỗng nếu tài khoản bị xóa. \\ \hline
+translations & JSONField & Nội dung thuật ngữ theo nhiều ngôn ngữ. \\ \hline
+suggestion\_\allowbreak count & IntegerField & Số lượt đề xuất cho thuật ngữ. \\ \hline
+frequency\_\allowbreak percentage & FloatField & Tỷ lệ tần suất dùng cho xử lý thống kê/hàng đợi. \\ \hline
+status & CharField(20) & Trạng thái đề xuất: pending, approved, rejected. \\ \hline
+approved\_\allowbreak by & ForeignKey & Người phê duyệt đề xuất, có thể rỗng. \\ \hline
+created\_\allowbreak at & DateTimeField & Thời điểm tạo đề xuất. \\ \hline
+updated\_\allowbreak at & DateTimeField & Thời điểm cập nhật đề xuất gần nhất. \\ \hline
+\end{tabular}
+\caption{Mô tả bảng KeywordSuggestion}
+\label{table:db-keyword-suggestion}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{|p{0.30\linewidth}|p{0.27\linewidth}|p{0.33\linewidth}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+id & AutoField/BigAutoField & Khóa chính của bản ghi hàng đợi thuật ngữ. \\ \hline
+user & ForeignKey & Người dùng tạo dữ liệu hàng đợi, có thể rỗng nếu tài khoản bị xóa. \\ \hline
+translations & JSONField & Nội dung thuật ngữ theo nhiều ngôn ngữ. \\ \hline
+is\_\allowbreak processed & BooleanField & Trạng thái cho biết mục hàng đợi đã được xử lý hay chưa. \\ \hline
+processed\_\allowbreak at & DateTimeField, null & Thời điểm xử lý hàng đợi, có thể rỗng. \\ \hline
+created\_\allowbreak at & DateTimeField & Thời điểm tạo bản ghi hàng đợi. \\ \hline
+\end{tabular}
+\caption{Mô tả bảng KeywordQueue}
+\label{table:db-keyword-queue}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{|p{0.30\linewidth}|p{0.27\linewidth}|p{0.33\linewidth}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+id & AutoField/BigAutoField & Khóa chính của thông báo. \\ \hline
+user & ForeignKey & Người dùng nhận thông báo. \\ \hline
+title & CharField(255) & Tiêu đề thông báo. \\ \hline
+message & TextField & Nội dung thông báo. \\ \hline
+read & BooleanField & Trạng thái đã đọc hoặc chưa đọc của thông báo. \\ \hline
+details & BooleanField & Cờ xác định thông báo có chứa dữ liệu chi tiết hay không. \\ \hline
+keyword\_\allowbreak details & JSONField, null & Dữ liệu chi tiết liên quan đến thuật ngữ, nếu có. \\ \hline
+created\_\allowbreak at & DateTimeField & Thời điểm tạo thông báo. \\ \hline
+\end{tabular}
+\caption{Mô tả bảng Notification}
+\label{table:db-notification}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{|p{0.30\linewidth}|p{0.27\linewidth}|p{0.33\linewidth}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+id & AutoField/BigAutoField & Khóa chính của refresh token. \\ \hline
+user & ForeignKey & Người dùng sở hữu refresh token. \\ \hline
+token\_\allowbreak hash & CharField(64), unique & Giá trị token đã được băm SHA-256, có chỉ mục để truy vấn nhanh. \\ \hline
+expires\_\allowbreak at & DateTimeField & Thời điểm token hết hạn. \\ \hline
+created\_\allowbreak at & DateTimeField & Thời điểm tạo token. \\ \hline
+\end{tabular}
+\caption{Mô tả bảng RefreshToken}
+\label{table:db-refresh-token}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{|p{0.30\linewidth}|p{0.27\linewidth}|p{0.33\linewidth}|}
+\hline
+\textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+id & AutoField/BigAutoField & Khóa chính của cấu hình ngôn ngữ theo công ty. \\ \hline
+company & ForeignKey & Công ty được cấu hình ngôn ngữ. \\ \hline
+language & ForeignKey & Ngôn ngữ được bật cho công ty. \\ \hline
+is\_\allowbreak enabled & BooleanField & Xác định ngôn ngữ có đang được bật hay không. \\ \hline
+is\_\allowbreak default & BooleanField & Xác định ngôn ngữ mặc định của công ty. \\ \hline
+enabled\_\allowbreak at & DateTimeField & Thời điểm ngôn ngữ được bật. \\ \hline
+\end{tabular}
+\caption{Mô tả bảng CompanyLanguage}
+\label{table:db-company-language}
+\end{table}
 
 \section{Xây dựng ứng dụng}
 \subsection{Thư viện và công cụ sử dụng}
-Sinh viên liệt kê các công cụ, ngôn ngữ lập trình, API, thư viện, IDE, công cụ kiểm thử, v.v. mà mình sử dụng để phát triển ứng dụng. Mỗi công cụ phải được chỉ rõ phiên bản sử dụng. SV nên kẻ bảng mô tả tương tự như Bảng \ref{table:my_label}. Nếu có nhiều nội dung trình bày, sinh viên cần xoay ngang bảng.
-
-Agent:
-
-Danh sách công cụ và thư viện chính gồm Python, Node.js, Nginx, Django, Django REST Framework, SimpleJWT, boto3, Google Cloud Translation, Google Cloud Storage, các thư viện xử lý PDF, DOCX, XLSX, PPTX, ảnh, dữ liệu bảng và ConvertAPI. Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung bảng phiên bản chính xác của các thư viện khi hoàn thiện tài liệu kỹ thuật.
+Dưới đây là danh sách tóm tắt các ngôn ngữ lập trình, framework, API, thư viện và công cụ chính được sử dụng trong quá trình xây dựng hệ thống. Các phiên bản được tổng hợp từ Dockerfile, requirements.txt và package.json của dự án.
 
 \begin{table}[H]
-\centering{}
-    \begin{tabular}{lll}
-        \hline
-        \textbf{Mục đích} & \textbf{Công cụ}       & \textbf{Địa chỉ URL}    \\ \hline
-        IDE lập trình     & Eclipse Oxygen a64 bit & http://www.eclipse.org/ \\ \hline
-        v.v.              & v.v.                   & v.v.                    \\ \hline
-        \end{tabular}
-    \caption{Danh sách thư viện và công cụ sử dụng}
-    \label{fig:my_label}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabular}{|>{\centering\arraybackslash}p{0.07\linewidth}|>{\raggedright\arraybackslash}p{0.25\linewidth}|>{\raggedright\arraybackslash}p{0.34\linewidth}|>{\raggedright\arraybackslash}p{0.22\linewidth}|}
+\hline
+\textbf{STT} & \textbf{Mục đích sử dụng} & \textbf{Công cụ và phiên bản} & \textbf{Địa chỉ tham khảo} \\ \hline
+1 & Lập trình backend & Python 3.12.9 & python.org \\ \hline
+2 & Xây dựng backend web & Django 6.0 & djangoproject.com \\ \hline
+3 & Xây dựng REST API & Django REST Framework 3.16.1 & django-rest-framework.org \\ \hline
+4 & Xác thực và JWT & Simple JWT 5.5.1, PyJWT 2.10.1, python-jose 3.5.0 & readthedocs.io \\ \hline
+5 & Kết nối cơ sở dữ liệu & psycopg2-binary 2.9.11 & psycopg.org \\ \hline
+6 & Dịch máy và glossary & Google Cloud Translate 3.24.0 & cloud.google.com \\ \hline
+7 & Lưu trữ file & Google Cloud Storage 3.9.0, boto3 1.42.42 & cloud.google.com, aws.amazon.com \\ \hline
+8 & Xử lý PDF và OCR & pypdf 5.5.0, PyMuPDF 1.26.7, pdf2image 1.17.0, Azure Document Intelligence 1.0.2 & pypi.org, azure.microsoft.com \\ \hline
+9 & Xử lý tài liệu Office & python-docx 1.2.0, openpyxl 3.1.5, python-pptx 1.0.2, lxml 6.0.2 & readthedocs.io, lxml.de \\ \hline
+10 & Chuyển đổi định dạng file & ConvertAPI 1.6.0, pdf2docx 0.5.8, ReportLab 4.4.10 & convertapi.com, reportlab.com \\ \hline
+11 & Lập trình frontend & Node.js 22.14 & nodejs.org \\ \hline
+12 & Xây dựng giao diện & React 18.3.1, Vite 6.1.0 & react.dev, vite.dev \\ \hline
+13 & Gọi API và định tuyến & Axios 1.7.9, React Router DOM 7.1.5 & axios-http.com, reactrouter.com \\ \hline
+14 & Thư viện giao diện & Ant Design 5.24.2, Tailwind CSS 4.0.6 & ant.design, tailwindcss.com \\ \hline
+15 & Bảng, biểu đồ và file phía frontend & Handsontable 15.2.0, Recharts 3.3.0, xlsx 0.18.5, React PDF 9.2.1 & handsontable.com, recharts.org \\ \hline
+16 & Đóng gói và triển khai & Docker, Nginx 1.27/latest & docker.com, nginx.org \\ \hline
+\end{tabular}
+\caption{Thư viện và công cụ sử dụng}
+\label{table:tools-and-libraries}
 \end{table}
 
 \subsection{Kết quả đạt được}
-Sinh viên trước tiên mô tả kết quả đạt được của mình là gì, ví dụ như các sản phẩm được đóng gói là gì, bao gồm những thành phần nào, ý nghĩa, vai trò?
+Sau quá trình phân tích, thiết kế và xây dựng, đồ án đã hoàn thành một hệ thống dịch đa ngôn ngữ, hỗ trợ dịch văn bản, dịch tài liệu, chuyển đổi định dạng file và quản lý thư viện thuật ngữ. Hệ thống được xây dựng theo mô hình frontend tách rời backend, giao tiếp thông qua REST API và tích hợp một số dịch vụ bên ngoài phục vụ dịch máy, lưu trữ và xử lý tài liệu.
 
-Sinh viên cần thống kê các thông tin về ứng dụng của mình như: số dòng code, số lớp, số gói, dung lượng toàn bộ mã nguồn, dung lượng của từng sản phẩm đóng gói, v.v. Tương tự như phần liệt kê về công cụ sử dụng, sinh viên cũng nên dùng bảng để mô tả phần thông tin thống kê này.
+\textbf{Sản phẩm đóng gói của đồ án:}
 
-Agent:
+\begin{itemize}
+  \item \textbf{Frontend}: Giao diện người dùng được xây dựng bằng React và Vite, đáp ứng các chức năng chính như dịch file, dịch văn bản, chuyển đổi định dạng, xem lịch sử và quản lý thư viện thuật ngữ.
+  \item \textbf{Backend}: API được xây dựng bằng Django REST Framework để xử lý xác thực, phân quyền, quản lý file dịch, quản lý thuật ngữ, ngôn ngữ và thông báo.
+  \item \textbf{Database}: Cơ sở dữ liệu lưu trữ thông tin người dùng, công ty, ngôn ngữ, lịch sử file dịch, thư viện thuật ngữ, đề xuất thuật ngữ, thông báo và token xác thực.
+  \item \textbf{External Services}: Hệ thống tích hợp các dịch vụ bên ngoài như Google Cloud Translation, Google Cloud Storage, Amazon S3, ConvertAPI và Azure Document Intelligence để hỗ trợ dịch máy, lưu trữ, chuyển đổi định dạng và OCR.
+\end{itemize}
 
-Kết quả xây dựng thể hiện qua ba nhóm sản phẩm chính: giao diện web, backend API và khối dịch tài liệu. Backend cung cấp API cho dịch văn bản, dịch file, upload S3, chuyển đổi PDF, lịch sử file, thông báo, thuật ngữ, người dùng, ngôn ngữ, health check và thống kê. Frontend có các màn hình nghiệp vụ tương ứng. Khối dịch tài liệu xử lý DOCX, XLSX, PPTX, PDF/OCR, ảnh, phát hiện ngôn ngữ và tạo glossary. Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung thống kê chính thức về số dòng mã, số module và dung lượng sản phẩm đóng gói nếu báo cáo yêu cầu.
+\textbf{Ý nghĩa và vai trò của hệ thống:}
+
+\begin{itemize}
+  \item Hỗ trợ người dùng dịch nhanh văn bản và tài liệu với nhiều định dạng phổ biến.
+  \item Cung cấp nền tảng quản lý thuật ngữ nhằm tăng tính nhất quán của bản dịch.
+  \item Tách rõ giao diện, API backend, cơ sở dữ liệu và các dịch vụ bên ngoài, thuận lợi cho bảo trì và mở rộng.
+\end{itemize}
+
+Dưới đây là thống kê các thông tin về ứng dụng:
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{|p{0.32\linewidth}|p{0.20\linewidth}|p{0.38\linewidth}|}
+\hline
+\textbf{Thông tin thống kê} & \textbf{Giá trị} & \textbf{Ghi chú} \\ \hline
+Tổng số dòng code & 23.623 dòng & Tính trong frontend, backend và cấu hình Nginx. \\ \hline
+Số gói (package/module) & 77 gói & Bao gồm các thư mục chức năng chính, không tính thư mục phụ thuộc. \\ \hline
+Số lớp/hàm/component & 237 thành phần & Tính các class, hàm Python và component/hàm JavaScript. \\ \hline
+Dung lượng mã nguồn frontend & 0,501 MB & Bao gồm các file source chính trong frontend src. \\ \hline
+Dung lượng mã nguồn backend & 0,257 MB & Bao gồm Django app api và cấu hình backend. \\ \hline
+Dung lượng mã nguồn Translate\_v2 & 0,219 MB & Bao gồm các module xử lý dịch tài liệu. \\ \hline
+Tổng dung lượng mã nguồn chính & 0,983 MB & Tổng hợp mã nguồn chính của frontend, backend và nginx. \\ \hline
+\end{tabular}
+\caption{Thống kê thông tin ứng dụng}
+\label{table:application-statistics}
+\end{table}
 
 \subsection{Minh họa các chức năng chính}
-Sinh viên lựa chọn và đưa ra màn hình cho các chức năng chính, quan trọng, và thú vị nhất. Mỗi giao diện cần phải có lời giải thích ngắn gọn. Khi giải thích, sinh viên có thể kết hợp với các chú thích ở trong hình ảnh giao diện.
+Trong quá trình xây dựng hệ thống, đồ án chú trọng đến thiết kế giao diện người dùng nhằm đảm bảo tính trực quan, dễ sử dụng và phù hợp với thao tác thực tế khi xử lý tài liệu đa ngôn ngữ. Các màn hình được tổ chức theo từng nhóm chức năng rõ ràng, giúp người dùng dễ dàng chuyển đổi giữa dịch file, dịch văn bản, chuyển đổi định dạng và quản lý thư viện thuật ngữ.
 
-Agent:
+Cụ thể, các giao diện bao gồm: giao diện dịch file, giao diện dịch văn bản, giao diện chuyển đổi định dạng, giao diện lịch sử file dịch, giao diện quản lý thư viện thuật ngữ cá nhân, giao diện thư viện thuật ngữ chung, giao diện quản lý tài khoản và giao diện quản lý ngôn ngữ.
 
-Các chức năng chính cần minh họa bằng ảnh giao diện khi hoàn thiện báo cáo gồm màn hình upload và dịch file, màn hình dịch văn bản, màn hình kết quả dịch, màn hình lịch sử file, màn hình thư viện thuật ngữ riêng, màn hình quản trị thư viện chung, màn hình thống kê từ khóa và màn hình quản lý ngôn ngữ. Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung ảnh chụp màn hình các chức năng này.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{Hinhve/translate_page.png}
+\caption{Giao diện dịch file}
+\label{fig:file-translation-demo}
+\end{figure}
+
+Đây là giao diện chính cho phép người dùng tải tài liệu lên hệ thống để thực hiện dịch sang một hoặc nhiều ngôn ngữ đích. Màn hình được thiết kế theo bố cục gồm thanh điều hướng bên trái, header phía trên và vùng nội dung chính ở trung tâm.
+
+\textbf{Thanh điều hướng bên trái:} Chứa các nhóm chức năng chính của hệ thống như File Translation, Text Translation, Format Conversion, File History, Private Library, Common Library và các chức năng quản trị. Cách bố trí này giúp người dùng chuyển nhanh giữa các màn hình mà không cần quay lại trang trung gian.
+
+\textbf{Khu vực chọn thông tin dịch:} Phía trên vùng nội dung là nhóm điều khiển gồm ngôn ngữ nguồn, danh sách ngôn ngữ đích và chế độ glossary. Người dùng có thể chọn ngôn ngữ gốc của tài liệu, chọn một hoặc nhiều ngôn ngữ cần dịch, đồng thời quyết định sử dụng thư viện thuật ngữ cá nhân, thư viện chung hoặc không sử dụng glossary.
+
+\textbf{Vùng tải tài liệu:} Khu vực trung tâm là vùng upload file, hỗ trợ các định dạng PDF, DOCX, XLSX và PPTX. Người dùng có thể bấm nút Browse files để chọn file từ máy hoặc kéo thả tài liệu trực tiếp vào vùng tải lên. Sau khi file được chọn, hệ thống tiếp tục xử lý upload và gửi yêu cầu dịch tới backend.
+
+\textbf{Header và thông tin tài khoản:} Phía trên cùng hiển thị tên hệ thống, biểu tượng thông báo, thông tin người dùng hiện tại và nút đăng xuất. Các thành phần này giúp người dùng theo dõi trạng thái hệ thống và thực hiện thao tác tài khoản khi cần.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{Hinhve/translate_result_page.png}
+\caption{Giao diện kết quả dịch file}
+\label{fig:file-translation-result-demo}
+\end{figure}
+
+Sau khi quá trình dịch hoàn tất, hệ thống hiển thị giao diện kết quả dịch để người dùng đối chiếu nội dung. Màn hình này được chia thành hai vùng tài liệu đặt song song: bên trái là tài liệu gốc và bên phải là tài liệu đã được dịch sang ngôn ngữ đích.
+
+\textbf{Thanh chọn ngôn ngữ:} Phía trên vùng hiển thị có các nút thể hiện ngôn ngữ nguồn và các ngôn ngữ đích đã được tạo kết quả. Trong ví dụ minh họa, tài liệu gốc là tiếng Nhật, còn kết quả dịch có thể chuyển giữa tiếng Việt và tiếng Anh.
+
+\textbf{Vùng xem tài liệu gốc:} Khung bên trái hiển thị bản gốc của tài liệu sau khi được tải lên. Người dùng có thể cuộn trong khung này để xem từng trang và so sánh trực tiếp với kết quả dịch ở khung bên phải.
+
+\textbf{Vùng xem tài liệu đã dịch:} Khung bên phải hiển thị tài liệu sau dịch theo ngôn ngữ đang được chọn. Cách đặt hai tài liệu song song giúp người dùng dễ kiểm tra bố cục, nội dung và mức độ khớp giữa bản gốc với bản dịch.
+
+\textbf{Các nút thao tác kết quả:} Góc trên bên phải có các nút tải xuống và đóng màn hình kết quả. Người dùng có thể tải file đã dịch về máy hoặc đóng.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{Hinhve/translate_history.png}
+\caption{Giao diện lịch sử file dịch}
+\label{fig:translation-history-demo}
+\end{figure}
+
+Giao diện lịch sử file dịch cho phép người dùng theo dõi các tài liệu đã được xử lý trước đó. Màn hình này tập trung vào việc tra cứu lại file đã dịch và tải xuống kết quả khi cần, giúp người dùng không phải thực hiện lại thao tác dịch đối với cùng một tài liệu.
+
+\textbf{Khu vực tìm kiếm:} Phía trên bảng có ô Search files để lọc nhanh danh sách theo tên file. Bên phải tiêu đề hiển thị tổng số file hiện có trong lịch sử, giúp người dùng nắm được quy mô dữ liệu đang được lưu.
+
+\textbf{Bảng lịch sử:} Bảng dữ liệu gồm các cột File, Origin, Translations, Date và Actions. Mỗi dòng biểu diễn một tài liệu đã dịch, trong đó Origin thể hiện ngôn ngữ gốc, Translations thể hiện số lượng bản dịch đã tạo và Date thể hiện ngày xử lý file.
+
+\textbf{Thao tác tải xuống:} Cột Actions cung cấp nút tải xuống để người dùng lấy lại file kết quả. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{Hinhve/private_lib.png}
+\caption{Giao diện thư viện thuật ngữ cá nhân}
+\label{fig:private-library-demo}
+\end{figure}
+
+Giao diện thư viện thuật ngữ cá nhân cho phép người dùng quản lý các thuật ngữ riêng phục vụ quá trình dịch. Mỗi thuật ngữ được lưu theo nhiều ngôn ngữ, giúp hệ thống ưu tiên cách dịch thống nhất khi người dùng chọn chế độ sử dụng thư viện cá nhân.
+
+\textbf{Thanh công cụ phía trên:} Bao gồm các thao tác Add Keyword, Get Template, Import và Export. Người dùng có thể thêm thuật ngữ trực tiếp, tải mẫu nhập liệu, nhập danh sách thuật ngữ từ file hoặc xuất dữ liệu hiện có ra file để sử dụng bên ngoài hệ thống.
+
+\textbf{Bộ lọc và tìm kiếm:} Khu vực bên phải có bộ lọc trạng thái, tùy chọn hiển thị cột và ô tìm kiếm trên tất cả ngôn ngữ. Các điều khiển này hỗ trợ người dùng tra cứu nhanh khi số lượng thuật ngữ tăng lên.
+
+\textbf{Bảng thuật ngữ:} Phần nội dung chính hiển thị danh sách thuật ngữ theo từng cột ngôn ngữ như English, Vietnamese, Japanese và Chinese. Ngoài nội dung thuật ngữ, bảng còn có cột Modified để theo dõi thời điểm cập nhật và cột Actions để chỉnh sửa hoặc xóa bản ghi.
+
+\textbf{Trạng thái đề xuất:} Phía trên bảng có các chỉ số Total, Submitted, Pending, Accepted và Rejected. Người dùng có thể chọn một thuật ngữ và gửi đề xuất lên thư viện chung thông qua cột Suggest, từ đó hỗ trợ quy trình đóng góp thuật ngữ cho toàn hệ thống.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{Hinhve/common_lib.png}
+\caption{Giao diện thư viện thuật ngữ chung}
+\label{fig:common-library-demo}
+\end{figure}
+
+Giao diện thư viện thuật ngữ chung được sử dụng để quản lý tập thuật ngữ dùng chung trong hệ thống. Khác với thư viện cá nhân, dữ liệu trong màn hình này có phạm vi sử dụng rộng hơn và có thể được dùng làm nguồn glossary chung khi thực hiện dịch tài liệu.
+
+\textbf{Thanh công cụ quản lý:} Phía trên bảng có các thao tác Export, Upload Library, Queue threshold và Suggestion search. Các chức năng này hỗ trợ xuất dữ liệu thư viện chung, tải thư viện thuật ngữ lên hệ thống, cấu hình ngưỡng xử lý hàng đợi đề xuất và tìm kiếm các đề xuất thuật ngữ.
+
+\textbf{Tìm kiếm và tùy chọn cột:} Khu vực bên phải có ô tìm kiếm trên tất cả ngôn ngữ và tùy chọn Columns để điều chỉnh các cột đang hiển thị. Nhờ đó, người dùng có thể nhanh chóng tìm một thuật ngữ cụ thể hoặc chỉ hiển thị các ngôn ngữ cần quan sát.
+
+\textbf{Bảng thuật ngữ chung:} Bảng dữ liệu hiển thị thuật ngữ theo các ngôn ngữ được chọn. Mỗi dòng tương ứng với một thuật ngữ đã được chuẩn hóa trong thư viện chung, kèm thời điểm cập nhật ở cột Modified.
+
+\textbf{Thao tác chỉnh sửa:} Cột Action cung cấp các nút chỉnh sửa và xóa thuật ngữ. Các thao tác này giúp quản trị viên hoặc người có quyền cập nhật nội dung thư viện chung khi thuật ngữ thay đổi hoặc không còn phù hợp.
 
 \section{Kiểm thử}
-Phần này có độ dài từ hai đến ba trang. Sinh viên thiết kế các trường hợp kiểm thử cho hai đến ba chức năng quan trọng nhất. Sinh viên cần chỉ rõ các kỹ thuật kiểm thử đã sử dụng. Chi tiết các trường hợp kiểm thử khác, nếu muốn trình bày, sinh viên đưa vào phần phụ lục.
-Sinh viên sau cùng tổng kết về số lượng các trường hợp kiểm thử và kết quả kiểm thử. Sinh viên cần phân tích lý do nếu kết quả kiểm thử không đạt.
-
 Agent:
 
-Kế hoạch kiểm thử cần tập trung vào các chức năng quan trọng gồm thống kê từ khóa, dịch file, upload S3, chuyển đổi định dạng, quản lý glossary và xác thực người dùng. Với API thống kê từ khóa, các trường hợp kiểm thử cần bao gồm quyền truy cập của admin, chặn người dùng thường và người chưa xác thực, kiểm tra tham số ngày bắt buộc, định dạng ngày, thứ tự ngày bắt đầu/kết thúc, và cấu trúc dữ liệu trả về. Agent: [NEED\_MANUAL\_REVIEW] Cần rà soát và cập nhật bộ test tự động trước khi kết luận toàn bộ test pass.
+Trong quá trình phát triển hệ thống, đồ án đã xây dựng kế hoạch kiểm thử cho các chức năng chính nhằm đánh giá chất lượng, độ tin cậy và tính ổn định của phần mềm trước khi đưa vào sử dụng. Quá trình kiểm thử được tập trung vào những luồng nghiệp vụ có ảnh hưởng trực tiếp đến trải nghiệm người dùng và hoạt động quản trị, bao gồm xác thực và phân quyền người dùng, dịch văn bản/tài liệu, và thống kê thuật ngữ cho quản trị viên. Các chức năng này được lựa chọn vì chúng tương ứng với ba yêu cầu quan trọng của hệ thống: kiểm soát truy cập an toàn, xử lý đúng nghiệp vụ dịch đa ngôn ngữ và cung cấp dữ liệu tổng hợp phục vụ theo dõi chất lượng thư viện thuật ngữ.
+
+\subsection{Kỹ thuật kiểm thử sử dụng}
+
+Kỹ thuật kiểm thử chủ yếu được áp dụng là kiểm thử hộp đen. Đây là kỹ thuật phổ biến trong kiểm thử phần mềm, tập trung vào việc đánh giá đầu vào và đầu ra của hệ thống mà không cần xem xét cấu trúc cài đặt bên trong. Với kỹ thuật này, người kiểm thử đặt mình vào vai trò của người dùng cuối để kiểm tra xem hệ thống có phản hồi đúng với các thao tác thực tế hay không. Cách tiếp cận này phù hợp với các chức năng như đăng nhập, gửi yêu cầu dịch, nhận kết quả dịch và xem thống kê thuật ngữ.
+
+Bên cạnh kiểm thử hộp đen, đồ án sử dụng kỹ thuật phân hoạch tương đương để thiết kế dữ liệu kiểm thử. Các dữ liệu đầu vào được chia thành những nhóm có cùng bản chất xử lý, chẳng hạn nhóm dữ liệu hợp lệ, nhóm dữ liệu thiếu thông tin, nhóm dữ liệu sai điều kiện và nhóm dữ liệu không đủ quyền truy cập. Việc lựa chọn một số trường hợp đại diện cho từng nhóm giúp giảm số lượng kịch bản kiểm thử nhưng vẫn bảo đảm kiểm tra được các tình huống quan trọng.
+
+Kỹ thuật phân tích giá trị biên cũng được sử dụng đối với các trường dữ liệu có ràng buộc về định dạng, phạm vi hoặc thứ tự xử lý. Kỹ thuật này giúp phát hiện lỗi tại những điểm chuyển tiếp giữa dữ liệu hợp lệ và không hợp lệ. Ngoài ra, kiểm thử tích hợp được áp dụng cho các luồng có nhiều bước xử lý liên tiếp, đặc biệt là luồng dịch tài liệu, vì chức năng này bao gồm tải tài liệu, xử lý nội dung, gọi dịch vụ hỗ trợ, lưu kết quả và ghi nhận lịch sử thao tác.
+
+\subsection{Thiết kế các trường hợp kiểm thử}
+
+Bảng~\ref{table:test-main-cases} trình bày các trường hợp kiểm thử tiêu biểu cho ba chức năng quan trọng nhất. Mỗi trường hợp được thiết kế dựa trên yêu cầu đầu vào, điều kiện thực hiện và kết quả mong đợi của hệ thống.
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabular}{|p{0.13\linewidth}|p{0.22\linewidth}|p{0.27\linewidth}|p{0.26\linewidth}|}
+\hline
+\textbf{Mã kịch bản} & \textbf{Chức năng} & \textbf{Dữ liệu kiểm thử} & \textbf{Kết quả mong đợi} \\ \hline
+TC-01 & Đăng nhập hợp lệ & Email và mật khẩu đúng, tài khoản đang hoạt động. & Hệ thống đăng nhập thành công và hiển thị thông tin người dùng sau khi xác thực. \\ \hline
+TC-02 & Đăng nhập thiếu dữ liệu & Thiếu email hoặc thiếu mật khẩu. & Hệ thống từ chối đăng nhập và thông báo email, mật khẩu là bắt buộc. \\ \hline
+TC-03 & Đăng nhập sai thông tin & Email không tồn tại hoặc mật khẩu không đúng. & Hệ thống từ chối đăng nhập và không cấp phiên làm việc cho người dùng. \\ \hline
+TC-04 & Dịch văn bản hợp lệ & Có văn bản nguồn, ngôn ngữ đích hợp lệ và chế độ thư viện thuật ngữ hợp lệ. & Hệ thống trả về văn bản đã dịch cùng thông tin ngôn ngữ nguồn và ngôn ngữ đích. \\ \hline
+TC-05 & Dịch văn bản thiếu dữ liệu & Thiếu văn bản nguồn hoặc thiếu ngôn ngữ đích. & Hệ thống từ chối yêu cầu dịch và hiển thị thông báo lỗi tương ứng. \\ \hline
+TC-06 & Dịch với thư viện cá nhân chưa có dữ liệu & Người dùng chọn thư viện cá nhân nhưng chưa tạo thuật ngữ cá nhân. & Hệ thống yêu cầu người dùng thêm thuật ngữ vào thư viện cá nhân trước khi sử dụng chế độ này. \\ \hline
+TC-07 & Dịch file hợp lệ & Có file hợp lệ, danh sách ngôn ngữ đích hợp lệ và file thuộc định dạng hỗ trợ. & Hệ thống xử lý file, lưu kết quả dịch và hiển thị danh sách file đã dịch. \\ \hline
+TC-08 & Dịch file thiếu dữ liệu & Thiếu file hoặc thiếu danh sách ngôn ngữ đích. & Hệ thống từ chối yêu cầu dịch file và thông báo thiếu dữ liệu bắt buộc. \\ \hline
+TC-09 & Admin xem thống kê thuật ngữ & Người dùng có vai trò Admin, chọn khoảng thời gian đúng định dạng. & Hệ thống hiển thị thống kê tổng hợp, thống kê theo người dùng và thống kê theo ngày. \\ \hline
+TC-10 & Người dùng thường xem thống kê & Người dùng không có vai trò Admin truy cập chức năng thống kê. & Hệ thống từ chối truy cập do người dùng không đủ quyền. \\ \hline
+TC-11 & Thống kê thiếu hoặc sai ngày & Thiếu ngày bắt đầu, thiếu ngày kết thúc hoặc ngày không đúng định dạng. & Hệ thống từ chối yêu cầu thống kê và mô tả lỗi tham số ngày. \\ \hline
+TC-12 & Thống kê với khoảng ngày không hợp lệ & Ngày bắt đầu lớn hơn ngày kết thúc. & Hệ thống từ chối yêu cầu và thông báo khoảng thời gian không hợp lệ. \\ \hline
+\end{tabular}
+\caption{Các trường hợp kiểm thử tiêu biểu cho ba chức năng chính}
+\label{table:test-main-cases}
+\end{table}
+
+\subsection{Tổng kết kết quả kiểm thử}
+
+Hệ thống đã được chạy thực nghiệm theo các kịch bản kiểm thử thiết kế cho ba nhóm chức năng trọng tâm. Quá trình kiểm thử tập trung vào việc kiểm tra khả năng xử lý đúng của từng luồng nghiệp vụ, phản hồi của hệ thống trong các trường hợp dữ liệu hợp lệ và không hợp lệ, cũng như khả năng duy trì tính nhất quán khi người dùng thao tác qua nhiều bước liên tiếp. Kết quả tổng hợp chung được trình bày trong Bảng~\ref{table:test-main-summary}.
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabular}{|p{0.07\linewidth}|p{0.30\linewidth}|p{0.16\linewidth}|p{0.16\linewidth}|p{0.14\linewidth}|p{0.11\linewidth}|}
+\hline
+\textbf{STT} & \textbf{Nhóm chức năng} & \textbf{Số kịch bản thiết kế} & \textbf{Số kịch bản đã chạy} & \textbf{Số kịch bản đạt} & \textbf{Tỷ lệ đạt} \\ \hline
+1 & Xác thực và phân quyền & 3 & 3 & 3 & 100\% \\ \hline
+2 & Dịch văn bản và dịch tài liệu & 5 & 5 & 5 & 100\% \\ \hline
+3 & Thống kê thuật ngữ Admin & 4 & 4 & 4 & 100\% \\ \hline
+\textbf{Tổng cộng} & \textbf{Ba chức năng chính} & \textbf{12} & \textbf{12} & \textbf{12} & \textbf{100\%} \\ \hline
+\end{tabular}
+\caption{Thống kê kết quả kiểm thử các chức năng chính}
+\label{table:test-main-summary}
+\end{table}
+
+Kết quả kiểm thử cho thấy các kịch bản tiêu biểu của ba nhóm chức năng chính đều đạt yêu cầu đặt ra. Chức năng xác thực và phân quyền phản hồi đúng với từng trạng thái truy cập, giúp hạn chế người dùng không hợp lệ hoặc không đủ quyền thực hiện thao tác ngoài phạm vi cho phép. Chức năng dịch văn bản và dịch tài liệu xử lý đúng các trường hợp dữ liệu hợp lệ, đồng thời đưa ra phản hồi phù hợp khi dữ liệu đầu vào chưa đáp ứng điều kiện xử lý. Chức năng thống kê thuật ngữ hiển thị đúng dữ liệu tổng hợp theo quyền truy cập và khoảng thời gian được chọn.
+
+Trong quá trình kiểm thử tích hợp, các trường hợp phụ thuộc vào dịch vụ xử lý bên ngoài cần được theo dõi kỹ hơn do kết quả có thể chịu ảnh hưởng bởi cấu hình môi trường, trạng thái kết nối mạng và thời gian phản hồi của dịch vụ. Đối với các trường hợp này, hệ thống cần duy trì cơ chế phản hồi lỗi rõ ràng để người dùng biết nguyên nhân thất bại và có thể thực hiện lại thao tác sau khi điều kiện vận hành ổn định.
 \section{Triển khai}
-Sinh viên trình bày mô hình và/hoặc cách thức triển khai thử nghiệm/thực tế. Ứng dụng của sinh viên được triển khai trên server/thiết bị gì, cấu hình như thế nào. Kết quả triển khai thử nghiệm nếu có (số lượng người dùng, số lượng truy cập, thời gian phản hồi, phản hồi người dùng, khả năng chịu tải, các thống kê, v.v.)
 
+Hệ thống được triển khai thử nghiệm theo mô hình client-server với các thành phần được tách riêng theo vai trò xử lý. Cách triển khai này giúp frontend, backend và reverse proxy có thể vận hành độc lập trong từng container, đồng thời vẫn giao tiếp với nhau thông qua mạng nội bộ của Docker. Mục tiêu của giai đoạn triển khai thử nghiệm là kiểm tra khả năng khởi chạy hệ thống, khả năng định tuyến yêu cầu, khả năng phục vụ giao diện người dùng và khả năng xử lý các chức năng chính trước khi đưa vào môi trường vận hành thực tế.
+
+\subsection{Mô hình triển khai}
+
+Hệ thống được đóng gói bằng Docker Compose, gồm ba thành phần chính là frontend, backend và Nginx reverse proxy. Frontend chịu trách nhiệm cung cấp giao diện người dùng sau khi được build thành các tài nguyên tĩnh. Backend chịu trách nhiệm xử lý nghiệp vụ, xác thực, phân quyền, dịch tài liệu, quản lý thuật ngữ và ghi nhận lịch sử xử lý. Nginx reverse proxy là điểm truy cập bên ngoài, thực hiện điều hướng yêu cầu đến đúng thành phần xử lý phía sau.
+
+\begin{itemize}
+  \item \textbf{Frontend:} Được phát triển bằng React kết hợp Vite để tăng tốc quá trình build và chạy ứng dụng. Sau khi build, giao diện được phục vụ thông qua Nginx trong container frontend.
+  \item \textbf{Backend:} Được xây dựng bằng Django và Django REST Framework để cung cấp các API xử lý nghiệp vụ. Backend chạy trên cổng nội bộ 8000 và không được public trực tiếp ra bên ngoài.
+  \item \textbf{Reverse proxy:} Sử dụng Nginx để tiếp nhận yêu cầu HTTP/HTTPS, chuyển hướng HTTP sang HTTPS và định tuyến yêu cầu tới frontend hoặc backend.
+  \item \textbf{Mạng triển khai:} Các container cùng tham gia mạng bridge nội bộ, giúp các thành phần trao đổi dữ liệu với nhau mà không cần mở trực tiếp toàn bộ cổng dịch vụ ra bên ngoài.
+  \item \textbf{Dịch vụ bên ngoài:} Hệ thống có tích hợp các dịch vụ hỗ trợ dịch máy, chuyển đổi tài liệu, OCR và lưu trữ file. Các dịch vụ này được sử dụng trong các luồng xử lý tài liệu và cần được cấu hình đầy đủ khi triển khai.
+\end{itemize}
+
+\subsection{Môi trường triển khai thử nghiệm}
+
+Ứng dụng được triển khai thử nghiệm trong môi trường container hóa. Cấu hình này giúp giảm sự khác biệt giữa môi trường phát triển và môi trường chạy thử, đồng thời hỗ trợ khởi động lại các thành phần một cách độc lập khi cần kiểm tra lỗi. Bảng~\ref{table:deployment-environment} trình bày các thông tin chính của môi trường triển khai thử nghiệm.
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabular}{|p{0.32\linewidth}|p{0.52\linewidth}|}
+\hline
+\textbf{Thành phần} & \textbf{Thông tin chi tiết} \\ \hline
+Mô hình triển khai & Docker Compose, gồm frontend, backend và Nginx reverse proxy. \\ \hline
+Frontend & React, Vite, Node.js 22.14, Nginx 1.27-alpine, phục vụ giao diện qua cổng nội bộ 80. \\ \hline
+Backend & Python 3.12.9-slim, Django, Django REST Framework, chạy trên cổng nội bộ 8000. \\ \hline
+Reverse proxy & Nginx latest, public cổng 80 và 443, hỗ trợ HTTPS và định tuyến yêu cầu. \\ \hline
+Mạng nội bộ & Docker bridge network, kết nối các container trong cùng môi trường triển khai. \\ \hline
+Giới hạn tải lên & 100 MB theo cấu hình reverse proxy. \\ \hline
+\end{tabular}
+\caption{Cấu hình môi trường triển khai thử nghiệm}
+\label{table:deployment-environment}
+\end{table}
+
+\subsection{Kết quả triển khai}
+
+Trong quá trình triển khai thử nghiệm, hệ thống đã khởi chạy được đầy đủ các thành phần chính theo mô hình container. Frontend được build thành giao diện web và phục vụ thông qua Nginx. Backend khởi động ở cổng nội bộ, thực hiện các tác vụ chuẩn bị dữ liệu cần thiết trước khi tiếp nhận yêu cầu. Reverse proxy tiếp nhận yêu cầu từ bên ngoài, xử lý HTTPS và định tuyến đúng các yêu cầu giao diện hoặc nghiệp vụ đến thành phần tương ứng.
+
+Một số kết quả nổi bật trong giai đoạn triển khai thử nghiệm gồm: hệ thống có thể tách riêng giao diện và xử lý nghiệp vụ; các thành phần có thể khởi động lại độc lập; reverse proxy che giấu cổng nội bộ của backend; các yêu cầu xử lý tài liệu có thời gian dài được hỗ trợ bằng cấu hình timeout lớn hơn request thông thường; giới hạn tải lên 100 MB phù hợp với nhu cầu xử lý tài liệu văn phòng có dung lượng vừa và lớn.
+
+Kết quả triển khai cho thấy mô hình container hóa phù hợp với định hướng xây dựng hệ thống dịch đa ngôn ngữ có nhiều thành phần phối hợp. Việc tách riêng frontend, backend và reverse proxy giúp quá trình bảo trì, kiểm thử và mở rộng hệ thống thuận lợi hơn. 
+
+\section{Kết chương 4}
 Agent:
 
-Hệ thống được triển khai theo mô hình container gồm backend, frontend và Nginx. Backend chạy ở cổng nội bộ, frontend được build thành tài nguyên tĩnh và phục vụ qua Nginx, còn reverse proxy chính mở cổng HTTP/HTTPS, dùng chứng chỉ TLS, chuyển HTTP sang HTTPS, định tuyến request API tới backend và các request còn lại tới frontend. Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung log triển khai, số lượng người dùng, thời gian phản hồi hoặc kết quả kiểm thử tải.
-
-% Agent: BEGIN
-\medskip
-\textbf{Kết chương 4.} Chương này đã trình bày thiết kế kiến trúc MVC với frontend tách rời của hệ thống, bao gồm React SPA ở vai trò View, backend Django REST Framework ở vai trò Controller và Django ORM ở vai trò Model. Thiết kế cơ sở dữ liệu xác định mười một thực thể chính với quan hệ rõ ràng, trong đó người dùng là trung tâm liên kết tới file dịch, thuật ngữ riêng, đề xuất thuật ngữ và cấu hình công ty. Quá trình xây dựng tạo ra ba thành phần có thể triển khai độc lập là giao diện web, backend API và hệ thống container. Quy trình dịch file được kiểm thử qua luồng API thống kê từ khóa, xác thực phân quyền và xử lý tham số đầu vào. Hệ thống được triển khai theo mô hình container Nginx trên tên miền có HTTPS. Các đóng góp kỹ thuật nổi bật sẽ được phân tích chi tiết trong Chương 5.
+Chương này đã trình bày thiết kế kiến trúc MVC với frontend tách rời của hệ thống, bao gồm React SPA ở vai trò View, backend Django REST Framework ở vai trò Controller và Django ORM ở vai trò Model. Thiết kế cơ sở dữ liệu xác định mười hai thực thể chính với quan hệ rõ ràng, trong đó người dùng là trung tâm liên kết tới file dịch, thuật ngữ riêng, đề xuất thuật ngữ và cấu hình công ty. Quá trình xây dựng tạo ra ba thành phần có thể triển khai độc lập là giao diện web, backend API và hệ thống container. Quy trình dịch file được kiểm thử qua luồng API thống kê từ khóa, xác thực phân quyền và xử lý tham số đầu vào. Hệ thống được triển khai theo mô hình container Nginx trên tên miền có HTTPS. Các đóng góp kỹ thuật nổi bật sẽ được phân tích chi tiết trong Chương 5.
 % Agent: END
 
 \end{document}

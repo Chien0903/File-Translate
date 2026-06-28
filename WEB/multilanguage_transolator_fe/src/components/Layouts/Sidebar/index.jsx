@@ -70,14 +70,13 @@ const SideBar = ({ isMobile = false, onMobileClose }) => {
       style={{ transition: isMobile ? "none" : "width 250ms ease" }}
     >
       {/* Logo */}
-      <div className={`flex items-center gap-3 p-4 border-b border-gray-100 ${!expanded && !isMobile ? "justify-center" : ""}`}>
-        <div className="w-10 h-10 bg-indigo-700 rounded-xl flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-bold text-lg">T</span>
+      <div className={`flex items-center gap-3 px-4 h-14 border-b border-gray-200 flex-shrink-0 ${!expanded && !isMobile ? "justify-center" : ""}`}>
+        <div className="w-8 h-8 bg-indigo-700 rounded-xl flex items-center justify-center flex-shrink-0">
+          <span className="text-white font-bold text-sm">M</span>
         </div>
         {(expanded || isMobile) && (
           <div className="min-w-0">
-            <div className="font-bold text-gray-900 text-sm leading-tight truncate">Toray Translate</div>
-            <div className="text-gray-400 text-xs truncate">Enterprise Edition</div>
+            <div className="font-bold text-gray-900 text-sm leading-tight truncate">Multilanguage Translator</div>
           </div>
         )}
         {isMobile && (

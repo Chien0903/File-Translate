@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, PasswordResetToken, TranslatedFile, Notification
+from .models import CustomUser, TranslatedFile, Notification
 from .models.keyword import KeywordSuggestion, KeywordQueue, PrivateKeyword
 
 class CustomUserAdmin(UserAdmin):
@@ -29,14 +29,6 @@ class NotificationAdmin(admin.ModelAdmin):
     list_filter = ['read', 'created_at']
     search_fields = ['user__email', 'title', 'message']
     ordering = ['-created_at']
-
-
-@admin.register(PasswordResetToken)
-class PasswordResetTokenAdmin(admin.ModelAdmin):
-    list_display = ("id", "email", "token", "created_at", "expires_at")
-    list_filter = ("created_at", "expires_at")
-    search_fields = ("email", "token")
-    ordering = ("-created_at",)
 
 
 admin.site.register(CustomUser, CustomUserAdmin)

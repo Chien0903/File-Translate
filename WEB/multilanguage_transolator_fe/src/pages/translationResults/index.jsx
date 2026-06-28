@@ -72,6 +72,7 @@ const TranslationResults = () => {
       th: "Thai",
     };
 
+    if (!code || code === "unknown") return "Auto Detect";
     return languageMap[code] || code;
   };
 

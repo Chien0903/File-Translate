@@ -35,6 +35,74 @@ Hệ thống được triển khai theo mô hình container cho backend, fronten
 
 Agent: [NEED\_MANUAL\_REVIEW] Cần bổ sung benchmark hiệu năng, kết quả chạy test, quy trình giám sát production, dữ liệu khảo sát người dùng và ảnh chụp màn hình sản phẩm bằng kết quả thực nghiệm hoặc tài liệu vận hành trước khi nộp báo cáo cuối cùng.
 
+% Agent: BEGIN — Nội dung chi tiết Chương 5
+
+\section{Quy trình dịch tài liệu đa định dạng bảo toàn cấu trúc}
+
+\subsection{Giới thiệu bài toán}
+
+Trong môi trường doanh nghiệp, tài liệu nội bộ được lưu trữ đồng thời dưới nhiều định dạng khác nhau, trong đó phổ biến nhất là DOCX, XLSX, PPTX và PDF. Mỗi định dạng có cấu trúc lưu trữ nội dung riêng biệt, tạo ra thách thức kỹ thuật khi cần cung cấp một giao diện dịch thống nhất mà vẫn bảo toàn định dạng tài liệu sau quá trình dịch. DOCX, XLSX và PPTX đều tuân theo chuẩn Office Open XML, tức là mỗi tệp thực chất là một kho nén ZIP chứa nhiều tệp XML bên trong, trong đó văn bản nằm rải rác ở các nút XML theo cấu trúc đặc thù của từng loại. PDF lại hoàn toàn khác biệt vì định dạng này không có cấu trúc XML rõ ràng và có thể tồn tại ở hai dạng: tệp có thể trích xuất văn bản trực tiếp và tệp ảnh quét không có nội dung chữ có thể đọc được bằng thư viện tiêu chuẩn.
+
+Bài toán đặt ra là thiết kế một quy trình dịch thống nhất về phía người dùng, đồng thời cho phép từng định dạng được xử lý theo cách đặc thù riêng của nó mà không làm hỏng cấu trúc tài liệu gốc. Ngoài yêu cầu bảo toàn định dạng, quy trình cần hoạt động hiệu quả đối với các tài liệu dài có nhiều đoạn văn bản lặp lại, vì mỗi lần gọi dịch sang Google Cloud Translation đều tiêu tốn thời gian và chi phí API.
+
+\subsection{Giải pháp}
+
+Hệ thống được thiết kế theo mô hình điều phối trung tâm, trong đó hàm \texttt{translate\_document} tiếp nhận yêu cầu từ backend API và phân nhánh xử lý theo loại tệp. Cách tổ chức này giúp giao diện người dùng chỉ cần gửi đường dẫn tệp, danh sách ngôn ngữ đích và chế độ thư viện thuật ngữ, mà không cần biết tệp sẽ được xử lý theo luồng nào bên dưới. Hàm điều phối nhận loại tệp qua phần mở rộng tên file rồi gọi đúng hàm xử lý chuyên biệt.
+
+Với định dạng DOCX, hệ thống duyệt từng đoạn văn bản trong tài liệu bằng thư viện \texttt{python-docx} và gửi danh sách các đoạn văn sang dịch theo lô thay vì dịch từng câu riêng lẻ. Một bài toán phụ phát sinh là các đoạn văn bản trong Word thường bị tách thành nhiều thành phần chạy liên tiếp do trình soạn thảo chia nhỏ đoạn văn khi người dùng thay đổi định dạng chữ, khiến ngữ nghĩa bị phân mảnh nếu dịch từng thành phần riêng. Hàm \texttt{merge\_all\_paragraphs} được xây dựng để gộp các thành phần chạy trong cùng đoạn văn lại trước khi dịch, nhằm bảo toàn ngữ nghĩa và giảm số lần gọi API.
+
+Với định dạng XLSX và PPTX, hàm \texttt{translate\_file} giải nén tệp, duyệt toàn bộ tệp XML trong thư mục giải nén, thu thập tập trung danh sách văn bản cần dịch, gọi dịch theo lô duy nhất rồi ghi lại kết quả vào đúng nút XML trước khi nén lại thành tệp kết quả. Toàn bộ nội dung của một tệp tài liệu được gửi sang dịch vụ dịch trong một hoặc vài lần gọi thay vì gọi riêng lẻ cho từng nút XML, giảm đáng kể số lần giao tiếp với dịch vụ bên ngoài.
+
+Cơ chế bộ nhớ đệm theo phiên xử lý là một thành phần quan trọng trong giải pháp này. Trong thực tế, các tài liệu văn phòng thường có những cụm từ lặp lại nhiều lần như tiêu đề cột, nhãn biểu mẫu hoặc đoạn văn mẫu chung. Hàm \texttt{cached\_translate\_text} bọc ngoài lớp gọi dịch, kiểm tra xem đoạn văn bản đã được dịch trong phiên hiện tại chưa trước khi gửi yêu cầu ra ngoài. Với các nội dung đã có kết quả trong bộ nhớ đệm, hệ thống tra cứu lại trực tiếp mà không gọi thêm API, góp phần rút ngắn thời gian xử lý và tiết kiệm chi phí.
+
+\subsection{Kết quả đạt được}
+
+Giải pháp điều phối trung tâm cho phép hệ thống xử lý bốn định dạng tài liệu phổ biến qua một điểm API duy nhất, trong khi tệp kết quả sau dịch vẫn giữ nguyên bố cục, kiểu định dạng và cấu trúc của tài liệu gốc. Cơ chế gộp đoạn văn trước khi dịch giải quyết vấn đề phân mảnh ngữ nghĩa đặc thù của định dạng DOCX, còn cơ chế dịch theo lô kết hợp bộ nhớ đệm phiên giúp giảm số lần giao tiếp với dịch vụ dịch bên ngoài xuống mức tối thiểu cần thiết cho mỗi tài liệu.
+
+\section{Cơ chế thư viện thuật ngữ hai cấp và quy trình phê duyệt}
+
+\subsection{Giới thiệu bài toán}
+
+Dịch máy thông thường xử lý từng câu độc lập mà không tính đến ngữ cảnh chuyên ngành của doanh nghiệp, dẫn đến tình trạng cùng một thuật ngữ kỹ thuật có thể được dịch khác nhau giữa các tài liệu khác nhau. Trong môi trường sản xuất, các thuật ngữ về vật liệu, quy trình hoặc tiêu chuẩn chất lượng cần được dịch nhất quán trên toàn bộ tài liệu nội bộ; sự không nhất quán về thuật ngữ làm giảm chất lượng giao tiếp và gây khó khăn trong việc theo dõi tài liệu kỹ thuật theo thời gian.
+
+Bài toán đặt ra là xây dựng cơ chế thư viện thuật ngữ đáp ứng đồng thời hai nhu cầu: người dùng cá nhân có thể tự lưu thuật ngữ riêng phù hợp với công việc của mình, trong khi tổ chức lại có thể duy trì một tập thuật ngữ chung được kiểm soát bởi người có thẩm quyền. Song song đó, cần có quy trình cho phép người dùng đóng góp thuật ngữ vào thư viện chung theo hướng từ dưới lên, thay vì chỉ có một nhóm nhỏ tự quản trị toàn bộ danh sách. Ngoài ra, thư viện thuật ngữ này phải được tích hợp thực sự vào quá trình dịch, không chỉ là dữ liệu tham khảo độc lập.
+
+\subsection{Giải pháp}
+
+Hệ thống được tổ chức thành hai lớp thư viện thuật ngữ. Lớp thứ nhất là thư viện cá nhân, được biểu diễn bằng model \texttt{PrivateKeyword}, nơi mỗi người dùng có thể thêm, sửa, xóa và tra cứu thuật ngữ riêng của mình. Lớp thứ hai là thư viện chung, được biểu diễn bằng model \texttt{KeywordSuggestion} với trạng thái \textit{approved}, được quản lý tập trung bởi Admin hoặc Library Keeper và áp dụng cho toàn bộ người dùng. Cả hai lớp đều lưu dữ liệu thuật ngữ theo nhiều ngôn ngữ trong một trường JSON duy nhất, trong đó khóa là mã ngôn ngữ theo chuẩn IETF và giá trị là nội dung thuật ngữ tương ứng.
+
+Để đảm bảo quy trình dịch có thể chọn đúng nguồn thư viện theo từng yêu cầu, hệ thống xây dựng cơ chế ngữ cảnh dịch dựa trên biến cục bộ luồng xử lý. Khi backend nhận một yêu cầu dịch, hàm \texttt{set\_translation\_context} lưu chế độ thư viện và mã người dùng vào biến cục bộ của luồng hiện tại. Toàn bộ chuỗi xử lý tài liệu phía sau có thể đọc ngữ cảnh này để quyết định dùng glossary chung, glossary riêng hoặc không dùng glossary, mà không cần truyền thêm tham số qua từng hàm con trong chuỗi xử lý. Sau khi hoàn thành, hàm \texttt{clear\_translation\_context} dọn dẹp ngữ cảnh để tránh ảnh hưởng sang các yêu cầu xử lý tiếp theo trong cùng tiến trình.
+
+Về tích hợp với Google Cloud Translation, khi danh sách thuật ngữ chung được cập nhật, hệ thống tạo hoặc đồng bộ lại glossary tương ứng trên Google Cloud Storage theo từng cặp ngôn ngữ liên quan. Khi hàm dịch được gọi với chế độ thư viện chung, hàm \texttt{translate\_text\_with\_glossary} ưu tiên các cặp thuật ngữ đã định nghĩa trong glossary; nếu không tìm thấy glossary phù hợp hoặc glossary gặp lỗi tạm thời, hàm tự chuyển sang dịch tiêu chuẩn để hệ thống vẫn hoàn thành yêu cầu mà không trả về lỗi cho người dùng.
+
+Quy trình đóng góp thuật ngữ từ cá nhân lên thư viện chung được tổ chức theo trạng thái có kiểm soát. Người dùng gửi đề xuất từ thư viện cá nhân của mình; đề xuất được tạo ở trạng thái \textit{pending} và hiển thị trong hàng đợi xét duyệt. Library Keeper hoặc Admin xem xét từng đề xuất và chuyển sang trạng thái \textit{approved} hoặc \textit{rejected}. Khi đề xuất được phê duyệt, hệ thống cập nhật nội dung thư viện chung và gửi thông báo tới người dùng đã đề xuất. Hệ thống cũng kiểm tra trùng lặp theo nội dung thuật ngữ để tránh tích lũy các đề xuất giống nhau từ nhiều người dùng.
+
+\subsection{Kết quả đạt được}
+
+Cơ chế hai lớp thư viện thuật ngữ cho phép người dùng và tổ chức quản lý thuật ngữ theo đúng phạm vi trách nhiệm của từng bên mà không chồng chéo quyền hạn. Người dùng thông thường có thể duy trì danh sách thuật ngữ riêng phù hợp với công việc cụ thể mà không cần quyền quản trị, trong khi tổ chức vẫn kiểm soát được nội dung thư viện chung thông qua quy trình phê duyệt có phân quyền. Cơ chế ngữ cảnh dịch theo luồng xử lý giúp ba chế độ sử dụng thư viện hoạt động nhất quán từ điểm API đầu vào xuyên suốt đến các hàm dịch cấp thấp nhất, mà không cần truyền thêm tham số qua toàn bộ chuỗi xử lý tài liệu.
+
+\section{Xử lý tài liệu PDF theo đặc tính nội dung với Azure Document Intelligence}
+
+\subsection{Giới thiệu bài toán}
+
+PDF là định dạng phổ biến nhất để chia sẻ tài liệu trong môi trường doanh nghiệp, nhưng cũng là định dạng phức tạp nhất về mặt xử lý vì một tệp PDF có thể thuộc hai loại hoàn toàn khác nhau về kỹ thuật. Loại thứ nhất là PDF văn bản, được tạo ra trực tiếp từ phần mềm soạn thảo hoặc xuất từ tài liệu Office; loại này chứa văn bản có thể trích xuất bằng thư viện PDF tiêu chuẩn. Loại thứ hai là PDF ảnh, được tạo bằng cách quét tài liệu giấy thành ảnh rồi đóng gói vào tệp PDF; loại này không chứa văn bản trích xuất được mà chỉ lưu ảnh bitmap của từng trang, khiến mọi thư viện trích xuất văn bản thông thường đều trả về kết quả rỗng.
+
+Bài toán đặt ra là phân loại đúng loại PDF và áp dụng luồng xử lý phù hợp với từng loại mà không yêu cầu người dùng tự khai báo loại tài liệu. Nếu hệ thống áp dụng cùng một cách xử lý cho cả hai loại, tài liệu PDF ảnh sẽ không có nội dung để dịch; ngược lại, nếu áp dụng luồng OCR cho mọi tài liệu, tài liệu PDF văn bản sẽ trải qua các bước chuyển đổi không cần thiết và có nguy cơ mất bố cục gốc.
+
+\subsection{Giải pháp}
+
+Hệ thống phân loại PDF thông qua việc kiểm tra lượng văn bản có thể trích xuất được từ trang đầu tiên của tệp. Nếu trang đầu tiên chứa đủ lượng ký tự đọc được, tệp được coi là PDF văn bản và xử lý theo luồng chuyển đổi: hệ thống gọi ConvertAPI để chuyển PDF sang DOCX, dịch tài liệu DOCX theo quy trình đã mô tả ở mục~5.1, sau đó chuyển DOCX đã dịch trở lại PDF. Nếu trang đầu tiên không có văn bản trích xuất được, tệp được coi là PDF ảnh và chuyển sang luồng OCR.
+
+Luồng OCR được xây dựng trên nền Azure Document Intelligence, dịch vụ phân tích bố cục tài liệu bằng mô hình học sâu được huấn luyện trên nhiều ngôn ngữ và loại tài liệu. Hàm \texttt{translate\_pdf\_ocr} gọi Azure Document Intelligence để phân tích từng trang tệp PDF và nhận về danh sách các khối văn bản kèm tọa độ, kích thước font và nội dung chữ trên từng trang. Hệ thống tiếp theo gửi toàn bộ danh sách đoạn văn bản thu được sang dịch theo lô, sau đó dựng lại tệp PDF kết quả bằng cách sử dụng từng trang của tài liệu gốc làm ảnh nền và đặt các hộp văn bản bản dịch lên trên đúng vị trí tọa độ tương ứng. Phương pháp dựng lại này bảo toàn bố cục trực quan của tài liệu gốc trong khi nội dung chữ hiển thị đã được thay thế bằng bản dịch.
+
+Một điều chỉnh quan trọng trong luồng này là xử lý thông tin ngôn ngữ nguồn. Khi người dùng không chọn ngôn ngữ gốc, Azure Document Intelligence có thể tự phát hiện ngôn ngữ của tài liệu trong quá trình OCR. Kết quả phát hiện ngôn ngữ này được đọc lại từ phản hồi của Azure và cập nhật vào biến ngôn ngữ nguồn để các bước dịch phía sau có thể sử dụng đúng cặp ngôn ngữ, đồng thời hệ thống ghi nhận được ngôn ngữ gốc thực tế vào lịch sử dịch.
+
+\subsection{Kết quả đạt được}
+
+Giải pháp phân nhánh theo đặc tính nội dung tệp cho phép hệ thống xử lý được cả hai loại PDF phổ biến trong thực tế mà không yêu cầu người dùng phân loại tài liệu thủ công. PDF văn bản được xử lý nhanh hơn qua luồng ConvertAPI và giữ nguyên cấu trúc văn bản sau dịch, trong khi PDF ảnh được xử lý qua pipeline OCR với Azure Document Intelligence và trả về tài liệu dịch có bố cục gần với bản gốc nhờ kỹ thuật đặt hộp văn bản theo tọa độ. Việc kết hợp hai luồng trong cùng một API dịch file giúp người dùng không cần quan tâm đến loại PDF đang xử lý, đồng thời hệ thống vẫn kiểm soát được chiến lược xử lý phù hợp nhất cho từng loại tài liệu.
+
+% Agent: END — Nội dung chi tiết Chương 5
+
 % Agent: BEGIN
 \medskip
 \textbf{Kết chương 5.} Chương này đã phân tích năm đóng góp kỹ thuật nổi bật của đồ án. Đóng góp về tích hợp quy trình dịch đa định dạng thể hiện ở việc gom nhiều luồng xử lý tài liệu vào một API thống nhất với bộ điều phối trung tâm. Đóng góp về glossary thể hiện ở cơ chế ngữ cảnh dịch theo luồng xử lý, cho phép ba chế độ glossary hoạt động nhất quán từ backend qua toàn bộ khối xử lý tài liệu. Quy trình phê duyệt thuật ngữ biến glossary từ dữ liệu tĩnh thành một quy trình quản trị có trạng thái và phân quyền. Xử lý PDF theo đặc tính tài liệu giải quyết sự không đồng nhất của định dạng PDF bằng cách phân nhánh luồng dựa trên đặc tính nội dung. Cuối cùng, tích hợp triển khai cloud ghép các thành phần lại thành một hệ thống vận hành hoàn chỉnh. Chương 6 sẽ tổng kết kết quả đạt được và các hướng phát triển tiếp theo.

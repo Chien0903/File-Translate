@@ -86,20 +86,22 @@ class Command(BaseCommand):
                 
     def create_temp_excel_from_queue(self, queue_items):
         """Tạo file Excel tạm thời từ queue data (10 cột ngôn ngữ)."""
+        _LANG_MAP = [
+            ("English",               'en'),
+            ("Japanese",              'ja'),
+            ("Vietnamese",            'vi'),
+            ("Chinese (Traditional)", 'zh-TW'),
+            ("Chinese (Simplified)",  'zh-CN'),
+            ("Thai",                  'th'),
+            ("Bengali",               'bn'),
+            ("Hindi",                 'hi'),
+            ("Indonesian",            'id'),
+            ("Oriya",                 'or'),
+        ]
         data = []
         for item in queue_items:
-            data.append({
-                'English': item.english or '',
-                'Japanese': item.japanese or '',
-                'Vietnamese': item.vietnamese or '',
-                'Chinese (Traditional)': item.chinese_traditional or '',
-                'Chinese (Simplified)': item.chinese_simplified or '',
-                'Thai': item.thai or '',
-                'Bengali': item.bengali or '',
-                'Hindi': item.hindi or '',
-                'Indonesian': item.indonesian or '',
-                'Oriya': item.oriya or '',
-            })
+            t = item.translations or {}
+            data.append({display: t.get(code, '') for display, code in _LANG_MAP})
 
         df = pd.DataFrame(data)
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
@@ -190,32 +192,31 @@ class Command(BaseCommand):
           3. Split keyword_data into to_create / to_update entirely in Python.
           4. bulk_create (1 query) + bulk_update (1 query per 500 rows).
         """
-        # Map display names → model field names
-        _FIELD_MAP = [
-            ("English",               "english"),
-            ("Japanese",              "japanese"),
-            ("Vietnamese",            "vietnamese"),
-            ("Chinese (Traditional)", "chinese_traditional"),
-            ("Chinese (Simplified)",  "chinese_simplified"),
-            ("Thai",                  "thai"),
-            ("Bengali",               "bengali"),
-            ("Hindi",                 "hindi"),
-            ("Indonesian",            "indonesian"),
-            ("Oriya",                 "oriya"),
+        # Map display names → language codes (translations JSONField)
+        _LANG_MAP = [
+            ("English",               'en'),
+            ("Japanese",              'ja'),
+            ("Vietnamese",            'vi'),
+            ("Chinese (Traditional)", 'zh-TW'),
+            ("Chinese (Simplified)",  'zh-CN'),
+            ("Thai",                  'th'),
+            ("Bengali",               'bn'),
+            ("Hindi",                 'hi'),
+            ("Indonesian",            'id'),
+            ("Oriya",                 'or'),
         ]
 
-        def _lookup_key(db_values: dict) -> frozenset:
+        def _lookup_key(translations: dict) -> frozenset:
             return frozenset(
-                (db_field, db_values[db_field])
-                for _, db_field in _FIELD_MAP
-                if db_values.get(db_field)
+                (code, val)
+                for _, code in _LANG_MAP
+                if (val := (translations or {}).get(code, '').strip())
             )
 
         # 1 query: load all existing suggestions
         existing_by_key: dict = {}
         for suggestion in KeywordSuggestion.objects.all():
-            db_vals = {db_field: getattr(suggestion, db_field, "") or "" for _, db_field in _FIELD_MAP}
-            key = _lookup_key(db_vals)
+            key = _lookup_key(suggestion.translations)
             if key:
                 existing_by_key[key] = suggestion
 
@@ -223,13 +224,14 @@ class Command(BaseCommand):
         to_update: list = []
 
         for keyword_data in suggested_keywords:
-            db_vals = {
-                db_field: keyword_data.get(display, "") or ""
-                for display, db_field in _FIELD_MAP
+            translations = {
+                code: keyword_data.get(display, '') or ''
+                for display, code in _LANG_MAP
+                if keyword_data.get(display, '')
             }
             count = keyword_data.get("Count", 1)
             percentage = keyword_data.get("Percentage", 0.0)
-            key = _lookup_key(db_vals)
+            key = _lookup_key(translations)
 
             if key in existing_by_key:
                 suggestion = existing_by_key[key]
@@ -238,10 +240,10 @@ class Command(BaseCommand):
                 to_update.append(suggestion)
             else:
                 new_obj = KeywordSuggestion(
+                    translations=translations,
                     suggestion_count=count,
                     frequency_percentage=percentage,
                     status='pending',
-                    **db_vals,
                 )
                 to_create.append(new_obj)
                 # Register in lookup so duplicates within this batch don't create twice

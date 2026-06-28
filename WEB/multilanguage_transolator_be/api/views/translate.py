@@ -506,7 +506,16 @@ class TranslateFileView(APIView):
             if not results:
                 return JsonResponse({"detail": "Failed to translate to any target language"}, status=500)
 
-            return JsonResponse({"translated_files": results}, status=200)
+            detected_source = origin_language or (
+                TranslatedFile.objects.filter(
+                    user=request.user,
+                    original_file_url=file_url,
+                ).order_by('-id').values_list('original_language', flat=True).first()
+            )
+            return JsonResponse({
+                "translated_files": results,
+                "source_language": detected_source or "unknown",
+            }, status=200)
         except Exception as e:
             logger.error(f"❌ Lỗi trong quá trình xử lý: {str(e)}")
             return JsonResponse({"detail": str(e)}, status=500)

@@ -251,8 +251,13 @@ const UploadFileNew = () => {
         library_mode: libraryMode,
       };
       const response = await translationService.translateFile(payload);
+      const detectedLang = response.data.source_language;
       navigate("/translation-results", {
-        state: { originalFile: file, originalLanguage: selectedOriginLanguage, translatedFiles: response.data.translated_files },
+        state: {
+          originalFile: file,
+          originalLanguage: selectedOriginLanguage || detectedLang,
+          translatedFiles: response.data.translated_files,
+        },
       });
     } catch (error) {
       const status = error.response?.status;

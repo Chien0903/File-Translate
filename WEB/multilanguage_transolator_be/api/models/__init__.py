@@ -1,4 +1,4 @@
-from .user import CustomUser, PasswordResetToken
+from .user import CustomUser
 from .keyword import KeywordSuggestion, PrivateKeyword
 from .translated_file import TranslatedFile
 from .notification import Notification
@@ -8,7 +8,7 @@ from .company_language import CompanyLanguage
 from .audit_log import LanguageAuditLog
 
 __all__ = [
-    'CustomUser', 'PasswordResetToken',
+    'CustomUser',
     'KeywordSuggestion', 'PrivateKeyword',
     'TranslatedFile',
     'Notification',

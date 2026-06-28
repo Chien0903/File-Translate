@@ -4,11 +4,7 @@ Chương 1 đã trình bày bối cảnh, bài toán đặt ra, phạm vi đề 
 
 \section{Khảo sát hiện trạng}
 \label{section:2.1}
-% Thông thường, khảo sát chi tiết về hiện trạng và yêu cầu của phần mềm sẽ được lấy từ ba nguồn chính, đó là (i) người dùng/khách hàng, (ii) các hệ thống đã có, (iii) và các ứng dụng tương tự.
-% Sinh viên cần tiến hành phân tích, so sánh, đánh giá chi tiết ưu nhược điểm của các sản phẩm/nghiên cứu hiện có. Sinh viên có thể lập bảng so sánh nếu cần thiết. Kết hợp với khảo sát người dùng/khách hàng (nếu có), sinh viên nêu và mô tả sơ lược các tính năng phần mềm quan trọng cần phát triển.
-
-% Agent: BEGIN
-Để xác định yêu cầu của hệ thống, quá trình khảo sát được tiến hành từ ba nguồn chính: Đầu tiên là người dùng tiềm năng trong môi trường doanh nghiệp, Tiếp theo là các công cụ dịch hiện có trên thị trường. Cuối cùng là các hệ thống có chức năng tương tự. Kết quả khảo sát là cơ sở để xác định các tính năng cần xây dựng và những hạn chế cần khắc phục so với các giải pháp hiện tại.
+Để xác định yêu cầu của hệ thống, quá trình khảo sát được tiến hành từ ba nguồn chính: (i) người dùng tiềm năng trong môi trường doanh nghiệp, (ii) các công cụ dịch hiện có trên thị trường và (iii) các hệ thống có chức năng tương tự. Kết quả khảo sát là cơ sở để xác định các tính năng cần xây dựng và những hạn chế cần khắc phục so với các giải pháp hiện tại.
 
 \subsection{Khảo sát từ người dùng}
 \label{subsection:2.1.1}
@@ -57,8 +53,6 @@ Dựa trên quá trình khảo sát, có thể thấy các công cụ hiện có
 \label{subsection:2.2.1}
 Biểu đồ use case tổng quát (Hình~\ref{fig:usecase_tong_quat}) xác định ba tác nhân và các nhóm chức năng mức cao của hệ thống.
 
-\textbf{Các tác nhân tham gia và vai trò:}
-
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{../Hinhve/uctongquan.png}
@@ -66,8 +60,11 @@ Biểu đồ use case tổng quát (Hình~\ref{fig:usecase_tong_quat}) xác đ�
   \label{fig:usecase_tong_quat}
 \end{figure}
 
+\textbf{Các tác nhân tham gia và vai trò:} Biểu đồ use case tổng quát (Hình~\ref{fig:usecase_tong_quat}) xác định ba tác nhân chính; mỗi tác nhân có vai trò và quyền hạn khác nhau trong hệ thống.
 \begin{itemize}
-  Biểu đồ Use Case tổng quát xác định ba tác nhân chính là Người dùng, Quản trị viên và Quản lý thư viện. Mỗi tác nhân có vai trò và quyền hạn khác nhau trong hệ thống.\item \textbf{Người dùng (User)} Là nhân viên doanh nghiệp có nhu cầu dịch văn bản hoặc tài liệu văn phòng sang một hoặc nhiều ngôn ngữ. \item \textbf{Quản trị viên (Admin):} Là người quản trị hệ thống trong phạm vi công ty. Họ có quyền quản lý tài khoản, cấu hình ngôn ngữ và xem thống kê từ khóa. \item \textbf{Quản lý thư viện (Library Keeper):} Là người chịu trách nhiệm vận hành thư viện thuật ngữ chung của doanh nghiệp. Họ có quyền xét duyệt các đề xuất thuật ngữ từ người dùng và quản lý nội dung trong thư viện chung.
+  \item \textbf{Người dùng (User):} Là nhân viên doanh nghiệp có nhu cầu dịch văn bản hoặc tài liệu văn phòng sang một hoặc nhiều ngôn ngữ.
+  \item \textbf{Quản trị viên (Admin):} Là người quản trị hệ thống trong phạm vi công ty. Họ có quyền quản lý tài khoản, cấu hình ngôn ngữ và xem thống kê từ khóa.
+  \item \textbf{Quản lý thư viện (Library Keeper):} Là người chịu trách nhiệm vận hành thư viện thuật ngữ chung của doanh nghiệp. Họ có quyền xét duyệt các đề xuất thuật ngữ từ người dùng và quản lý nội dung trong thư viện chung.
 \end{itemize}
 
 \textbf{Mô tả ngắn gọn các use case chính:}
@@ -77,9 +74,9 @@ Biểu đồ use case tổng quát (Hình~\ref{fig:usecase_tong_quat}) xác đ�
   \item \textbf{Xem lịch sử dịch:} Tra cứu và tải lại các tệp đã dịch được lưu trên AWS~S3 (bảng \texttt{TranslatedFile}).
   \item \textbf{Quản lý thư viện cá nhân:} Người dùng tạo, chỉnh sửa và xóa bộ từ điển thuật ngữ nội bộ (\texttt{PrivateKeyword} với \texttt{translations}~JSONField).
   \item \textbf{Đề xuất thuật ngữ:} Người dùng đề xuất thuật ngữ từ thư viện cá nhân; hệ thống tích lũy theo ngưỡng (\texttt{min\_suggesters\_for\_queue}) trước khi chuyển sang hàng đợi xét duyệt.
-  \item \textbf {Thông báo:} Người dùng nhận thông báo (bell icon trong header) khi thuật ngữ được thêm, cập nhật hoặc xóa khỏi thư viện chung.
+  \item \textbf{Thông báo:} Người dùng nhận thông báo khi thuật ngữ được thêm, cập nhật hoặc xóa khỏi thư viện chung.
   \item \textbf{Quản lý người dùng, Cấu hình ngôn ngữ, Xem thống kê thư viện thuật ngữ:} Dành riêng cho Admin, hỗ trợ vận hành hệ thống ở tầng quản trị.
-  \item \textbf{Duyệt đề xuất thuật ngữ:} Admin và Library~Keeper phê duyệt hoặc từ chối đề xuất trong \texttt{CommonLibraryManagement}; khi phê duyệt, hệ thống tự động cập nhậtlên Google~Cloud~Storage (quan hệ \textit{include} với use case \textit{Cập nhật glossary lên Google Cloud}).
+  \item \textbf{Duyệt đề xuất thuật ngữ:} Admin và Library~Keeper phê duyệt hoặc từ chối đề xuất; khi phê duyệt, hệ thống tự động cập nhật lên Google~Cloud~Storage (quan hệ \textit{include} với use case \textit{Cập nhật glossary lên Google Cloud}).
 \end{itemize}
 
 \subsection{Biểu đồ use case phân rã Dịch văn bản}
