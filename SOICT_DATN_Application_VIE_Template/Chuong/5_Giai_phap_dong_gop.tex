@@ -1,7 +1,8 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
-Chương 4 đã mô tả quá trình thiết kế, xây dựng và triển khai hệ thống. Chương 5 này tập trung phân tích các đóng góp kỹ thuật nổi bật, là những giải pháp được thiết kế riêng để giải quyết các bài toán đặc thù của hệ thống dịch tài liệu đa ngôn ngữ. Năm đóng góp chính được trình bày gồm: tích hợp quy trình dịch tài liệu đa định dạng, quản lý glossary chung và riêng theo ngữ cảnh dịch, quy trình đề xuất và phê duyệt thuật ngữ, xử lý PDF theo đặc tính tài liệu, và tích hợp triển khai web với lưu trữ cloud.
+Chương~\ref{chapter:Experiment} đã mô tả quá trình thiết kế, xây dựng và triển khai hệ thống. Chương~\ref{chapter:SolutionAndContribution} này tập trung phân tích các đóng góp kỹ thuật nổi bật, là những giải pháp được thiết kế riêng để giải quyết các bài toán đặc thù của hệ thống dịch tài liệu đa ngôn ngữ. Năm đóng góp chính được trình bày gồm: tích hợp quy trình dịch tài liệu đa định dạng, quản lý glossary chung và riêng theo ngữ cảnh dịch, quy trình đề xuất và phê duyệt thuật ngữ, xử lý PDF theo đặc tính tài liệu, và tích hợp triển khai web với lưu trữ cloud.
 \section{Quy trình dịch tài liệu đa định dạng bảo toàn cấu trúc}
+\label{section:5.1}
 
 \subsection{Giới thiệu bài toán}
 
@@ -24,6 +25,7 @@ Cơ chế bộ nhớ đệm theo phiên xử lý là một thành phần bổ su
 Giải pháp điều phối trung tâm cho phép hệ thống xử lý bốn định dạng tài liệu phổ biến qua một điểm API duy nhất, trong khi tệp kết quả sau dịch vẫn giữ nguyên bố cục, kiểu định dạng và cấu trúc của tài liệu gốc. Cơ chế gộp đoạn văn trước khi dịch giải quyết vấn đề phân mảnh ngữ nghĩa đặc thù của định dạng DOCX, còn cơ chế dịch theo lô kết hợp bộ nhớ đệm phiên giúp giảm số lần giao tiếp với dịch vụ dịch bên ngoài xuống mức tối thiểu cần thiết cho mỗi tài liệu.
 
 \section{Cơ chế thư viện thuật ngữ hai cấp và quy trình phê duyệt}
+\label{section:5.2}
 
 \subsection{Giới thiệu bài toán}
 
@@ -46,6 +48,7 @@ Quy trình đóng góp thuật ngữ từ thư viện cá nhân lên thư viện
 Cơ chế hai lớp thư viện thuật ngữ cho phép người dùng và tổ chức quản lý thuật ngữ theo đúng phạm vi trách nhiệm của từng bên mà không chồng chéo quyền hạn. Người dùng thông thường có thể duy trì danh sách thuật ngữ riêng phù hợp với công việc cụ thể mà không cần quyền quản trị, trong khi tổ chức vẫn kiểm soát được nội dung thư viện chung thông qua quy trình phê duyệt có phân quyền. Cơ chế ngữ cảnh dịch theo luồng xử lý giúp ba chế độ sử dụng thư viện hoạt động nhất quán từ điểm API đầu vào xuyên suốt đến các hàm dịch cấp thấp nhất, mà không cần truyền thêm tham số qua toàn bộ chuỗi xử lý tài liệu.
 
 \section{Xử lý tài liệu PDF theo đặc tính nội dung với Azure Document Intelligence}
+\label{section:5.3}
 
 \subsection{Giới thiệu bài toán}
 
@@ -55,7 +58,7 @@ Bài toán đặt ra là phân loại đúng loại PDF và áp dụng luồng x
 
 \subsection{Giải pháp}
 
-Hệ thống phân loại PDF bằng cách kiểm tra lượng văn bản có thể trích xuất được từ trang đầu tiên. Nếu trang đầu chứa đủ ký tự đọc được, tệp được xác định là PDF văn bản và xử lý theo luồng chuyển đổi: hệ thống chuyển PDF sang định dạng DOCX thông qua dịch vụ ConvertAPI, dịch tài liệu DOCX theo quy trình đã mô tả ở mục~5.1, sau đó chuyển ngược kết quả về PDF. Nếu trang đầu không có văn bản trích xuất được, tệp được xác định là PDF ảnh và chuyển sang luồng OCR.
+Hệ thống phân loại PDF bằng cách kiểm tra lượng văn bản có thể trích xuất được từ trang đầu tiên. Nếu trang đầu chứa đủ ký tự đọc được, tệp được xác định là PDF văn bản và xử lý theo luồng chuyển đổi: hệ thống chuyển PDF sang định dạng DOCX thông qua dịch vụ ConvertAPI, dịch tài liệu DOCX theo quy trình đã mô tả ở Mục~\ref{section:5.1}, sau đó chuyển ngược kết quả về PDF. Nếu trang đầu không có văn bản trích xuất được, tệp được xác định là PDF ảnh và chuyển sang luồng OCR.
 
 Luồng OCR được xây dựng trên nền Azure Document Intelligence, dịch vụ phân tích bố cục tài liệu bằng mô hình học sâu được huấn luyện trên nhiều ngôn ngữ và loại tài liệu. Hệ thống gửi tệp PDF đến Azure để phân tích từng trang và nhận về danh sách các khối văn bản kèm tọa độ vị trí, kích thước chữ và nội dung trên từng trang. Toàn bộ nội dung văn bản thu được sau đó được gửi sang dịch theo lô. Tệp PDF kết quả được dựng lại bằng cách sử dụng từng trang gốc làm ảnh nền và đặt các hộp văn bản đã dịch lên đúng tọa độ tương ứng. Phương pháp này bảo toàn bố cục trực quan của tài liệu gốc trong khi toàn bộ nội dung hiển thị đã được thay thế bằng bản dịch.
 
@@ -67,7 +70,7 @@ Giải pháp phân nhánh theo đặc tính nội dung tệp cho phép hệ th�
 
 \medskip
 \section{Tổng kết}
-Chương này đã phân tích năm đóng góp kỹ thuật nổi bật của đồ án. Đóng góp về tích hợp quy trình dịch đa định dạng thể hiện ở việc gom nhiều luồng xử lý tài liệu vào một API thống nhất với bộ điều phối trung tâm. Đóng góp về glossary thể hiện ở cơ chế ngữ cảnh dịch theo luồng xử lý, cho phép ba chế độ glossary hoạt động nhất quán từ backend qua toàn bộ khối xử lý tài liệu. Quy trình phê duyệt thuật ngữ biến glossary từ dữ liệu tĩnh thành một quy trình quản trị có trạng thái và phân quyền. Xử lý PDF theo đặc tính tài liệu giải quyết sự không đồng nhất của định dạng PDF bằng cách phân nhánh luồng dựa trên đặc tính nội dung. Cuối cùng, tích hợp triển khai cloud ghép các thành phần lại thành một hệ thống vận hành hoàn chỉnh. Chương 6 sẽ tổng kết kết quả đạt được và các hướng phát triển tiếp theo.
+Chương này đã phân tích năm đóng góp kỹ thuật nổi bật của đồ án. Đóng góp về tích hợp quy trình dịch đa định dạng thể hiện ở việc gom nhiều luồng xử lý tài liệu vào một API thống nhất với bộ điều phối trung tâm. Đóng góp về glossary thể hiện ở cơ chế ngữ cảnh dịch theo luồng xử lý, cho phép ba chế độ glossary hoạt động nhất quán từ backend qua toàn bộ khối xử lý tài liệu. Quy trình phê duyệt thuật ngữ biến glossary từ dữ liệu tĩnh thành một quy trình quản trị có trạng thái và phân quyền. Xử lý PDF theo đặc tính tài liệu giải quyết sự không đồng nhất của định dạng PDF bằng cách phân nhánh luồng dựa trên đặc tính nội dung. Cuối cùng, tích hợp triển khai cloud ghép các thành phần lại thành một hệ thống vận hành hoàn chỉnh. Chương~\ref{chapter:conclusion} sẽ tổng kết kết quả đạt được và các hướng phát triển tiếp theo.
 
 
 \end{document}
