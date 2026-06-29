@@ -1,20 +1,9 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
-
-% Agent: BEGIN
-\textbf{Tổng quan Chương 6.} Chương 5 đã trình bày chi tiết năm đóng góp kỹ thuật nổi bật của đồ án. Chương 6 này tổng kết toàn bộ quá trình thực hiện, đánh giá những gì đã đạt được và chưa đạt được, rồi đề xuất các hướng phát triển tiếp theo. Kết luận tập trung vào tính hoàn chỉnh của hệ thống đã xây dựng và các bài học rút ra trong quá trình thiết kế, triển khai.
-% Agent: END
+Chương 5 đã trình bày chi tiết năm đóng góp kỹ thuật nổi bật của đồ án. Chương 6 này tổng kết toàn bộ quá trình thực hiện, đánh giá những gì đã đạt được và chưa đạt được, rồi đề xuất các hướng phát triển tiếp theo. Kết luận tập trung vào tính hoàn chỉnh của hệ thống đã xây dựng và các bài học rút ra trong quá trình thiết kế, triển khai.
 
 \section{Kết luận}
-Sinh viên so sánh kết quả nghiên cứu hoặc sản phẩm của mình với các nghiên cứu hoặc sản phẩm tương tự.
-
-Sinh viên phân tích trong suốt quá trình thực hiện ĐATN, mình đã làm được gì, chưa làm được gì, các đóng góp nổi bật là gì, và tổng hợp những bài học kinh nghiệm rút ra nếu có.
-
-Agent:
-
 Đồ án đã xây dựng được một hệ thống web dịch đa ngôn ngữ gồm giao diện React/Vite, backend Django REST Framework, khối xử lý tài liệu, lưu trữ S3, glossary trên Google Cloud và triển khai Docker/Nginx. Các chức năng chính gồm xác thực JWT, quản lý người dùng theo vai trò, dịch văn bản, dịch tài liệu DOCX/XLSX/PPTX/PDF, chuyển đổi PDF, lưu lịch sử file dịch, quản lý thư viện thuật ngữ chung và riêng, phê duyệt đề xuất thuật ngữ, thống kê từ khóa, thông báo và quản lý ngôn ngữ theo công ty. Đóng góp nổi bật là tích hợp dịch tài liệu đa định dạng với quản trị glossary, cho phép hệ thống hỗ trợ cả thuật ngữ chung của doanh nghiệp và thuật ngữ riêng của từng người dùng. Hạn chế còn lại là cần bổ sung kiểm thử toàn diện, benchmark hiệu năng, ảnh minh họa giao diện, dữ liệu khảo sát người dùng và tài liệu giám sát vận hành production.
-
-% Agent: BEGIN — Nội dung chi tiết Chương 6
 
 Đồ án tập trung xây dựng một hệ thống dịch tài liệu đa ngôn ngữ phục vụ nhu cầu nội bộ doanh nghiệp, một lĩnh vực mà các công cụ dịch máy thương mại thông thường chưa đáp ứng được đầy đủ. Các công cụ như Google Translate hay DeepL hoạt động tốt với văn bản thuần nhưng không bảo toàn định dạng tài liệu Office và không có cơ chế quản lý thuật ngữ theo ngữ cảnh doanh nghiệp. Các hệ thống quản lý dịch thuật chuyên nghiệp như memoQ hay SDL Trados cung cấp nhiều tính năng hơn nhưng phức tạp, đắt và không phù hợp để tích hợp trực tiếp vào môi trường vận hành nội bộ. Hệ thống trong đồ án này đặt trọng tâm vào ba điểm khác biệt so với các công cụ thông thường: bảo toàn định dạng tài liệu sau dịch, quản lý thuật ngữ theo hai cấp với quy trình kiểm duyệt, và khả năng triển khai nội bộ để kiểm soát dữ liệu.
 
@@ -30,52 +19,32 @@ Về mặt tích hợp dịch vụ bên ngoài, hệ thống đã kết nối th
 
 \textbf{b, Những gì chưa làm được}
 
-Mặc dù hệ thống đã đáp ứng được các yêu cầu nghiệp vụ cơ bản, vẫn còn một số điểm cần tiếp tục hoàn thiện. Về kiểm thử, đồ án chủ yếu thực hiện kiểm thử thủ công và chỉ bao phủ được ba nhóm chức năng trọng tâm; bộ test tự động cho các luồng tích hợp phức tạp như dịch file, upload S3 và đồng bộ glossary chưa được xây dựng. Về hiệu năng, hệ thống chưa có đánh giá benchmark với nhiều người dùng đồng thời; luồng dịch tài liệu lớn hiện xử lý đồng bộ trong cùng request, có thể gây timeout với tệp nhiều trang.
-
-Ngoài ra, hệ thống chưa có cơ chế giám sát vận hành đủ chi tiết để phát hiện sớm các lỗi liên quan đến dịch vụ bên ngoài, chưa có tài liệu API dưới dạng Swagger/OpenAPI và chưa được đánh giá trong môi trường production thực tế với dữ liệu người dùng thật.
+Hạn chế lớn nhất của hệ thống là mức độ phụ thuộc cao vào các dịch vụ bên ngoài. Chức năng dịch máy phụ thuộc vào Google Cloud Translation, OCR phụ thuộc vào Azure Document Intelligence, lưu trữ tệp phụ thuộc vào Amazon S3 và Google Cloud Storage, chuyển đổi định dạng phụ thuộc vào ConvertAPI. Khi bất kỳ dịch vụ nào gặp sự cố hoặc thay đổi chính sách, chức năng tương ứng ngừng hoạt động hoặc phát sinh chi phí ngoài kiểm soát. Hệ thống hiện chưa có cơ chế dự phòng để chuyển sang dịch vụ thay thế, và chất lượng kết quả đầu ra phụ thuộc hoàn toàn vào nhà cung cấp mà không có lớp đánh giá nội bộ.
 
 \subsection{Đóng góp nổi bật}
 
-Đóng góp kỹ thuật quan trọng nhất của đồ án là quy trình dịch tài liệu đa định dạng bảo toàn cấu trúc. Thay vì trích xuất toàn bộ văn bản, dịch rồi ghép lại tùy tiện, hệ thống xử lý dịch ở cấp độ cấu trúc XML bên trong từng định dạng, kết hợp gộp đoạn văn bị phân mảnh và dịch theo lô để vừa bảo toàn định dạng vừa tối thiểu hóa số lần gọi API.
+Đóng góp kỹ thuật quan trọng nhất là quy trình dịch tài liệu đa định dạng bảo toàn cấu trúc, trong đó hệ thống xử lý dịch trực tiếp ở cấp độ cấu trúc bên trong từng định dạng thay vì chỉ trích xuất văn bản thuần, kết hợp gộp đoạn văn bị phân mảnh và dịch theo lô để bảo toàn bố cục và giảm số lần gọi API.
 
-Đóng góp thứ hai là thiết kế cơ chế thư viện thuật ngữ hai cấp tích hợp thực sự vào quy trình dịch. Việc sử dụng ngữ cảnh dịch theo luồng xử lý cho phép ba chế độ sử dụng thư viện hoạt động nhất quán xuyên suốt toàn bộ chuỗi xử lý tài liệu mà không cần truyền thêm tham số; quy trình đề xuất và phê duyệt thuật ngữ biến thư viện chung từ dữ liệu tĩnh thành một hệ thống quản trị có vòng đời kiểm soát được.
+Đóng góp thứ hai là cơ chế thư viện thuật ngữ hai cấp tích hợp thực sự vào quy trình dịch, cho phép ba chế độ sử dụng thư viện hoạt động nhất quán xuyên suốt chuỗi xử lý tài liệu, kết hợp với quy trình đề xuất và phê duyệt thuật ngữ có phân quyền.
 
-Đóng góp thứ ba là pipeline xử lý PDF theo đặc tính nội dung, cho phép hệ thống tự phân loại và xử lý cả hai loại PDF phổ biến mà không yêu cầu người dùng can thiệp thủ công.
+Đóng góp thứ ba là pipeline xử lý PDF tự động phân loại theo đặc tính nội dung, cho phép hệ thống xử lý cả PDF văn bản lẫn PDF ảnh mà không yêu cầu người dùng can thiệp thủ công.
 
 \subsection{Bài học kinh nghiệm rút ra}
 
-Quá trình thực hiện đồ án để lại một số bài học kỹ thuật và thiết kế có giá trị. Bài học thứ nhất là cần hiểu rõ cấu trúc nội bộ của định dạng tệp trước khi thiết kế luồng xử lý, vì sự khác biệt giữa các định dạng đòi hỏi các chiến lược hoàn toàn khác nhau và không thể áp dụng chung một cách đơn giản. Bài học thứ hai là cơ chế ngữ cảnh theo luồng xử lý giải quyết hiệu quả bài toán truyền tham số xuyên chuỗi hàm dài mà không làm cho chữ ký hàm trở nên phức tạp, nhưng cần chú ý làm sạch ngữ cảnh sau mỗi request để tránh rò rỉ dữ liệu giữa các yêu cầu trong cùng tiến trình. Bài học thứ ba là việc phân quyền cần được thiết kế từ đầu và áp dụng nhất quán ở cả tầng API lẫn tầng giao diện, thay vì bổ sung sau khi đã xây dựng các chức năng chính, vì việc bổ sung muộn thường dẫn đến thiếu sót ở một số điểm. Bài học thứ tư là dịch theo lô và bộ nhớ đệm phiên là hai kỹ thuật đơn giản nhưng có tác động lớn đến hiệu năng khi làm việc với API dịch tính phí theo lượt gọi.
+Quá trình thực hiện đồ án để lại một số bài học có giá trị. Thứ nhất, cần nắm rõ cấu trúc nội bộ của từng định dạng tệp trước khi thiết kế luồng xử lý, vì mỗi định dạng đòi hỏi chiến lược riêng và không thể áp dụng chung. Thứ hai, phân quyền cần được thiết kế từ đầu và áp dụng nhất quán ở cả tầng API lẫn giao diện, bổ sung muộn thường dẫn đến thiếu sót khó phát hiện. Thứ ba, dịch theo lô kết hợp bộ nhớ đệm là kỹ thuật đơn giản nhưng tác động lớn đến hiệu năng khi làm việc với API tính phí theo lượt gọi.
 
 \section{Hướng phát triển}
-Trong phần này, sinh viên trình bày định hướng công việc trong tương lai để hoàn thiện sản phẩm hoặc nghiên cứu của mình.
-
-Trước tiên, sinh viên trình bày các công việc cần thiết để hoàn thiện các chức năng/nhiệm vụ đã làm. Sau đó sinh viên phân tích các hướng đi mới cho phép cải thiện và nâng cấp các chức năng/nhiệm vụ đã làm.
-
-Agent:
-
-Hướng phát triển trước mắt là hoàn thiện bộ test tự động, bổ sung test tích hợp cho luồng dịch file, upload S3, ConvertAPI, glossary và các màn hình frontend. Hệ thống cũng cần bổ sung logging/monitoring có cấu trúc, cơ chế hàng đợi nền cho các file lớn, giới hạn kích thước và loại file ở cả frontend lẫn backend, cùng dashboard theo dõi lỗi dịch và thời gian xử lý. Về nghiệp vụ, có thể mở rộng kiểm soát chất lượng thuật ngữ bằng versioning glossary, lịch sử thay đổi từ khóa, quy trình review nhiều cấp và chức năng xuất báo cáo thống kê. Về triển khai, cần bổ sung tài liệu cấu hình production, backup database, quy trình rotate secret, kiểm thử tải và kịch bản khôi phục khi dịch vụ bên ngoài như Google Cloud Translation, S3 hoặc ConvertAPI gặp lỗi.
 
 \subsection{Hoàn thiện các chức năng hiện tại}
 
-Ưu tiên hàng đầu trong giai đoạn hoàn thiện là xây dựng bộ kiểm thử tự động bao phủ toàn diện các luồng nghiệp vụ chính. Hiện tại hệ thống chỉ có kiểm thử thủ công với độ bao phủ hạn chế; việc bổ sung kiểm thử đơn vị cho các hàm xử lý XML và dịch theo lô, kiểm thử tích hợp cho luồng dịch tài liệu từ đầu đến cuối và kiểm thử API tự động cho toàn bộ endpoint là cần thiết để phát hiện sớm lỗi hồi quy khi codebase thay đổi.
-
-Hệ thống cũng cần chuyển luồng dịch tài liệu sang xử lý bất đồng bộ bằng hàng đợi nền. Hiện tại, yêu cầu dịch tệp lớn nhiều trang được xử lý đồng bộ trong cùng HTTP request, dẫn đến nguy cơ timeout với tài liệu dài hoặc khi dịch vụ bên ngoài phản hồi chậm. Việc tích hợp một hệ thống hàng đợi tác vụ sẽ cho phép yêu cầu dịch được trả về ngay lập tức với mã theo dõi trạng thái, trong khi tác vụ dịch thực tế chạy trong nền và thông báo kết quả khi hoàn thành.
-
-Ngoài ra, hệ thống cần bổ sung logging có cấu trúc và cơ chế giám sát vận hành để theo dõi tình trạng các dịch vụ bên ngoài, thời gian xử lý từng loại tài liệu và tỷ lệ lỗi của từng luồng. Thông tin này giúp vận hành hệ thống chủ động phát hiện sự cố trước khi người dùng gặp phải và có cơ sở để tối ưu hóa hiệu năng theo dữ liệu thực tế.
+Hướng hoàn thiện trước mắt gồm: (i) xây dựng bộ kiểm thử tự động bao phủ các luồng tích hợp chính như dịch file, đồng bộ glossary và xác thực; (ii) chuyển luồng dịch tài liệu lớn sang xử lý bất đồng bộ bằng hàng đợi nền để tránh timeout khi dịch vụ bên ngoài phản hồi chậm; (iii) bổ sung cơ chế giám sát vận hành để theo dõi trạng thái các dịch vụ bên ngoài và tỷ lệ lỗi của từng luồng xử lý.
 
 \subsection{Nâng cấp và mở rộng chức năng}
 
-Sau khi hoàn thiện các chức năng cơ bản, hệ thống có thể được nâng cấp theo một số hướng để tăng giá trị thực tiễn. Hướng thứ nhất là mở rộng hỗ trợ định dạng tài liệu, đặc biệt là định dạng OpenDocument của LibreOffice và các tệp bảng tính CSV thuần có mã hóa đa ngôn ngữ, nhằm phục vụ cho các quy trình làm việc không sử dụng bộ công cụ Microsoft Office.
+Về dài hạn, hệ thống có thể mở rộng hỗ trợ thêm định dạng tài liệu, tích hợp thêm dịch vụ dịch máy để có cơ chế dự phòng, và bổ sung quản lý phiên bản cho thư viện thuật ngữ.
 
-Hướng thứ hai là nâng cấp hệ thống quản lý thư viện thuật ngữ với khả năng theo dõi lịch sử thay đổi và quản lý phiên bản. Hiện tại mỗi lần thuật ngữ được cập nhật sẽ ghi đè lên dữ liệu cũ; việc lưu lại lịch sử thay đổi giúp người quản trị truy vết được ai đã thay đổi thuật ngữ nào và vào thời điểm nào, đồng thời có thể khôi phục lại phiên bản trước nếu cần.
+\section{Tổng kết}
 
-Hướng thứ ba là tích hợp thêm các dịch vụ dịch máy như DeepL hoặc Azure Cognitive Services bên cạnh Google Cloud Translation hiện tại. Việc hỗ trợ nhiều nhà cung cấp dịch vụ cho phép hệ thống so sánh chất lượng dịch giữa các dịch vụ với cùng một tài liệu, hoặc chuyển sang dịch vụ thay thế khi dịch vụ chính gặp sự cố, tăng tính bền vững của hệ thống trong môi trường vận hành thực tế.
+Với các định hướng phát triển trên, hệ thống dịch tài liệu đa ngôn ngữ có tiềm năng phát triển từ công cụ nội bộ thành nền tảng dịch thuật tự động tích hợp vào quy trình vận hành doanh nghiệp. Sự kết hợp giữa xử lý tài liệu đa định dạng và quản lý thuật ngữ theo ngữ cảnh là điểm tạo nên giá trị thực tiễn của hệ thống trong môi trường doanh nghiệp đa ngôn ngữ.
 
-Hướng thứ tư là xây dựng tài liệu API chính thức theo chuẩn OpenAPI/Swagger. Tài liệu API rõ ràng sẽ hỗ trợ các nhóm kỹ thuật tích hợp hệ thống này vào quy trình làm việc nội bộ khác, mở ra khả năng gọi API dịch tự động từ các hệ thống khác trong doanh nghiệp mà không cần thao tác qua giao diện web.
-
-\subsection{Tổng kết}
-
-Với những định hướng phát triển nêu trên, hệ thống dịch tài liệu đa ngôn ngữ có tiềm năng phát triển từ một công cụ nội bộ phục vụ nhu cầu dịch tài liệu thủ công thành một nền tảng quản lý thuật ngữ và dịch thuật tự động có thể tích hợp vào quy trình vận hành doanh nghiệp. Sự kết hợp giữa kỹ thuật xử lý tài liệu, quản lý thuật ngữ theo ngữ cảnh và tích hợp các dịch vụ dịch máy chất lượng cao là điểm tạo nên giá trị thực tiễn của hệ thống trong bối cảnh nhu cầu xử lý tài liệu đa ngôn ngữ ngày càng tăng trong môi trường doanh nghiệp toàn cầu.
-
-% Agent: END — Nội dung chi tiết Chương 6
 \end{document}

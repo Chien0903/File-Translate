@@ -1,248 +1,63 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
-
-% Chương này có độ dài không quá 10 trang.
-
-Agent:
-
-Trong chương này, đồ án trình bày tổng quan, ưu điểm, nhược điểm và ứng dụng của các công nghệ, nền tảng và công cụ được sử dụng để xây dựng hệ thống dịch tài liệu đa ngôn ngữ. Các công nghệ này được lựa chọn dựa trên yêu cầu thực tế đã phân tích ở Chương 2, đồng thời cân nhắc đến tính khả thi, khả năng tích hợp, hiệu quả triển khai và mức độ phù hợp với quy mô của hệ thống.
+Chương 2 đã phân tích yêu cầu và xác định phạm vi hệ thống cần xây dựng. Chương 3 này trình bày các công nghệ, nền tảng và công cụ được lựa chọn để triển khai hệ thống, bao gồm: (i) React.js và Vite cho giao diện người dùng trong phần 3.1, (ii) Django và Django REST Framework cho backend trong phần 3.2, (iii) JWT và SimpleJWT cho xác thực trong phần 3.3, (iv) Django ORM cùng cơ sở dữ liệu trong phần 3.4, (v) Google Cloud Translation và Google Cloud Storage trong phần 3.5, (vi) các thư viện xử lý tài liệu và OCR trong phần 3.6, (vii) ConvertAPI trong phần 3.7, (viii) Amazon S3 trong phần 3.8, và (ix) Docker cùng Nginx trong phần 3.9.
 
 \section{React.js và Vite}
 
-React.js là thư viện JavaScript mã nguồn mở dùng để xây dựng giao diện người dùng dựa trên các component có thể tái sử dụng. Vite là công cụ phát triển và build frontend hiện đại, thường được sử dụng cùng React để tăng tốc quá trình phát triển.
+React.js là thư viện JavaScript mã nguồn mở dùng để xây dựng giao diện người dùng theo mô hình component có thể tái sử dụng, kết hợp cơ chế Virtual DOM giúp cập nhật giao diện hiệu quả mà không cần làm mới toàn bộ trang \cite{reactjs}. Vite là công cụ build frontend hiện đại với tốc độ khởi động nhanh và hỗ trợ hot reload, phù hợp với quy trình phát triển lặp lại \cite{vitejs}. So với Vue.js, React có hệ sinh thái thư viện rộng hơn và phù hợp với giao diện có nhiều thành phần tái sử dụng; so với Angular, React nhẹ hơn và không ràng buộc cấu trúc framework quá chặt.
 
-\subsection{Ưu điểm}
-\begin{itemize}
-  \item Component giúp chia nhỏ giao diện, dễ tái sử dụng và bảo trì.
-  \item Virtual DOM giúp cập nhật giao diện nhanh và hiệu quả.
-  \item Vite có tốc độ khởi động nhanh, hỗ trợ hot reload tốt.
-  \item Hệ sinh thái React phong phú, dễ tích hợp thêm thư viện giao diện, biểu đồ và gọi API.
-\end{itemize}
-
-\subsection{Nhược điểm}
-\begin{itemize}
-  \item React chỉ tập trung vào tầng giao diện, nên cần kết hợp thêm thư viện cho định tuyến và gọi API.
-  \item JSX, hook và context có thể gây khó khăn cho người mới bắt đầu.
-  \item Vite cần cấu hình biến môi trường chính xác khi triển khai.
-\end{itemize}
-
-\subsection{Ứng dụng trong đồ án}
-
-React.js và Vite được sử dụng để xây dựng phần giao diện người dùng của hệ thống. Frontend giao tiếp với backend thông qua API, đồng thời xử lý các tương tác phía trình duyệt.
-
-\subsection{Lý do lựa chọn}
-
-So với Vue.js, React có hệ sinh thái thư viện rộng hơn và phù hợp với giao diện có nhiều thành phần tái sử dụng. So với Angular, React nhẹ hơn và linh hoạt hơn, không yêu cầu cấu trúc framework quá chặt. Vì vậy, React.js kết hợp Vite là lựa chọn phù hợp cho phần frontend của đồ án.
+Trong đồ án, React và Vite được sử dụng để xây dựng toàn bộ giao diện người dùng theo mô hình SPA, giao tiếp với backend thông qua REST API và xử lý các tương tác phía trình duyệt như nhập văn bản, tải tệp, chọn ngôn ngữ và hiển thị kết quả dịch.
 
 \section{Django và Django REST Framework}
 
-Django là framework web Python hỗ trợ xây dựng backend với cấu trúc rõ ràng. Django REST Framework là thư viện mở rộng giúp xây dựng REST API trên nền Django.
+Django là framework web Python với cấu trúc rõ ràng, cung cấp sẵn ORM, hệ thống routing, middleware và cơ chế quản lý người dùng, giúp rút ngắn thời gian xây dựng các thành phần backend phổ biến \cite{django}. Django REST Framework là thư viện mở rộng trên nền Django, hỗ trợ xây dựng REST API với serializer, viewset và hệ thống phân quyền tích hợp \cite{django-rest-framework}. So với Flask, Django phù hợp hơn khi hệ thống cần nhiều thành phần có sẵn như ORM, migration và authentication; so với Express.js, Django thuận lợi hơn vì các thư viện xử lý tài liệu và dịch thuật của đồ án chủ yếu nằm trong hệ sinh thái Python.
 
-\subsection{Ưu điểm}
-\begin{itemize}
-  \item Django cung cấp sẵn ORM, middleware, routing và cơ chế quản lý người dùng.
-  \item Django REST Framework hỗ trợ xây dựng API rõ ràng, dễ mở rộng.
-  \item Tích hợp tốt với hệ sinh thái Python và các thư viện xử lý dữ liệu.
-  \item Phù hợp với hệ thống có nhiều model và yêu cầu phân quyền.
-\end{itemize}
-
-\subsection{Nhược điểm}
-\begin{itemize}
-  \item Django có thể nặng hơn các framework tối giản như Flask.
-  \item Các request xử lý lâu cần được thiết kế cẩn thận để tránh ảnh hưởng trải nghiệm người dùng.
-  \item Cần tổ chức serializer, view và permission hợp lý để API không trở nên phức tạp.
-\end{itemize}
-
-\subsection{Ứng dụng trong đồ án}
-
-Django và Django REST Framework được sử dụng để xây dựng backend API, quản lý dữ liệu, xác thực người dùng và điều phối các xử lý nghiệp vụ phía server.
-
-\subsection{Lý do lựa chọn}
-
-So với Flask, Django phù hợp hơn với hệ thống cần nhiều thành phần có sẵn như ORM, authentication và migration. So với Express.js, Django thuận lợi hơn vì các thư viện xử lý tài liệu và dịch thuật của đồ án chủ yếu nằm trong hệ sinh thái Python.
+Trong đồ án, Django và Django REST Framework được sử dụng để xây dựng toàn bộ backend API, bao gồm xác thực và phân quyền người dùng, điều phối xử lý nghiệp vụ dịch tài liệu, quản lý thư viện thuật ngữ và lưu trữ lịch sử dịch.
 
 \section{JWT và SimpleJWT}
 
-JWT là cơ chế xác thực dựa trên token, thường được sử dụng trong các hệ thống frontend và backend tách biệt. SimpleJWT là thư viện hỗ trợ JWT cho Django REST Framework.
+JWT là cơ chế xác thực dựa trên token, trong đó mỗi token mang theo thông tin người dùng được mã hóa và có thể được xác thực mà không cần truy vấn cơ sở dữ liệu ở mỗi request \cite{jwt-rfc7519}. SimpleJWT là thư viện hỗ trợ JWT cho Django REST Framework, cung cấp sẵn cơ chế phát hành access token, refresh token và kiểm tra hợp lệ \cite{simplejwt}. So với session authentication phía server, JWT phù hợp hơn với mô hình frontend tách biệt gọi backend qua API, vì token được lưu phía client và không yêu cầu server duy trì trạng thái phiên.
 
-\subsection{Ưu điểm}
-\begin{itemize}
-  \item Phù hợp với kiến trúc REST API.
-  \item Access token và refresh token giúp cân bằng giữa bảo mật và tính tiện dụng.
-  \item SimpleJWT tích hợp trực tiếp với Django REST Framework.
-\end{itemize}
-
-\subsection{Nhược điểm}
-\begin{itemize}
-  \item Cần quản lý thời gian sống và nơi lưu token cẩn thận.
-  \item Nếu refresh token bị lộ, hệ thống có thể gặp rủi ro bảo mật.
-  \item Cần cơ chế thu hồi token khi người dùng đăng xuất hoặc token không còn hợp lệ.
-\end{itemize}
-
-\subsection{Ứng dụng trong đồ án}
-
-SimpleJWT được sử dụng để cấp và kiểm tra token xác thực. Hệ thống cũng lưu refresh token dưới dạng hash để hỗ trợ kiểm soát phiên đăng nhập.
-
-\subsection{Lý do lựa chọn}
-
-So với session authentication, JWT phù hợp hơn với mô hình frontend gọi backend qua API. So với tự xây dựng cơ chế token, SimpleJWT an toàn và ổn định hơn vì cung cấp sẵn các thành phần xác thực cần thiết.
+Trong đồ án, SimpleJWT được sử dụng để cấp token xác thực khi người dùng đăng nhập, kiểm tra token ở mỗi request API và hỗ trợ làm mới token thông qua refresh token được lưu dưới dạng hash để kiểm soát phiên đăng nhập.
 
 \section{Django ORM, SQLite và PostgreSQL}
 
-Django ORM là cơ chế ánh xạ dữ liệu quan hệ thành các model Python. SQLite thường phù hợp cho phát triển cục bộ, trong khi PostgreSQL phù hợp hơn với môi trường triển khai.
+Django ORM là cơ chế ánh xạ đối tượng Python sang bảng cơ sở dữ liệu quan hệ, cho phép định nghĩa cấu trúc dữ liệu qua model Python và thao tác dữ liệu qua API đối tượng thay vì viết SQL thủ công. Hệ thống migration của Django quản lý thay đổi cấu trúc dữ liệu theo lịch sử có kiểm soát. Mô hình dữ liệu của đồ án có nhiều quan hệ rõ ràng giữa người dùng, công ty, ngôn ngữ, tệp dịch và thuật ngữ, nên cơ sở dữ liệu quan hệ phù hợp hơn NoSQL \cite{postgresql}.
 
-\subsection{Ưu điểm}
-\begin{itemize}
-  \item Django ORM giúp thao tác cơ sở dữ liệu bằng model Python.
-  \item Migration giúp quản lý thay đổi cấu trúc dữ liệu có kiểm soát.
-  \item SQLite gọn nhẹ và dễ dùng trong phát triển.
-  \item PostgreSQL mạnh hơn cho môi trường nhiều người dùng.
-\end{itemize}
-
-\subsection{Nhược điểm}
-\begin{itemize}
-  \item SQLite không phù hợp với tải ghi đồng thời lớn.
-  \item PostgreSQL cần cấu hình và vận hành phức tạp hơn.
-  \item ORM có thể che giấu chi phí truy vấn nếu sử dụng không hợp lý.
-\end{itemize}
-
-\subsection{Ứng dụng trong đồ án}
-
-Django ORM được sử dụng để định nghĩa và thao tác với các model dữ liệu của hệ thống. Cấu hình backend cho phép sử dụng SQLite trong môi trường phát triển và PostgreSQL trong môi trường triển khai.
-
-\subsection{Lý do lựa chọn}
-
-Mô hình dữ liệu của đồ án có nhiều quan hệ rõ ràng, vì vậy cơ sở dữ liệu quan hệ phù hợp hơn NoSQL. Django ORM giúp giảm phụ thuộc vào câu lệnh SQL thủ công và thống nhất cách truy cập dữ liệu trong backend.
+Trong đồ án, Django ORM được sử dụng để định nghĩa và thao tác toàn bộ model dữ liệu. SQLite được dùng trong môi trường phát triển cục bộ do cấu hình đơn giản, còn PostgreSQL được dùng trong môi trường triển khai vì hỗ trợ tốt hơn cho tải ghi đồng thời và tính toàn vẹn dữ liệu.
 
 \section{Google Cloud Translation và Google Cloud Storage}
 
-Google Cloud Translation là dịch vụ dịch máy thông qua API. Google Cloud Storage là dịch vụ lưu trữ đối tượng, được sử dụng để lưu dữ liệu glossary phục vụ quá trình dịch có kiểm soát thuật ngữ.
+Google Cloud Translation là dịch vụ dịch máy thông qua API, hỗ trợ hơn 100 ngôn ngữ và cho phép tích hợp glossary để ưu tiên các thuật ngữ tùy chỉnh trong quá trình dịch \cite{google-cloud-translation}. Google Cloud Storage là dịch vụ lưu trữ đối tượng được sử dụng để lưu các tệp glossary, vì đây là định dạng lưu trữ mà Google Cloud Translation yêu cầu khi sử dụng tính năng glossary \cite{google-cloud-storage}. So với tự xây dựng mô hình dịch máy, Google Cloud Translation giảm đáng kể chi phí huấn luyện và vận hành, đồng thời đảm bảo chất lượng dịch được duy trì qua các cập nhật của Google.
 
-\subsection{Ưu điểm}
-\begin{itemize}
-  \item Google Cloud Translation hỗ trợ nhiều ngôn ngữ và dễ tích hợp qua API.
-  \item Dịch vụ hỗ trợ glossary, phù hợp với nhu cầu thống nhất thuật ngữ.
-  \item Google Cloud Storage tích hợp tốt với glossary của Google Cloud Translation.
-\end{itemize}
-
-\subsection{Nhược điểm}
-\begin{itemize}
-  \item Phụ thuộc vào dịch vụ bên ngoài, credential và kết nối mạng.
-  \item Chất lượng dịch vẫn cần kiểm tra với tài liệu chuyên ngành.
-  \item Nếu glossary cập nhật lỗi, kết quả dịch có thể không áp dụng đúng thuật ngữ mong muốn.
-\end{itemize}
-
-\subsection{Ứng dụng trong đồ án}
-
-Google Cloud Translation được sử dụng làm nền tảng dịch máy. Google Cloud Storage được sử dụng để lưu tệp glossary, giúp hệ thống áp dụng thuật ngữ trong quá trình dịch.
-
-\subsection{Lý do lựa chọn}
-
-So với tự xây dựng mô hình dịch máy, Google Cloud Translation giảm đáng kể chi phí huấn luyện và vận hành. Việc sử dụng Google Cloud Storage cho glossary cũng giúp quy trình quản lý thuật ngữ thống nhất với nền tảng dịch đã chọn.
+Trong đồ án, Google Cloud Translation đóng vai trò nhân tố dịch máy trung tâm; mọi yêu cầu dịch văn bản và dịch tài liệu đều đi qua dịch vụ này. Google Cloud Storage lưu trữ các tệp glossary tương ứng với từng cặp ngôn ngữ được đồng bộ từ thư viện thuật ngữ chung của hệ thống.
 
 \section{Thư viện xử lý tài liệu và OCR}
 
-Hệ thống sử dụng các thư viện Python để xử lý tài liệu văn phòng, PDF, ảnh và OCR. Một số thư viện tiêu biểu gồm \texttt{python-docx}, \texttt{openpyxl}, \texttt{python-pptx}, \texttt{pypdf}, \texttt{PyMuPDF}, \texttt{Pillow} và Azure Document Intelligence.
+Để xử lý các định dạng tài liệu phổ biến trong môi trường doanh nghiệp, hệ thống sử dụng một tập thư viện Python chuyên biệt theo từng định dạng: python-docx \cite{python-docx} cho DOCX, openpyxl \cite{openpyxl} cho XLSX, python-pptx \cite{python-pptx} cho PPTX, pypdf và PyMuPDF \cite{pymupdf} cho PDF, Pillow cho xử lý ảnh. Đối với tài liệu PDF dạng ảnh quét không có văn bản trích xuất được, hệ thống sử dụng Azure Document Intelligence \cite{azure-document-intelligence}, dịch vụ OCR dựa trên mô hình học sâu có khả năng nhận dạng văn bản, phát hiện bố cục và xác định tọa độ từng khối chữ trên trang. Cách tiếp cận theo từng định dạng riêng biệt phù hợp hơn với yêu cầu giữ lại cấu trúc tài liệu, vì mỗi định dạng có cách tổ chức XML và cấu trúc nội dung hoàn toàn khác nhau.
 
-\subsection{Ưu điểm}
-\begin{itemize}
-  \item Mỗi thư viện xử lý tốt một nhóm định dạng cụ thể.
-  \item Có thể trích xuất nội dung từ nhiều loại tài liệu khác nhau.
-  \item OCR giúp xử lý tài liệu scan hoặc ảnh không có văn bản trực tiếp.
-\end{itemize}
-
-\subsection{Nhược điểm}
-\begin{itemize}
-  \item Khó bảo toàn tuyệt đối bố cục của tài liệu phức tạp.
-  \item OCR có thể nhận dạng sai khi chất lượng ảnh thấp.
-  \item Phụ thuộc vào môi trường chạy, font chữ và thư viện hệ thống.
-\end{itemize}
-
-\subsection{Ứng dụng trong đồ án}
-
-Các thư viện này được sử dụng để đọc, trích xuất, xử lý và tạo lại tài liệu sau khi dịch. OCR được dùng trong trường hợp nội dung không thể trích xuất trực tiếp dưới dạng văn bản.
-
-\subsection{Lý do lựa chọn}
-
-So với chỉ xử lý văn bản thuần, các thư viện tài liệu giúp hệ thống làm việc trực tiếp với các định dạng phổ biến trong môi trường doanh nghiệp. Cách tiếp cận theo từng định dạng cũng phù hợp hơn với yêu cầu giữ lại cấu trúc tài liệu.
+Trong đồ án, các thư viện này được sử dụng để đọc, trích xuất nội dung, xử lý dịch và ghi lại kết quả vào đúng cấu trúc tài liệu gốc. Azure Document Intelligence được sử dụng trong luồng xử lý PDF ảnh để nhận dạng văn bản và xác định tọa độ nhằm dựng lại tài liệu kết quả.
 
 \section{ConvertAPI}
 
-ConvertAPI là dịch vụ chuyển đổi định dạng tài liệu thông qua API, thường được sử dụng khi cần chuẩn hóa tài liệu trước khi xử lý tiếp.
+ConvertAPI là dịch vụ chuyển đổi định dạng tài liệu thông qua API, hỗ trợ chuyển đổi giữa nhiều định dạng tài liệu khác nhau, trong đó quan trọng nhất với đồ án là chuyển đổi giữa PDF và DOCX \cite{convertapi}. Việc tự xây dựng công cụ chuyển đổi PDF chính xác đòi hỏi xử lý nhiều trường hợp đặc thù về font chữ, bố cục và nhúng đối tượng, vượt quá phạm vi của đồ án; ConvertAPI giải quyết vấn đề này thông qua API và giúp backend tái sử dụng luồng xử lý DOCX đã có thay vì xây dựng luồng riêng cho PDF.
 
-\subsection{Ưu điểm}
-\begin{itemize}
-  \item Giảm độ phức tạp khi chuyển đổi các định dạng khó như PDF.
-  \item Dễ tích hợp vào backend thông qua API.
-  \item Giúp tận dụng lại các luồng xử lý tài liệu đã có sau khi chuyển đổi.
-\end{itemize}
-
-\subsection{Nhược điểm}
-\begin{itemize}
-  \item Phụ thuộc vào dịch vụ bên ngoài và khóa API.
-  \item Kết quả chuyển đổi có thể chưa giữ nguyên hoàn toàn bố cục gốc.
-\end{itemize}
-
-\subsection{Ứng dụng trong đồ án}
-
-ConvertAPI được sử dụng để chuyển đổi định dạng tài liệu trong các trường hợp cần đưa tệp về dạng dễ xử lý hơn.
-
-\subsection{Lý do lựa chọn}
-
-Việc tự xây dựng công cụ chuyển đổi PDF chính xác là phức tạp. ConvertAPI giúp giảm khối lượng xử lý ở backend và phù hợp với phạm vi triển khai của đồ án.
+Trong đồ án, ConvertAPI được sử dụng trong luồng xử lý PDF văn bản: hệ thống chuyển PDF sang DOCX, dịch theo quy trình DOCX chuẩn rồi chuyển ngược kết quả về PDF để trả về cho người dùng.
 
 \section{Amazon S3}
 
-Amazon S3 là dịch vụ lưu trữ đối tượng của AWS, phù hợp để lưu các tệp có dung lượng lớn và truy cập thông qua URL.
+Amazon S3 là dịch vụ lưu trữ đối tượng của AWS, cho phép lưu và truy xuất tệp thông qua URL mà không phụ thuộc vào dung lượng hay vòng đời của server \cite{amazon-s3}. Lưu tệp trực tiếp trên server backend không phù hợp với triển khai container hóa vì dữ liệu sẽ mất khi container bị xóa hoặc thay thế; S3 tách lưu trữ tệp ra khỏi vòng đời container và phù hợp với mô hình scale ngang khi số lượng tệp tăng.
 
-\subsection{Ưu điểm}
-\begin{itemize}
-  \item Tách lưu trữ tệp khỏi server backend.
-  \item Phù hợp với mô hình triển khai bằng container.
-  \item Có khả năng mở rộng tốt khi số lượng tệp tăng.
-\end{itemize}
-
-\subsection{Nhược điểm}
-\begin{itemize}
-  \item Cần cấu hình bucket, region và quyền truy cập chính xác.
-  \item Cần có chính sách quản lý vòng đời dữ liệu để kiểm soát dung lượng lưu trữ.
-\end{itemize}
-
-\subsection{Ứng dụng trong đồ án}
-
-Amazon S3 được sử dụng để lưu trữ các tệp trong quá trình xử lý và các tệp kết quả. Backend lưu đường dẫn tệp để phục vụ việc truy xuất lại khi cần.
-
-\subsection{Lý do lựa chọn}
-
-So với lưu tệp trực tiếp trên server, S3 phù hợp hơn với hệ thống triển khai bằng Docker vì dữ liệu không phụ thuộc vào vòng đời của container.
+Trong đồ án, Amazon S3 được sử dụng để lưu các tệp tài liệu trong quá trình xử lý và tệp kết quả sau khi dịch. Backend lưu đường dẫn S3 vào cơ sở dữ liệu để phục vụ việc tải lại tệp kết quả theo lịch sử dịch của người dùng.
 
 \section{Docker và Nginx}
 
-Docker là nền tảng đóng gói ứng dụng bằng container. Nginx là web server và reverse proxy được sử dụng để điều phối request đến các dịch vụ bên trong.
+Docker là nền tảng đóng gói ứng dụng thành container, đảm bảo môi trường chạy nhất quán giữa máy phát triển và máy triển khai \cite{docker}. Docker Compose cho phép định nghĩa và khởi động đồng thời nhiều service liên quan trong một cấu hình duy nhất. Nginx là web server và reverse proxy được sử dụng để tiếp nhận request từ bên ngoài, định tuyến đến frontend hoặc backend, hỗ trợ HTTPS và kiểm soát timeout cho các request xử lý lâu \cite{nginx}. So với triển khai thủ công từng thành phần, Docker giúp tái lập môi trường nhanh hơn và giảm sai lệch giữa các môi trường.
 
-\subsection{Ưu điểm}
-\begin{itemize}
-  \item Docker giúp chuẩn hóa môi trường chạy của hệ thống.
-  \item Nginx hỗ trợ reverse proxy, HTTPS, giới hạn upload và timeout.
-  \item Các thành phần frontend, backend và proxy có thể triển khai tách biệt.
-\end{itemize}
-
-\subsection{Nhược điểm}
-\begin{itemize}
-  \item Cần cấu hình đúng network, port và biến môi trường.
-  \item Nginx cần cấu hình timeout phù hợp với request xử lý lâu.
-\end{itemize}
-
-\subsection{Ứng dụng trong đồ án}
-
-Docker Compose được sử dụng để chạy các thành phần chính của hệ thống. Nginx đóng vai trò reverse proxy, định tuyến request đến frontend hoặc backend.
-
-\subsection{Lý do lựa chọn}
-
-So với triển khai thủ công từng thành phần, Docker giúp tái lập môi trường dễ hơn. Nginx giúp hệ thống có một điểm truy cập thống nhất và thuận tiện hơn khi cấu hình HTTPS hoặc reverse proxy.
+Trong đồ án, Docker Compose được sử dụng để đóng gói và khởi động đồng thời các service frontend, backend và cơ sở dữ liệu. Nginx đóng vai trò reverse proxy duy nhất, định tuyến request đến đúng service và hỗ trợ cấu hình HTTPS cho môi trường triển khai thử nghiệm.
 
 \section{Tổng kết}
 
-Chương này đã trình bày các công nghệ chính được sử dụng trong đồ án. React.js và Vite phục vụ xây dựng giao diện người dùng; Django và Django REST Framework đảm nhiệm backend API; JWT và SimpleJWT hỗ trợ xác thực; Django ORM cùng SQLite hoặc PostgreSQL phục vụ lưu trữ dữ liệu. Google Cloud Translation, Google Cloud Storage, các thư viện xử lý tài liệu, ConvertAPI và Amazon S3 hỗ trợ trực tiếp cho bài toán dịch tài liệu đa định dạng. Docker và Nginx được sử dụng để đóng gói và triển khai hệ thống. Các công nghệ này là cơ sở để Chương 4 trình bày thiết kế và triển khai chi tiết của hệ thống.
+Chương này đã trình bày các công nghệ chính được lựa chọn để xây dựng hệ thống dịch tài liệu đa ngôn ngữ. React.js và Vite đảm nhiệm giao diện người dùng; Django và Django REST Framework xây dựng backend API; JWT và SimpleJWT xử lý xác thực; Django ORM cùng SQLite hoặc PostgreSQL quản lý dữ liệu. Google Cloud Translation và Google Cloud Storage phục vụ dịch máy và quản lý glossary; các thư viện xử lý tài liệu cùng Azure Document Intelligence xử lý từng định dạng tệp; ConvertAPI chuyển đổi PDF; Amazon S3 lưu trữ tệp kết quả. Docker và Nginx đóng gói và triển khai hệ thống. Các công nghệ này tạo nền tảng kỹ thuật cho Chương 4, nơi trình bày thiết kế và triển khai chi tiết của hệ thống.
 
 \end{document}

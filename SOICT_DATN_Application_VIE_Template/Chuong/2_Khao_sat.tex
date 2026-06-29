@@ -31,19 +31,7 @@ Từ khảo sát trên có thể thấy, các công cụ hiện có đã hỗ tr
 \subsection{Các tính năng cần phát triển}
 \label{subsection:2.1.3}
 
-Dựa trên quá trình khảo sát, có thể thấy các công cụ hiện có đều có điểm mạnh riêng trong việc hỗ trợ dịch văn bản và tài liệu, nhưng vẫn còn một số hạn chế khi áp dụng trong môi trường doanh nghiệp. Các hạn chế chủ yếu nằm ở khả năng giữ nguyên định dạng tài liệu sau khi dịch, kiểm soát thuật ngữ chuyên ngành và tổ chức quy trình dịch cho nhiều người dùng. Từ đó, hệ thống được đề xuất cần tập trung phát triển các chức năng chính như sau:
-
-1. \textbf{Dịch tài liệu đa định dạng:} Hỗ trợ dịch văn bản và các tệp tài liệu phổ biến như DOCX, XLSX, PPTX, PDF và ảnh. Đối với các tài liệu PDF hoặc ảnh, hệ thống cần có khả năng xử lý nội dung có thể chỉnh sửa hoặc nội dung cần OCR.
-
-2. \textbf{Giữ nguyên cấu trúc tài liệu:} Sau khi dịch, hệ thống cần cố gắng bảo toàn bố cục, bảng biểu, slide, đoạn văn và các thành phần định dạng cơ bản của tài liệu gốc, nhằm giảm thời gian chỉnh sửa thủ công cho người dùng.
-
-3. \textbf{Hỗ trợ dịch sang nhiều ngôn ngữ:} Người dùng có thể lựa chọn một hoặc nhiều ngôn ngữ đích trong cùng một yêu cầu dịch, phù hợp với nhu cầu xử lý tài liệu đa ngôn ngữ trong doanh nghiệp.
-
-4. \textbf{Quản lý thuật ngữ chuyên ngành:} Hệ thống cần hỗ trợ thư viện thuật ngữ chung và thư viện thuật ngữ riêng, giúp người dùng kiểm soát cách dịch các từ khóa quan trọng và nâng cao tính nhất quán của nội dung dịch.
-
-5. \textbf{Quản lý kết quả dịch:} Các tệp sau khi dịch cần được lưu lại để người dùng có thể xem lịch sử, tải về và tái sử dụng khi cần thiết. Chức năng này giúp quá trình dịch tài liệu được tổ chức tập trung hơn so với việc sử dụng các công cụ dịch rời rạc.
-
-6. \textbf{Hỗ trợ quản trị hệ thống:} Bên cạnh các chức năng dịch, hệ thống cần có các chức năng phục vụ vận hành như quản lý người dùng, cấu hình quản lý ngôn ngữ, quản lý đề xuất thuật ngữ, thông báo và lưu trữ tệp kết quả trên dịch vụ đám mây.
+Dựa trên quá trình khảo sát, có thể thấy các công cụ hiện có đều có điểm mạnh riêng trong việc hỗ trợ dịch văn bản và tài liệu, nhưng vẫn còn một số hạn chế khi áp dụng trong môi trường doanh nghiệp. Các hạn chế chủ yếu nằm ở khả năng giữ nguyên định dạng tài liệu sau khi dịch, kiểm soát thuật ngữ chuyên ngành và tổ chức quy trình dịch cho nhiều người dùng. Từ đó, hệ thống được đề xuất cần tập trung phát triển sáu chức năng chính: (i) \textbf{dịch tài liệu đa định dạng}, hỗ trợ dịch văn bản và các tệp tài liệu phổ biến như DOCX, XLSX, PPTX, PDF và ảnh, trong đó với tài liệu PDF ảnh quét hệ thống cần xử lý OCR; (ii) \textbf{giữ nguyên cấu trúc tài liệu}, bảo toàn bố cục, bảng biểu, slide, đoạn văn và các thành phần định dạng cơ bản sau khi dịch nhằm giảm thời gian chỉnh sửa thủ công; (iii) \textbf{hỗ trợ dịch sang nhiều ngôn ngữ}, cho phép người dùng lựa chọn một hoặc nhiều ngôn ngữ đích trong cùng một yêu cầu; (iv) \textbf{quản lý thuật ngữ chuyên ngành}, hỗ trợ thư viện thuật ngữ chung và thư viện thuật ngữ riêng để kiểm soát cách dịch các từ khóa quan trọng và nâng cao tính nhất quán; (v) \textbf{quản lý kết quả dịch}, lưu lại lịch sử các tệp đã dịch để người dùng có thể tra cứu và tải về khi cần, giúp tổ chức quy trình dịch tập trung hơn so với các công cụ rời rạc; (vi) \textbf{hỗ trợ quản trị hệ thống}, bao gồm các chức năng vận hành như quản lý người dùng, cấu hình ngôn ngữ, quản lý đề xuất thuật ngữ, thông báo và lưu trữ tệp kết quả trên dịch vụ đám mây.
 
 
 \section{Tổng quan chức năng}
@@ -60,24 +48,9 @@ Biểu đồ use case tổng quát (Hình~\ref{fig:usecase_tong_quat}) xác đ�
   \label{fig:usecase_tong_quat}
 \end{figure}
 
-\textbf{Các tác nhân tham gia và vai trò:} Biểu đồ use case tổng quát (Hình~\ref{fig:usecase_tong_quat}) xác định ba tác nhân chính; mỗi tác nhân có vai trò và quyền hạn khác nhau trong hệ thống.
-\begin{itemize}
-  \item \textbf{Người dùng (User):} Là nhân viên doanh nghiệp có nhu cầu dịch văn bản hoặc tài liệu văn phòng sang một hoặc nhiều ngôn ngữ.
-  \item \textbf{Quản trị viên (Admin):} Là người quản trị hệ thống trong phạm vi công ty. Họ có quyền quản lý tài khoản, cấu hình ngôn ngữ và xem thống kê từ khóa.
-  \item \textbf{Quản lý thư viện (Library Keeper):} Là người chịu trách nhiệm vận hành thư viện thuật ngữ chung của doanh nghiệp. Họ có quyền xét duyệt các đề xuất thuật ngữ từ người dùng và quản lý nội dung trong thư viện chung.
-\end{itemize}
+Biểu đồ use case tổng quát (Hình~\ref{fig:usecase_tong_quat}) xác định ba tác nhân chính trong hệ thống, mỗi tác nhân có vai trò và quyền hạn khác nhau: (i) \textbf{Người dùng (User)} là nhân viên doanh nghiệp có nhu cầu dịch văn bản hoặc tài liệu văn phòng sang một hoặc nhiều ngôn ngữ; (ii) \textbf{Quản trị viên (Admin)} là người quản trị hệ thống trong phạm vi công ty, có quyền quản lý tài khoản, cấu hình ngôn ngữ và xem thống kê từ khóa; (iii) \textbf{Quản lý thư viện (Library Keeper)} là người vận hành thư viện thuật ngữ chung, có quyền xét duyệt đề xuất thuật ngữ từ người dùng và quản lý nội dung thư viện chung.
 
-\textbf{Mô tả ngắn gọn các use case chính:}
-\begin{itemize}
-  \item \textbf{Dịch văn bản} và \textbf{Dịch tệp tài liệu:} Người dùng gửi văn bản thuần hoặc tệp Office/PDF/XLS/CSV và chọn một hoặc nhiều ngôn ngữ đích; hệ thống trả về URL tải tệp kết quả.
-  \item \textbf{Chuyển đổi file PDF:} Người dùng chuyển đổi định dạng tài liệu (PDF↔DOCX, v.v.) mà không thực hiện dịch, thông qua ConvertAPI.
-  \item \textbf{Xem lịch sử dịch:} Tra cứu và tải lại các tệp đã dịch được lưu trên AWS~S3 (bảng \texttt{TranslatedFile}).
-  \item \textbf{Quản lý thư viện cá nhân:} Người dùng tạo, chỉnh sửa và xóa bộ từ điển thuật ngữ nội bộ (\texttt{PrivateKeyword} với \texttt{translations}~JSONField).
-  \item \textbf{Đề xuất thuật ngữ:} Người dùng đề xuất thuật ngữ từ thư viện cá nhân; hệ thống tích lũy theo ngưỡng (\texttt{min\_suggesters\_for\_queue}) trước khi chuyển sang hàng đợi xét duyệt.
-  \item \textbf{Thông báo:} Người dùng nhận thông báo khi thuật ngữ được thêm, cập nhật hoặc xóa khỏi thư viện chung.
-  \item \textbf{Quản lý người dùng, Cấu hình ngôn ngữ, Xem thống kê thư viện thuật ngữ:} Dành riêng cho Admin, hỗ trợ vận hành hệ thống ở tầng quản trị.
-  \item \textbf{Duyệt đề xuất thuật ngữ:} Admin và Library~Keeper phê duyệt hoặc từ chối đề xuất; khi phê duyệt, hệ thống tự động cập nhật lên Google~Cloud~Storage (quan hệ \textit{include} với use case \textit{Cập nhật glossary lên Google Cloud}).
-\end{itemize}
+Các use case chính của hệ thống gồm: (i) \textbf{Dịch văn bản} và \textbf{dịch tệp tài liệu}, trong đó người dùng gửi văn bản thuần hoặc tệp Office/PDF và chọn một hoặc nhiều ngôn ngữ đích để nhận kết quả; (ii) \textbf{chuyển đổi định dạng tài liệu} mà không dịch nội dung, thông qua dịch vụ ConvertAPI; (iii) \textbf{xem lịch sử dịch} để tra cứu và tải lại các tệp đã xử lý; (iv) \textbf{quản lý thư viện thuật ngữ cá nhân} để người dùng tự tạo, chỉnh sửa và xóa bộ từ điển nội bộ của mình; (v) \textbf{đề xuất thuật ngữ} lên thư viện chung theo cơ chế tích lũy ngưỡng trước khi chuyển sang hàng đợi xét duyệt; (vi) \textbf{thông báo} khi thuật ngữ trong thư viện chung được cập nhật; (vii) các chức năng \textbf{quản lý người dùng, cấu hình ngôn ngữ và thống kê từ khóa} dành riêng cho Admin; và (viii) \textbf{duyệt đề xuất thuật ngữ} dành cho Admin và Library Keeper, khi phê duyệt hệ thống tự động cập nhật glossary lên Google Cloud Storage.
 
 \subsection{Biểu đồ use case phân rã Dịch văn bản}
 \label{subsection:2.2.2}
@@ -89,14 +62,7 @@ Biểu đồ use case tổng quát (Hình~\ref{fig:usecase_tong_quat}) xác đ�
   \label{fig:uc_dichvanban}
 \end{figure}
 
-Biểu đồ use case phân rã Dịch văn bản được phân rã thành các use case với tác nhân là Người dùng như sau:
-\begin{itemize}
-  \item \textbf{Nhập văn bản nguồn:} Người dùng nhập nội dung văn bản cần dịch vào ô nhập liệu trên trang dịch văn bản.
-  \item \textbf{Chọn ngôn ngữ nguồn:} Người dùng tùy chọn chỉ định ngôn ngữ của văn bản đầu vào. Đây là use case mở rộng (\textit{extend}) --- nếu bỏ qua, hệ thống tự động phát hiện ngôn ngữ.
-  \item \textbf{Chọn ngôn ngữ đích:} Người dùng chọn một hoặc nhiều ngôn ngữ cần dịch sang từ danh sách ngôn ngữ đang kích hoạt của công ty.
-  \item \textbf{Chọn chế độ thuật ngữ:} Người dùng chọn bảng thuật ngữ áp dụng khi dịch: thư viện chung, thư viện cá nhân hoặc không dùng thuật ngữ.
-  \item \textbf{Xem kết quả dịch:} Người dùng nhận và đọc văn bản đã được dịch, hiển thị trực tiếp trên giao diện.
-\end{itemize}
+Hình~\ref{fig:uc_dichvanban} thể hiện biểu đồ phân rã chức năng Dịch văn bản. Các bước thao tác của người dùng bao gồm: (i) nhập nội dung văn bản cần dịch vào ô nhập liệu; (ii) tùy chọn chỉ định ngôn ngữ nguồn, hoặc để hệ thống tự phát hiện (extend); (iii) chọn một hoặc nhiều ngôn ngữ đích từ danh sách ngôn ngữ đang kích hoạt của công ty; (iv) chọn chế độ thư viện thuật ngữ áp dụng (thư viện chung, thư viện cá nhân hoặc không dùng); (v) nhận và xem kết quả dịch hiển thị trực tiếp trên giao diện.
 
 \subsection{Biểu đồ use case phân rã Dịch tệp tài liệu}
 \label{subsection:2.2.3phanra}
@@ -108,14 +74,7 @@ Biểu đồ use case phân rã Dịch văn bản được phân rã thành các
   \label{fig:uc_dichfile}
 \end{figure}
 
-Biểu đồ use case phân rã Dịch tệp tài liệu được phân rã thành các use case với tác nhân là Người dùng như sau:
-\begin{itemize}
-  \item \textbf{Chọn tệp tài liệu:} Người dùng chọn tệp cần dịch. Hệ thống chấp nhận sáu nhóm định dạng: DOCX, XLSX, PPTX, PDF native-text, PDF scan và XLS/XLSM/XLSB/CSV.
-  \item \textbf{Chọn ngôn ngữ nguồn:} Người dùng tùy chọn chỉ định ngôn ngữ của tài liệu. Đây là use case mở rộng (\textit{extend}) --- nếu bỏ qua, hệ thống tự phát hiện ngôn ngữ.
-  \item \textbf{Chọn ngôn ngữ đích:} Người dùng chọn một hoặc nhiều ngôn ngữ đích; hệ thống tạo một tệp kết quả cho mỗi ngôn ngữ.
-  \item \textbf{Chọn chế độ thuật ngữ:} Người dùng chọn bảng thuật ngữ áp dụng: thư viện chung, thư viện cá nhân hoặc không dùng.
-  \item \textbf{Tải tệp đã dịch về:} Người dùng nhận danh sách URL kết quả và tải tệp về. Tệp cũng được lưu tự động vào lịch sử dịch.
-\end{itemize}
+Hình~\ref{fig:uc_dichfile} thể hiện biểu đồ phân rã chức năng Dịch tệp tài liệu. Các bước thao tác của người dùng bao gồm: (i) chọn tệp cần dịch từ các nhóm định dạng được hỗ trợ gồm DOCX, XLSX, PPTX, PDF văn bản, PDF ảnh quét và các định dạng bảng tính; (ii) tùy chọn chỉ định ngôn ngữ nguồn, hoặc để hệ thống tự phát hiện (extend); (iii) chọn một hoặc nhiều ngôn ngữ đích, hệ thống tạo một tệp kết quả riêng cho mỗi ngôn ngữ; (iv) chọn chế độ thư viện thuật ngữ áp dụng; (v) nhận danh sách URL tệp kết quả và tải về, đồng thời tệp được lưu tự động vào lịch sử dịch.
 
 \subsection{Biểu đồ use case phân rã Đề xuất thuật ngữ}
 \label{subsection:2.2.4phanra}
@@ -127,15 +86,7 @@ Biểu đồ use case phân rã Dịch tệp tài liệu được phân rã thà
   \label{fig:uc_dexuatthuatngu}
 \end{figure}
 
-Biểu đồ use case phân rã Đề xuất thuật ngữ được phân rã thành các use case với tác nhân là Người dùng như sau:
-\begin{itemize}
-  \item \textbf{Xem danh sách thuật ngữ:} Người dùng xem toàn bộ thuật ngữ đã lưu trong thư viện cá nhân, hỗ trợ phân trang và tìm kiếm.
-  \item \textbf{Thêm thuật ngữ:} Người dùng nhập thuật ngữ mới với giá trị dịch cho từng ngôn ngữ đang kích hoạt của công ty.
-  \item \textbf{Chỉnh sửa thuật ngữ:} Người dùng cập nhật nội dung dịch của một thuật ngữ hiện có.
-  \item \textbf{Xóa thuật ngữ:} Người dùng xóa một thuật ngữ khỏi thư viện cá nhân.
-  \item \textbf{Đề xuất lên thư viện chung:} Người dùng gửi thuật ngữ từ thư viện cá nhân lên thư viện chung. Hệ thống tích lũy số người đề xuất cùng cặp từ; khi đạt ngưỡng, đưa vào hàng đợi xét duyệt.
-  \item \textbf{Theo dõi trạng thái đề xuất:} Người dùng theo dõi trạng thái các đề xuất đã gửi (đang chờ / đã duyệt / bị từ chối) trong giao diện thư viện cá nhân.
-\end{itemize}
+Hình~\ref{fig:uc_dexuatthuatngu} thể hiện biểu đồ phân rã chức năng Quản lý thư viện và Đề xuất thuật ngữ. Các thao tác của người dùng bao gồm: (i) xem danh sách toàn bộ thuật ngữ đã lưu trong thư viện cá nhân, có hỗ trợ phân trang và tìm kiếm; (ii) thêm thuật ngữ mới với giá trị dịch cho từng ngôn ngữ đang kích hoạt; (iii) chỉnh sửa nội dung dịch của thuật ngữ hiện có; (iv) xóa thuật ngữ khỏi thư viện cá nhân; (v) đề xuất thuật ngữ lên thư viện chung, trong đó hệ thống tích lũy số người đề xuất cùng một cặp từ và đưa vào hàng đợi xét duyệt khi đạt ngưỡng; (vi) theo dõi trạng thái các đề xuất đã gửi trực tiếp trong giao diện thư viện cá nhân.
 
 \subsection{Biểu đồ use case phân rã Duyệt đề xuất thuật ngữ}
 \label{subsection:2.2.5phanra}
@@ -147,12 +98,7 @@ Biểu đồ use case phân rã Đề xuất thuật ngữ được phân rã th
   \label{fig:uc_duyetthuatngu}
 \end{figure}
 
-Biểu đồ use case phân rã Duyệt đề xuất thuật ngữ được phân rã thành các use case với tác nhân là Quản trị viên và Quản lý thư viện như sau:
-\begin{itemize}
-  \item \textbf{Xem danh sách đề xuất chờ duyệt:} Quản trị viên / Quản lý thư viện xem các đề xuất ở trạng thái chờ duyệt, có thể lọc theo từ khóa hoặc người đề xuất.
-  \item \textbf{Phê duyệt đề xuất:} Quản trị viên / Quản lý thư viện chấp nhận đề xuất; thuật ngữ được bổ sung vào thư viện chung.
-  \item \textbf{Từ chối đề xuất:} Quản trị viên / Quản lý thư viện từ chối đề xuất; thư viện chung không thay đổi.
-\end{itemize}
+Hình~\ref{fig:uc_duyetthuatngu} thể hiện biểu đồ phân rã chức năng Duyệt đề xuất thuật ngữ thành ba thao tác của Quản trị viên và Quản lý thư viện: (i) xem danh sách đề xuất đang chờ duyệt với khả năng lọc theo từ khóa hoặc người đề xuất; (ii) phê duyệt đề xuất để bổ sung thuật ngữ vào thư viện chung; (iii) từ chối đề xuất khi nội dung không phù hợp, trong đó thư viện chung không thay đổi.
 
 \subsection{Biểu đồ use case phân rã Quản lý tài khoản người dùng}
 \label{subsection:2.2.7phanra}
@@ -164,17 +110,11 @@ Biểu đồ use case phân rã Duyệt đề xuất thuật ngữ được phâ
   \label{fig:uc_quanlyuser}
 \end{figure}
 
-Biểu đồ use case phân rã Quản lý tài khoản người dùng được phân rã thành các use case với tác nhân là Quản trị viên như sau:
-\begin{itemize}
-  \item \textbf{Xem danh sách tài khoản:} Quản trị viên xem toàn bộ tài khoản trong hệ thống kèm vai trò, trạng thái và thông tin cơ bản, có hỗ trợ tìm kiếm và phân trang.
-  \item \textbf{Tạo tài khoản:} Quản trị viên tạo tài khoản mới với thông tin email, tên hiển thị và vai trò ban đầu.
-  \item \textbf{Thay đổi vai trò người dùng:} Quản trị viên điều chỉnh vai trò tài khoản giữa ba cấp: Người dùng, Quản trị viên và Quản lý thư viện. Thay đổi có hiệu lực ngay lập tức.
-  \item \textbf{Vô hiệu hóa tài khoản:} Quản trị viên vô hiệu hóa tài khoản để ngăn đăng nhập mà không xóa dữ liệu liên quan.
-\end{itemize}
+Hình~\ref{fig:uc_quanlyuser} thể hiện biểu đồ phân rã chức năng Quản lý tài khoản người dùng thành bốn thao tác của Quản trị viên: (i) xem danh sách toàn bộ tài khoản trong hệ thống kèm vai trò, trạng thái và thông tin cơ bản, có hỗ trợ tìm kiếm và phân trang; (ii) tạo tài khoản mới với thông tin email, tên hiển thị và vai trò ban đầu; (iii) điều chỉnh vai trò tài khoản giữa ba cấp là Người dùng, Quản trị viên và Quản lý thư viện với hiệu lực ngay lập tức; (iv) vô hiệu hóa tài khoản để ngăn đăng nhập mà không xóa dữ liệu liên quan.
 
 \subsection{Quy trình nghiệp vụ}
 \label{subsection:2.2.3}
-Quy trình dịch tệp tài liệu là một trong những nghiệp vụ trọng tâm của hệ thống dịch đa ngôn ngữ trong môi trường doanh nghiệp. Quy trình này bao gồm việc người dùng chọn tệp cần dịch, lựa chọn ngôn ngữ nguồn, ngôn ngữ đích và chế độ sử dụng thuật ngữ, sau đó gửi yêu cầu để hệ thống thực hiện xử lý và dịch tài liệu.
+Quy trình dịch tệp tài liệu là một trong những nghiệp vụ trọng tâm của hệ thống dịch đa ngôn ngữ trong môi trường doanh nghiệp, được mô tả chi tiết trong Hình~\ref{fig:activity_dichfile}. Quy trình này bao gồm việc người dùng chọn tệp cần dịch, lựa chọn ngôn ngữ nguồn, ngôn ngữ đích và chế độ sử dụng thuật ngữ, sau đó gửi yêu cầu để hệ thống thực hiện xử lý và dịch tài liệu.
 
 Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung tài liệu sang ngôn ngữ mong muốn, mà còn hỗ trợ giữ lại cấu trúc và định dạng ban đầu của tài liệu sau khi dịch. Bên cạnh đó, việc kết hợp thư viện thuật ngữ trong quá trình dịch giúp nâng cao tính nhất quán của các thuật ngữ chuyên ngành, đặc biệt đối với các tài liệu được sử dụng trong doanh nghiệp. Sau khi quá trình dịch hoàn tất, người dùng có thể tải xuống tệp kết quả và tra cứu lại trong lịch sử dịch khi cần thiết.
 
@@ -450,7 +390,7 @@ Về hiệu năng, hệ thống cần đảm bảo các thao tác thông thườ
 
 Về độ tin cậy, hệ thống cần xử lý tốt các tệp tạm trong quá trình dịch và dọn dẹp sau khi hoàn tất để tránh phát sinh dữ liệu dư thừa. Với các lỗi tạm thời khi tải tệp lên dịch vụ lưu trữ, hệ thống cần có cơ chế thử lại phù hợp. Trong trường hợp glossary không khả dụng, hệ thống cần có phương án chuyển sang chế độ dịch thông thường để không làm gián đoạn toàn bộ quy trình dịch.
 
-Về tính dễ sử dụng, giao diện cần được thiết kế rõ ràng, giúp người dùng dễ dàng tải tệp, lựa chọn ngôn ngữ, chọn chế độ thuật ngữ, theo dõi trạng thái xử lý và tải về kết quả dịch. Các thông báo lỗi và trạng thái xử lý cần được hiển thị dễ hiểu để người dùng có thể nắm được tiến trình dịch tài liệu.
+Về tính dễ sử dụng, giao diện cần được thiết kế rõ ràng để người dùng có thể tải tệp, lựa chọn ngôn ngữ, chọn chế độ thuật ngữ, theo dõi trạng thái xử lý và tải về kết quả dịch mà không cần hướng dẫn bổ sung. Các thông báo lỗi và trạng thái xử lý cần được hiển thị dễ hiểu để người dùng có thể nắm được tiến trình dịch tài liệu.
 
 Về tính dễ bảo trì, mã nguồn và kiến trúc hệ thống cần được tổ chức rõ ràng theo các lớp như giao diện, API, dịch vụ nghiệp vụ, xử lý tài liệu và dữ liệu. Cách tổ chức này giúp việc mở rộng chức năng, sửa lỗi, thay đổi dịch vụ tích hợp hoặc bổ sung định dạng tài liệu mới trở nên thuận tiện hơn.
 

@@ -369,9 +369,22 @@ KHÔNG ghi file.
 - Trong văn phong khoa học, không được dùng từ trong văn nói, không dùng các từ phóng đại, thái quá, các từ thiếu khách quan, thiên về cảm xúc, về quan điểm cá nhân như “tuyệt vời”, “cực hay”, “cực kỳ hữu ích”, v.v. Các câu văn cần được tối ưu hóa, đảm bảo rất khó để thể thêm hoặc bớt đi được dù chỉ một từ. Cách diễn đạt cần ngắn gọn, súc tích, không dài dòng
 - Khi thực sự cần liệt kê, sinh viên nên liệt kê theo phong cách khoa học với các ký tự La Mã. Ví dụ, nhiều sinh viên luôn cảm thấy hối hận vì (i) chưa cố gắng hết mình, (ii) chưa sắp xếp thời gian học/chơi một cách hợp lý, (iii) chưa tìm được người yêu để chia sẻ quãng đời sinh viên vất vả, và (iv) viết ĐATN một cách cẩu thả
 
+Lưu ý quan trọng về tài liệu tham khảo, tham chiếu và trình bày hình/bảng:
+- Nếu bổ sung bất kỳ tài liệu tham khảo nào ở cuối bài, bắt buộc phải chèn citation/trích dẫn tương ứng ngay trong phần nội dung liên quan.
+- Không được đưa tài liệu vào danh mục tài liệu tham khảo nếu tài liệu đó không được cite trong bài.
+- Citation cần đặt ở vị trí phù hợp, ngay sau câu/đoạn sử dụng thông tin từ nguồn đó.
+- Ưu tiên trích dẫn theo đúng định dạng đang dùng trong báo cáo, ví dụ [1], [2] hoặc \cite{} nếu viết bằng LaTeX.
+- Không dùng Wikipedia, slide bài giảng hoặc các trang web phổ thông làm tài liệu tham khảo.
+- Với những nội dung đã được trình bày chi tiết ở mục/phần/chương khác trong báo cáo, không lặp lại dài dòng. Hãy tham chiếu chéo đến đúng mục đó, ví dụ: “như đã trình bày ở Mục 3.2”, “xem chi tiết tại Chương 4”, hoặc dùng \ref{} / \autoref{} nếu viết bằng LaTeX.
+- Khi nhắc lại một khái niệm, bảng, hình, thuật toán hoặc công thức đã xuất hiện ở phần khác, hãy dùng tham chiếu đến số mục, số hình, số bảng, số thuật toán hoặc số công thức tương ứng.
+- Đối với bảng, tên bảng/chú thích bảng phải đặt ở phía trên bảng.
+- Đối với hình ảnh, sơ đồ, biểu đồ, ảnh chụp màn hình, tên hình/chú thích hình phải đặt ở phía dưới hình.
+- Khi nhắc đến bảng hoặc hình trong nội dung, phải tham chiếu đúng số thứ tự, ví dụ: “như thể hiện trong Bảng 4.7” hoặc “như minh họa ở Hình 4.5”.
+- Không viết chú thích hình ở phía trên hình và không viết chú thích bảng ở phía dưới bảng.
 ## Quy định chung
 - cần đảm bảo tính thống nhất toàn báo cáo (font chữ, căn dòng hai bên, hình ảnh, bảng, margin trang, đánh số trang, v.v.). Để làm được như vậy, chỉ cần sử dụng các định dạng theo đúng template ĐATN này. Khi paste nội dung văn bản từ tài liệu khác của mình, cần chọn kiểu Copy là “Text Only” để định dạng văn bản của template không bị phá vỡ/vi phạm
 - Tất cả các hình vẽ, bảng biểu, công thức, và tài liệu tham khảo trong ĐATN nhất thiết phải được SV giải thích và tham chiếu tới ít nhất một lần. Không chấp nhận các trường hợp đưa ra hình ảnh, bảng biểu tùy hứng và không có lời mô tả/giải thích nào
+
 
 ## Quy tắc Đánh dấu (bullet) và đánh số (numering)
 Việc sử dụng danh sách trong LaTeX khá đơn giản và không yêu cầu sinh viên
