@@ -8,6 +8,8 @@ Chương~\ref{chapter:Methodology} đã trình bày lý do lựa chọn và vai 
 
 Trong đồ án này, kiến trúc MVC (Model -- View -- Controller) với frontend tách rời được lựa chọn để xây dựng hệ thống dịch tài liệu đa ngôn ngữ. Đây là biến thể thường gặp trong các ứng dụng web hiện đại, còn có thể gọi là API-driven MVC. Khác với MVC truyền thống, nơi View thường được render ở phía server bằng template, hệ thống này đặt View ở phía client thông qua React SPA. Frontend lấy dữ liệu từ backend bằng REST API và tự render giao diện trên trình duyệt.
 
+Việc tách rời frontend khỏi backend mang lại một số lợi ích phù hợp với yêu cầu của hệ thống. Thứ nhất, frontend và backend có thể được phát triển, kiểm thử và triển khai độc lập, giúp giảm sự phụ thuộc lẫn nhau trong quá trình xây dựng. Thứ hai, backend chỉ cần cung cấp REST API, không ràng buộc với một công nghệ giao diện cụ thể, tạo điều kiện mở rộng hoặc thay thế frontend sau này nếu cần. Thứ ba, mô hình này phù hợp với cách tổ chức triển khai theo container, trong đó frontend và backend được đóng gói riêng và giao tiếp qua mạng nội bộ thông qua Nginx.
+
 Về bản chất, hệ thống vẫn tuân theo tư tưởng chính của MVC: Model quản lý dữ liệu, Controller xử lý yêu cầu và điều phối nghiệp vụ, còn View hiển thị dữ liệu cho người dùng. Cách tổ chức này giúp tách rõ trách nhiệm giữa giao diện người dùng, xử lý nghiệp vụ và quản lý dữ liệu, đồng thời phù hợp với định hướng xây dựng frontend và backend độc lập.
 
 \textbf{b, Model (M) -- Xử lý dữ liệu và nghiệp vụ ứng dụng}
@@ -679,44 +681,69 @@ Kết quả kiểm thử cho thấy các kịch bản tiêu biểu của ba nhó
 Trong quá trình kiểm thử tích hợp, các trường hợp phụ thuộc vào dịch vụ xử lý bên ngoài cần được theo dõi kỹ hơn do kết quả có thể chịu ảnh hưởng bởi cấu hình môi trường, trạng thái kết nối mạng và thời gian phản hồi của dịch vụ. Đối với các trường hợp này, hệ thống cần duy trì cơ chế phản hồi lỗi rõ ràng để người dùng biết nguyên nhân thất bại và có thể thực hiện lại thao tác sau khi điều kiện vận hành ổn định.
 \section{Triển khai}
 
-Hệ thống được triển khai thử nghiệm theo mô hình client-server với các thành phần được tách riêng theo vai trò xử lý. Cách triển khai này giúp frontend, backend và reverse proxy có thể vận hành độc lập trong từng container, đồng thời vẫn giao tiếp với nhau thông qua mạng nội bộ của Docker. Mục tiêu của giai đoạn triển khai thử nghiệm là kiểm tra khả năng khởi chạy hệ thống, khả năng định tuyến yêu cầu, khả năng phục vụ giao diện người dùng và khả năng xử lý các chức năng chính trước khi đưa vào môi trường vận hành thực tế.
+Hệ thống được triển khai thử nghiệm trên máy chủ ảo theo mô hình container hóa sử dụng Docker Compose. Cách triển khai này phù hợp với kiến trúc đã thiết kế vì hệ thống gồm nhiều thành phần độc lập là frontend, backend và reverse proxy, có thể đóng gói riêng và phối hợp thông qua mạng nội bộ Docker.
 
-\subsection{Mô hình triển khai}
+\subsection{Cấu hình máy chủ triển khai}
 
-Hệ thống được đóng gói bằng Docker Compose, gồm ba thành phần chính là frontend, backend và Nginx reverse proxy. Frontend chịu trách nhiệm cung cấp giao diện người dùng sau khi được build thành các tài nguyên tĩnh. Backend chịu trách nhiệm xử lý nghiệp vụ, xác thực, phân quyền, dịch tài liệu, quản lý thuật ngữ và ghi nhận lịch sử xử lý. Nginx reverse proxy là điểm truy cập bên ngoài, thực hiện điều hướng yêu cầu đến đúng thành phần xử lý phía sau.
-
-Mô hình triển khai gồm ba container chạy trong cùng mạng bridge nội bộ của Docker. \textbf{Frontend} được phát triển bằng React kết hợp Vite và được phục vụ thông qua Nginx trong container riêng sau khi build. \textbf{Backend} được xây dựng bằng Django và Django REST Framework, chạy trên cổng nội bộ 8000 và không được public trực tiếp ra bên ngoài. \textbf{Reverse proxy} sử dụng Nginx để tiếp nhận yêu cầu HTTP và HTTPS, chuyển hướng HTTP sang HTTPS và định tuyến yêu cầu đến đúng thành phần. Các container trao đổi dữ liệu qua mạng bridge nội bộ mà không cần mở toàn bộ cổng dịch vụ ra bên ngoài. Ngoài ra, hệ thống tích hợp các dịch vụ bên ngoài hỗ trợ dịch máy, OCR, lưu trữ file và chuyển đổi định dạng; các dịch vụ này cần được cấu hình đầy đủ trước khi triển khai.
-
-\subsection{Môi trường triển khai thử nghiệm}
-
-Ứng dụng được triển khai thử nghiệm trong môi trường container hóa. Cấu hình này giúp giảm sự khác biệt giữa môi trường phát triển và môi trường chạy thử, đồng thời hỗ trợ khởi động lại các thành phần một cách độc lập khi cần kiểm tra lỗi. Bảng~\ref{table:deployment-environment} trình bày các thông tin chính của môi trường triển khai thử nghiệm.
+Cấu hình máy chủ sử dụng cho môi trường triển khai thử nghiệm được trình bày trong Bảng~\ref{table:server-config}.
 
 \begin{table}[H]
 \centering
-\caption{Cấu hình môi trường triển khai thử nghiệm}
-\label{table:deployment-environment}
+\caption{Cấu hình máy chủ triển khai thử nghiệm}
+\label{table:server-config}
 \small
 \setlength{\tabcolsep}{4pt}
 \renewcommand{\arraystretch}{1.16}
-\begin{tabular}{|p{0.32\linewidth}|p{0.52\linewidth}|}
+\begin{tabular}{|p{0.35\linewidth}|p{0.52\linewidth}|}
 \hline
-\textbf{Thành phần} & \textbf{Thông tin chi tiết} \\ \hline
-Mô hình triển khai & Docker Compose, gồm frontend, backend và Nginx reverse proxy. \\ \hline
-Frontend & React, Vite, Node.js 22.14, Nginx 1.27-alpine, phục vụ giao diện qua cổng nội bộ 80. \\ \hline
-Backend & Python 3.12.9-slim, Django, Django REST Framework, chạy trên cổng nội bộ 8000. \\ \hline
-Reverse proxy & Nginx latest, public cổng 80 và 443, hỗ trợ HTTPS và định tuyến yêu cầu. \\ \hline
-Mạng nội bộ & Docker bridge network, kết nối các container trong cùng môi trường triển khai. \\ \hline
-Giới hạn tải lên & 100 MB theo cấu hình reverse proxy. \\ \hline
+\textbf{Thông số} & \textbf{Giá trị} \\ \hline
+Loại máy chủ & AWS EC2 t3.micro \\ \hline
+CPU & 2 vCPU \\ \hline
+RAM & 1 GiB \\ \hline
+Hệ điều hành & Ubuntu Server 22.04 LTS \\ \hline
+Container runtime & Docker \\ \hline
+Công cụ điều phối & Docker Compose \\ \hline
+Reverse proxy/HTTPS & Nginx và Let's Encrypt (Certbot) \\ \hline
+Tên miền & aitranslate.torayhk.com \\ \hline
 \end{tabular}
 \end{table}
 
+\subsection{Mô hình triển khai}
+
+Các dịch vụ chính được khai báo trong \texttt{docker-compose.yml} và chạy trong cùng mạng bridge nội bộ \texttt{app\_net}. Bảng~\ref{table:deployment-components} mô tả vai trò của từng thành phần.
+
+\begin{table}[H]
+\centering
+\caption{Các thành phần triển khai chính của hệ thống}
+\label{table:deployment-components}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabular}{|p{0.22\linewidth}|p{0.28\linewidth}|p{0.38\linewidth}|}
+\hline
+\textbf{Thành phần} & \textbf{Container/Image} & \textbf{Vai trò trong hệ thống} \\ \hline
+Frontend & Node.js 22.14 build $\rightarrow$ Nginx 1.27-alpine & Phục vụ giao diện web React SPA cho người dùng, expose cổng nội bộ 80. \\ \hline
+Backend & Python 3.12.9-slim, Django REST Framework & Xử lý nghiệp vụ, xác thực, dịch tài liệu, quản lý thuật ngữ; expose cổng nội bộ 8000. \\ \hline
+Nginx & nginx:latest & Reverse proxy, phân phối HTTPS và định tuyến yêu cầu đến frontend hoặc backend. \\ \hline
+\end{tabular}
+\end{table}
+
+Nginx đóng vai trò điểm truy cập duy nhất từ bên ngoài, lắng nghe cổng 80 và 443. Mọi yêu cầu HTTP được chuyển hướng tự động sang HTTPS. Các yêu cầu đến đường dẫn \texttt{/api/} được định tuyến đến backend, các yêu cầu còn lại được chuyển đến frontend. Giới hạn tải lên được cấu hình là 100 MB và timeout cho các yêu cầu xử lý tài liệu là 300--600 giây.
+
+\subsection{Quy trình triển khai}
+
+Quy trình triển khai thử nghiệm gồm các bước chính sau:
+
+\begin{itemize}
+    \item Chuẩn bị file \texttt{.env} chứa các biến cấu hình gồm thông tin kết nối cơ sở dữ liệu, khóa API của Google Cloud Translation, Amazon S3, Azure Document Intelligence và ConvertAPI.
+    \item Build image container cho frontend và backend bằng lệnh \texttt{docker compose build}.
+    \item Khởi động các container bằng \texttt{docker compose up -d}; backend tự động chạy migration cơ sở dữ liệu trước khi tiếp nhận yêu cầu.
+    \item Kiểm tra trạng thái các container và xác nhận Nginx phục vụ được giao diện và định tuyến đúng yêu cầu API.
+\end{itemize}
+
 \subsection{Kết quả triển khai}
 
-Trong quá trình triển khai thử nghiệm, hệ thống đã khởi chạy được đầy đủ các thành phần chính theo mô hình container. Frontend được build thành giao diện web và phục vụ thông qua Nginx. Backend khởi động ở cổng nội bộ, thực hiện các tác vụ chuẩn bị dữ liệu cần thiết trước khi tiếp nhận yêu cầu. Reverse proxy tiếp nhận yêu cầu từ bên ngoài, xử lý HTTPS và định tuyến đúng các yêu cầu giao diện hoặc nghiệp vụ đến thành phần tương ứng.
-
-Một số kết quả nổi bật trong giai đoạn triển khai thử nghiệm gồm: hệ thống có thể tách riêng giao diện và xử lý nghiệp vụ; các thành phần có thể khởi động lại độc lập; reverse proxy che giấu cổng nội bộ của backend; các yêu cầu xử lý tài liệu có thời gian dài được hỗ trợ bằng cấu hình timeout lớn hơn request thông thường; giới hạn tải lên 100 MB phù hợp với nhu cầu xử lý tài liệu văn phòng có dung lượng vừa và lớn.
-
-Kết quả triển khai cho thấy mô hình container hóa phù hợp với định hướng xây dựng hệ thống dịch đa ngôn ngữ có nhiều thành phần phối hợp. Việc tách riêng frontend, backend và reverse proxy giúp quá trình bảo trì, kiểm thử và mở rộng hệ thống thuận lợi hơn. 
+Sau triển khai, hệ thống hoạt động ổn định với ba container phối hợp qua mạng nội bộ Docker. Frontend được phục vụ qua HTTPS tại tên miền \texttt{aitranslate.torayhk.com}. Backend xử lý yêu cầu API mà không cần mở cổng trực tiếp ra ngoài. Reverse proxy che giấu cấu trúc nội bộ và xử lý SSL termination tập trung. Việc tách riêng ba thành phần giúp quá trình bảo trì và khởi động lại từng thành phần độc lập thuận lợi hơn.
 
 \section{Tổng kết}
 Chương này đã trình bày thiết kế kiến trúc MVC với frontend tách rời của hệ thống, bao gồm React SPA ở vai trò View, backend Django REST Framework ở vai trò Controller và Django ORM ở vai trò Model. Thiết kế cơ sở dữ liệu xác định mười hai thực thể chính với quan hệ rõ ràng, trong đó người dùng là trung tâm liên kết tới file dịch, thuật ngữ riêng, đề xuất thuật ngữ và cấu hình công ty. Quá trình xây dựng tạo ra ba thành phần có thể triển khai độc lập là giao diện web, backend API và hệ thống container. Quy trình dịch file được kiểm thử qua luồng API thống kê từ khóa, xác thực phân quyền và xử lý tham số đầu vào. Hệ thống được triển khai theo mô hình container Nginx trên tên miền có HTTPS. Các đóng góp kỹ thuật nổi bật sẽ được phân tích chi tiết trong Chương 5.

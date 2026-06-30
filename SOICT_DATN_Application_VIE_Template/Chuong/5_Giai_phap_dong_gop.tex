@@ -24,7 +24,7 @@ Cơ chế bộ nhớ đệm theo phiên xử lý là một thành phần bổ su
 
 Giải pháp điều phối trung tâm cho phép hệ thống xử lý bốn định dạng tài liệu phổ biến qua một điểm API duy nhất, trong khi tệp kết quả sau dịch vẫn giữ nguyên bố cục, kiểu định dạng và cấu trúc của tài liệu gốc. Cơ chế gộp đoạn văn trước khi dịch giải quyết vấn đề phân mảnh ngữ nghĩa đặc thù của định dạng DOCX, còn cơ chế dịch theo lô kết hợp bộ nhớ đệm phiên giúp giảm số lần giao tiếp với dịch vụ dịch bên ngoài xuống mức tối thiểu cần thiết cho mỗi tài liệu.
 
-\section{Cơ chế thư viện thuật ngữ hai cấp và quy trình phê duyệt}
+\section{Cơ chế thư viện thuật ngữ hai cấp}
 \label{section:5.2}
 
 \subsection{Giới thiệu bài toán}
@@ -37,15 +37,13 @@ Bài toán đặt ra là xây dựng cơ chế thư viện thuật ngữ đáp �
 
 Hệ thống được tổ chức thành hai lớp thư viện thuật ngữ độc lập về phạm vi sử dụng. Lớp thứ nhất là thư viện cá nhân, nơi mỗi người dùng có thể tự quản lý danh sách thuật ngữ riêng của mình bao gồm các thao tác thêm, sửa, xóa và tra cứu. Lớp thứ hai là thư viện chung, được quản lý tập trung bởi người có thẩm quyền và áp dụng cho toàn bộ người dùng trong hệ thống. Cả hai lớp đều lưu dữ liệu thuật ngữ theo nhiều ngôn ngữ cùng lúc, trong đó mỗi bản ghi gắn với mã ngôn ngữ theo chuẩn IETF và nội dung tương ứng, cho phép tra cứu nhanh theo cặp ngôn ngữ bất kỳ.
 
-Để đảm bảo quy trình dịch có thể chọn đúng nguồn thư viện theo từng yêu cầu mà không phải truyền tham số xuyên suốt toàn bộ chuỗi xử lý, hệ thống áp dụng cơ chế ngữ cảnh dịch dựa trên biến cục bộ luồng xử lý. Khi backend nhận yêu cầu dịch, chế độ thư viện và thông tin người dùng được lưu vào biến cục bộ của luồng hiện tại. Các module xử lý tài liệu ở cấp sâu hơn đọc ngữ cảnh này để quyết định sử dụng glossary chung, glossary riêng hoặc không dùng glossary mà không cần nhận tham số từ tầng trên. Sau khi yêu cầu hoàn thành, ngữ cảnh được dọn dẹp để tránh ảnh hưởng đến các yêu cầu xử lý tiếp theo trong cùng tiến trình.
+Khi thực hiện dịch, hệ thống xác định glossary cần sử dụng dựa trên chế độ thư viện mà người dùng lựa chọn. Nếu chế độ là thư viện chung, hệ thống tra cứu glossary tương ứng với cặp ngôn ngữ đang dịch trên Google Cloud Storage và truyền vào lời gọi Google Cloud Translation API. Nếu chế độ là thư viện riêng, hệ thống sử dụng glossary cá nhân của người dùng đó. Nếu không dùng thư viện, lời gọi API được thực hiện trực tiếp không kèm glossary. Trong trường hợp glossary không tồn tại hoặc xảy ra lỗi khi gọi API có glossary, hệ thống tự động chuyển sang dịch tiêu chuẩn để đảm bảo yêu cầu vẫn được hoàn thành.
 
 Về tích hợp với dịch vụ dịch máy, khi danh sách thuật ngữ chung được cập nhật, hệ thống đồng bộ glossary tương ứng lên Google Cloud Storage theo từng cặp ngôn ngữ. Khi thực hiện dịch với chế độ thư viện chung, lớp gọi dịch ưu tiên tra cứu các cặp thuật ngữ đã định nghĩa trong glossary; nếu glossary không tồn tại hoặc gặp lỗi tạm thời, hệ thống tự chuyển sang dịch tiêu chuẩn để đảm bảo yêu cầu vẫn được hoàn thành mà không trả về lỗi cho người dùng.
 
-Quy trình đóng góp thuật ngữ từ thư viện cá nhân lên thư viện chung được tổ chức theo luồng trạng thái có kiểm soát. Người dùng gửi đề xuất từ danh sách thuật ngữ của mình; đề xuất được khởi tạo ở trạng thái chờ duyệt và hiển thị trong hàng đợi xét duyệt của người quản lý. Library Keeper hoặc Admin xem xét từng đề xuất và phê duyệt hoặc từ chối. Khi được phê duyệt, hệ thống cập nhật thư viện chung và gửi thông báo tới người đề xuất. Hệ thống cũng kiểm tra trùng lặp nội dung để tránh tích lũy các đề xuất giống nhau từ nhiều người dùng khác nhau.
-
 \subsection{Kết quả đạt được}
 
-Cơ chế hai lớp thư viện thuật ngữ cho phép người dùng và tổ chức quản lý thuật ngữ theo đúng phạm vi trách nhiệm của từng bên mà không chồng chéo quyền hạn. Người dùng thông thường có thể duy trì danh sách thuật ngữ riêng phù hợp với công việc cụ thể mà không cần quyền quản trị, trong khi tổ chức vẫn kiểm soát được nội dung thư viện chung thông qua quy trình phê duyệt có phân quyền. Cơ chế ngữ cảnh dịch theo luồng xử lý giúp ba chế độ sử dụng thư viện hoạt động nhất quán từ điểm API đầu vào xuyên suốt đến các hàm dịch cấp thấp nhất, mà không cần truyền thêm tham số qua toàn bộ chuỗi xử lý tài liệu.
+Cơ chế hai lớp thư viện thuật ngữ cho phép người dùng và tổ chức quản lý thuật ngữ theo đúng phạm vi trách nhiệm của từng bên mà không chồng chéo quyền hạn. Người dùng thông thường có thể duy trì danh sách thuật ngữ riêng phù hợp với công việc cụ thể mà không cần quyền quản trị, trong khi tổ chức vẫn kiểm soát được nội dung thư viện chung thông qua cơ chế phân quyền. Cơ chế ngữ cảnh dịch theo luồng xử lý giúp ba chế độ sử dụng thư viện hoạt động nhất quán từ điểm API đầu vào xuyên suốt đến các hàm dịch cấp thấp nhất, mà không cần truyền thêm tham số qua toàn bộ chuỗi xử lý tài liệu.
 
 \section{Xử lý tài liệu PDF theo đặc tính nội dung với Azure Document Intelligence}
 \label{section:5.3}
@@ -70,7 +68,7 @@ Giải pháp phân nhánh theo đặc tính nội dung tệp cho phép hệ th�
 
 \medskip
 \section{Tổng kết}
-Chương này đã phân tích năm đóng góp kỹ thuật nổi bật của đồ án. Đóng góp về tích hợp quy trình dịch đa định dạng thể hiện ở việc gom nhiều luồng xử lý tài liệu vào một API thống nhất với bộ điều phối trung tâm. Đóng góp về glossary thể hiện ở cơ chế ngữ cảnh dịch theo luồng xử lý, cho phép ba chế độ glossary hoạt động nhất quán từ backend qua toàn bộ khối xử lý tài liệu. Quy trình phê duyệt thuật ngữ biến glossary từ dữ liệu tĩnh thành một quy trình quản trị có trạng thái và phân quyền. Xử lý PDF theo đặc tính tài liệu giải quyết sự không đồng nhất của định dạng PDF bằng cách phân nhánh luồng dựa trên đặc tính nội dung. Cuối cùng, tích hợp triển khai cloud ghép các thành phần lại thành một hệ thống vận hành hoàn chỉnh. Chương~\ref{chapter:conclusion} sẽ tổng kết kết quả đạt được và các hướng phát triển tiếp theo.
+Chương này đã phân tích năm đóng góp kỹ thuật nổi bật của đồ án. Đóng góp về tích hợp quy trình dịch đa định dạng thể hiện ở việc gom nhiều luồng xử lý tài liệu vào một API thống nhất với bộ điều phối trung tâm. Đóng góp về glossary thể hiện ở cơ chế hai lớp thư viện thuật ngữ kết hợp ngữ cảnh dịch theo luồng xử lý, cho phép ba chế độ glossary hoạt động nhất quán từ backend qua toàn bộ khối xử lý tài liệu. Xử lý PDF theo đặc tính tài liệu giải quyết sự không đồng nhất của định dạng PDF bằng cách phân nhánh luồng dựa trên đặc tính nội dung. Cuối cùng, tích hợp triển khai cloud ghép các thành phần lại thành một hệ thống vận hành hoàn chỉnh. Chương~\ref{chapter:conclusion} sẽ tổng kết kết quả đạt được và các hướng phát triển tiếp theo.
 
 
 \end{document}
