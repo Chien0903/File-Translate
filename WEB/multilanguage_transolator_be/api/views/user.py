@@ -40,6 +40,10 @@ class GetUserDetailView(APIView):
     permission_classes = [IsAuthenticated]  # Yêu cầu user phải đăng nhập
 
     def get(self, request, user_id):
+        is_admin = request.user.is_staff or request.user.role == "Admin"
+        if request.user.id != user_id and not is_admin:
+            return Response({"detail": "Permission denied."}, status=403)
+
         try:
             user = CustomUser.objects.get(id=user_id)
         except CustomUser.DoesNotExist:
@@ -60,8 +64,7 @@ class UpdateUserRoleView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, user_id):
-        # Kiểm tra xem người gọi API có phải là Admin không
-        if not request.user.role == "Admin":
+        if not (request.user.is_staff or request.user.role == "Admin"):
             return Response({"detail": "You do not have permission to change roles."}, status=403)
 
         try:

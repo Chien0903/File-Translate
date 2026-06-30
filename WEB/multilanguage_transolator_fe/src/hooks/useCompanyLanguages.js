@@ -71,5 +71,8 @@ export const useCompanyLanguages = () => {
     [languages]
   );
 
-  return { languages, codeByName, nameList, prefixByName, prefixByCode, loading };
+  return useMemo(
+    () => ({ languages, codeByName, nameList, prefixByName, prefixByCode, loading }),
+    [languages, codeByName, nameList, prefixByName, prefixByCode, loading]
+  );
 };

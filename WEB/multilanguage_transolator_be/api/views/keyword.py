@@ -48,11 +48,8 @@ def _check_admin_or_keeper(user):
 
 def _get_active_language_codes():
     """Return list of ISO codes for all active languages, sorted."""
-    try:
-        from ..models.language import Language
-        return list(Language.objects.filter(is_active=True).values_list('code', flat=True))
-    except Exception:
-        return ['en', 'ja', 'vi', 'zh-CN', 'zh-TW', 'th', 'bn', 'hi', 'id', 'or']
+    from ..models.language import Language
+    return list(Language.objects.filter(is_active=True).values_list('code', flat=True))
 
 
 PRIVATE_DUP_PLACEHOLDERS = {"", "-", "—", "–", "null", "none", ".."}
@@ -352,14 +349,21 @@ class ApproveSuggestionView(APIView):
         async_manage_common_glossaries()
 
         User = get_user_model()
-        for user in User.objects.all():
-            Notification.objects.create(
-                user=user,
-                title="New Keyword Added",
-                message="A new keyword has been added to the library.",
-                details=True,
-                keyword_details=[{"translations": suggestion.translations}],
-            )
+        all_user_ids = User.objects.values_list('id', flat=True)
+        keyword_details = [{"translations": suggestion.translations}]
+        Notification.objects.bulk_create(
+            [
+                Notification(
+                    user_id=uid,
+                    title="New Keyword Added",
+                    message="A new keyword has been added to the library.",
+                    details=True,
+                    keyword_details=keyword_details,
+                )
+                for uid in all_user_ids
+            ],
+            batch_size=500,
+        )
         return Response({"message": "Suggestion approved!"})
 
 
@@ -429,12 +433,11 @@ class KeywordSuggestionListCreateView(APIView):
 
             search = request.GET.get('search', '').strip()
             if search:
-                # Filter in Python since JSONField text search varies by DB backend
-                matched_ids = [
-                    obj.id for obj in queryset.only('id', 'translations')
-                    if any(search.lower() in str(v).lower() for v in (obj.translations or {}).values())
-                ]
-                queryset = queryset.filter(id__in=matched_ids)
+                lang_codes = _get_active_language_codes()
+                q = Q()
+                for code in lang_codes:
+                    q |= Q(**{f'translations__{code}__icontains': search})
+                queryset = queryset.filter(q)
 
             total = queryset.count()
             try:
@@ -673,13 +676,16 @@ class SuggestionQueueListView(APIView):
                         base_qs.filter(_user_q(token)).values_list('id', flat=True)
                     )
 
-                content_matched_ids = {
-                    obj.id for obj in base_qs.only('id', 'translations')
-                    if any(
-                        any(t.lower() in str(v).lower() for v in (obj.translations or {}).values())
-                        for t in tokens
-                    )
-                }
+                lang_codes = _get_active_language_codes()
+                content_q = Q()
+                for token in tokens:
+                    token_q = Q()
+                    for code in lang_codes:
+                        token_q |= Q(**{f'translations__{code}__icontains': token})
+                    content_q |= token_q
+                content_matched_ids = set(
+                    base_qs.filter(content_q).values_list('id', flat=True)
+                )
 
                 all_ids = user_matched_ids | content_matched_ids
                 queryset = KeywordSuggestion.objects.filter(
