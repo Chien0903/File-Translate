@@ -730,20 +730,9 @@ Nginx & nginx:latest & Reverse proxy, phân phối HTTPS và định tuyến yê
 
 Nginx đóng vai trò điểm truy cập duy nhất từ bên ngoài, lắng nghe cổng 80 và 443. Mọi yêu cầu HTTP được chuyển hướng tự động sang HTTPS. Các yêu cầu đến đường dẫn \texttt{/api/} được định tuyến đến backend, các yêu cầu còn lại được chuyển đến frontend. Giới hạn tải lên được cấu hình là 100 MB và timeout cho các yêu cầu xử lý tài liệu là 300--600 giây.
 
-\subsection{Quy trình triển khai}
-
-Quy trình triển khai thử nghiệm gồm các bước chính sau:
-
-\begin{itemize}
-    \item Chuẩn bị file \texttt{.env} chứa các biến cấu hình gồm thông tin kết nối cơ sở dữ liệu, khóa API của Google Cloud Translation, Amazon S3, Azure Document Intelligence và ConvertAPI.
-    \item Build image container cho frontend và backend bằng lệnh \texttt{docker compose build}.
-    \item Khởi động các container bằng \texttt{docker compose up -d}; backend tự động chạy migration cơ sở dữ liệu trước khi tiếp nhận yêu cầu.
-    \item Kiểm tra trạng thái các container và xác nhận Nginx phục vụ được giao diện và định tuyến đúng yêu cầu API.
-\end{itemize}
-
 \subsection{Kết quả triển khai}
 
-Sau triển khai, hệ thống hoạt động ổn định với ba container phối hợp qua mạng nội bộ Docker. Frontend được phục vụ qua HTTPS tại tên miền \texttt{aitranslate.torayhk.com}. Backend xử lý yêu cầu API mà không cần mở cổng trực tiếp ra ngoài. Reverse proxy che giấu cấu trúc nội bộ và xử lý SSL termination tập trung. Việc tách riêng ba thành phần giúp quá trình bảo trì và khởi động lại từng thành phần độc lập thuận lợi hơn.
+Sau triển khai, hệ thống khởi chạy thành công với đầy đủ ba thành phần theo mô hình container. Frontend phục vụ giao diện web qua HTTPS. Backend tiếp nhận yêu cầu API qua cổng nội bộ mà không cần mở trực tiếp ra ngoài. Reverse proxy xử lý SSL termination, chuyển hướng HTTP sang HTTPS và định tuyến yêu cầu đến đúng thành phần. Việc tách riêng các thành phần giúp quá trình bảo trì và mở rộng hệ thống thuận lợi hơn.
 
 \section{Tổng kết}
 Chương này đã trình bày thiết kế kiến trúc MVC với frontend tách rời của hệ thống, bao gồm React SPA ở vai trò View, backend Django REST Framework ở vai trò Controller và Django ORM ở vai trò Model. Thiết kế cơ sở dữ liệu xác định mười hai thực thể chính với quan hệ rõ ràng, trong đó người dùng là trung tâm liên kết tới file dịch, thuật ngữ riêng, đề xuất thuật ngữ và cấu hình công ty. Quá trình xây dựng tạo ra ba thành phần có thể triển khai độc lập là giao diện web, backend API và hệ thống container. Quy trình dịch file được kiểm thử qua luồng API thống kê từ khóa, xác thực phân quyền và xử lý tham số đầu vào. Hệ thống được triển khai theo mô hình container Nginx trên tên miền có HTTPS. Các đóng góp kỹ thuật nổi bật sẽ được phân tích chi tiết trong Chương 5.
