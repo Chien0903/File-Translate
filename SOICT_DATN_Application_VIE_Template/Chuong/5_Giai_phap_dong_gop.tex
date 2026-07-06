@@ -1,6 +1,6 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
-Chương~\ref{chapter:Experiment} đã mô tả quá trình thiết kế, xây dựng và triển khai hệ thống. Chương~\ref{chapter:SolutionAndContribution} này tập trung phân tích các đóng góp kỹ thuật nổi bật, là những giải pháp được thiết kế riêng để giải quyết các bài toán đặc thù của hệ thống dịch tài liệu đa ngôn ngữ. Năm đóng góp chính được trình bày gồm: tích hợp quy trình dịch tài liệu đa định dạng, quản lý glossary chung và riêng theo ngữ cảnh dịch, quy trình đề xuất và phê duyệt thuật ngữ, xử lý PDF theo đặc tính tài liệu, và tích hợp triển khai web với lưu trữ cloud.
+Chương này tập trung phân tích các đóng góp kỹ thuật nổi bật, là những giải pháp được thiết kế riêng để giải quyết các bài toán đặc thù của hệ thống dịch tài liệu đa ngôn ngữ. Năm đóng góp chính được trình bày gồm: tích hợp quy trình dịch tài liệu đa định dạng, quản lý glossary chung và riêng theo ngữ cảnh dịch, quy trình đề xuất và phê duyệt thuật ngữ, xử lý PDF theo đặc tính tài liệu, và tích hợp triển khai web với lưu trữ cloud.
 \section{Quy trình dịch tài liệu đa định dạng bảo toàn cấu trúc}
 \label{section:5.1}
 
@@ -35,7 +35,7 @@ Bài toán đặt ra là xây dựng cơ chế thư viện thuật ngữ đáp �
 
 \subsection{Giải pháp}
 
-Hệ thống được tổ chức thành hai lớp thư viện thuật ngữ độc lập về phạm vi sử dụng. Lớp thứ nhất là thư viện cá nhân, nơi mỗi người dùng có thể tự quản lý danh sách thuật ngữ riêng của mình bao gồm các thao tác thêm, sửa, xóa và tra cứu. Lớp thứ hai là thư viện chung, được quản lý tập trung bởi người có thẩm quyền và áp dụng cho toàn bộ người dùng trong hệ thống. Cả hai lớp đều lưu dữ liệu thuật ngữ theo nhiều ngôn ngữ cùng lúc, trong đó mỗi bản ghi gắn với mã ngôn ngữ theo chuẩn IETF và nội dung tương ứng, cho phép tra cứu nhanh theo cặp ngôn ngữ bất kỳ.
+Hệ thống được tổ chức thành hai lớp thư viện thuật ngữ độc lập về phạm vi sử dụng. Lớp thứ nhất là thư viện cá nhân, nơi mỗi người dùng có thể tự quản lý danh sách thuật ngữ riêng của mình bao gồm các thao tác thêm, sửa, xóa và tra cứu. Lớp thứ hai là thư viện chung, được quản lý tập trung bởi người có thẩm quyền và áp dụng cho toàn bộ người dùng trong hệ thống. Cả hai lớp đều lưu dữ liệu thuật ngữ theo nhiều ngôn ngữ cùng lúc, trong đó mỗi bản ghi gắn với mã ngôn ngữ theo chuẩn IETF và nội dung tương ứng, cho phép tra cứu nhanh theo cặp ngôn ngữ bất~kỳ.
 
 Khi thực hiện dịch, hệ thống xác định glossary cần sử dụng dựa trên chế độ thư viện mà người dùng lựa chọn. Nếu chế độ là thư viện chung, hệ thống tra cứu glossary tương ứng với cặp ngôn ngữ đang dịch trên Google Cloud Storage và truyền vào lời gọi Google Cloud Translation API. Nếu chế độ là thư viện riêng, hệ thống sử dụng glossary cá nhân của người dùng đó. Nếu không dùng thư viện, lời gọi API được thực hiện trực tiếp không kèm glossary. Trong trường hợp glossary không tồn tại hoặc xảy ra lỗi khi gọi API có glossary, hệ thống tự động chuyển sang dịch tiêu chuẩn để đảm bảo yêu cầu vẫn được hoàn thành.
 
@@ -64,11 +64,8 @@ Ngoài ra, khi người dùng không chọn ngôn ngữ gốc, Azure Document In
 
 \subsection{Kết quả đạt được}
 
-Giải pháp phân nhánh theo đặc tính nội dung tệp cho phép hệ thống xử lý được cả hai loại PDF phổ biến trong thực tế mà không yêu cầu người dùng phân loại tài liệu thủ công. PDF văn bản được xử lý nhanh hơn qua luồng ConvertAPI và giữ nguyên cấu trúc văn bản sau dịch, trong khi PDF ảnh được xử lý qua pipeline OCR với Azure Document Intelligence và trả về tài liệu dịch có bố cục gần với bản gốc nhờ kỹ thuật đặt hộp văn bản theo tọa độ. Việc kết hợp hai luồng trong cùng một API dịch file giúp người dùng không cần quan tâm đến loại PDF đang xử lý, đồng thời hệ thống vẫn kiểm soát được chiến lược xử lý phù hợp nhất cho từng loại tài liệu.
+Giải pháp phân nhánh theo đặc tính nội dung tệp cho phép hệ thống xử lý được cả hai loại PDF phổ biến trong thực tế mà không yêu cầu người dùng phân loại tài liệu thủ công. PDF văn bản được xử lý nhanh hơn qua luồng ConvertAPI và giữ nguyên cấu trúc văn bản sau dịch, trong khi PDF ảnh được xử lý qua pipeline OCR với Azure Document Intelligence và trả về tài liệu dịch có bố cục gần với bản gốc nhờ kỹ thuật đặt hộp văn bản theo tọa độ. Việc kết hợp hai luồng trong cùng một API dịch file giúp người dùng không cần quan tâm đến loại PDF đang xử lý, đồng thời hệ thống vẫn kiểm soát được chiến lược xử lý phù hợp nhất cho từng loại tài~liệu.
 
-\medskip
-\section{Tổng kết}
-Chương này đã phân tích năm đóng góp kỹ thuật nổi bật của đồ án. Đóng góp về tích hợp quy trình dịch đa định dạng thể hiện ở việc gom nhiều luồng xử lý tài liệu vào một API thống nhất với bộ điều phối trung tâm. Đóng góp về glossary thể hiện ở cơ chế hai lớp thư viện thuật ngữ kết hợp ngữ cảnh dịch theo luồng xử lý, cho phép ba chế độ glossary hoạt động nhất quán từ backend qua toàn bộ khối xử lý tài liệu. Xử lý PDF theo đặc tính tài liệu giải quyết sự không đồng nhất của định dạng PDF bằng cách phân nhánh luồng dựa trên đặc tính nội dung. Cuối cùng, tích hợp triển khai cloud ghép các thành phần lại thành một hệ thống vận hành hoàn chỉnh. Chương~\ref{chapter:conclusion} sẽ tổng kết kết quả đạt được và các hướng phát triển tiếp theo.
 
 
 \end{document}

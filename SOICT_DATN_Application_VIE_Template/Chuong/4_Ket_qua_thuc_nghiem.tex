@@ -1,30 +1,30 @@
 ﻿\documentclass[../DoAn.tex]{subfiles}
 \begin{document}
-Chương~\ref{chapter:Methodology} đã trình bày lý do lựa chọn và vai trò của từng nhóm công nghệ. Chương~\ref{chapter:Experiment} này áp dụng những công nghệ đó vào việc phân tích, thiết kế và xây dựng hệ thống dịch đa ngôn ngữ. Nội dung trình bày theo trình tự từ kiến trúc tổng thể, thiết kế chi tiết giao diện và cơ sở dữ liệu, đến kết quả xây dựng, kiểm thử và triển khai. Hệ thống được thiết kế theo kiến trúc MVC với frontend tách rời, trong đó React SPA đảm nhiệm View, Django REST Framework đảm nhiệm Controller và Django ORM đảm nhiệm Model.
+Chương này áp dụng những công nghệ đó vào việc phân tích, thiết kế và xây dựng hệ thống dịch đa ngôn ngữ. Nội dung trình bày theo trình tự từ kiến trúc tổng thể, thiết kế chi tiết giao diện và cơ sở dữ liệu, đến kết quả xây dựng, kiểm thử và triển khai. Hệ thống được thiết kế theo kiến trúc MVC với frontend tách rời, trong đó React SPA đảm nhiệm View, Django REST Framework đảm nhiệm Controller và Django ORM đảm nhiệm Model.
 
 \section{Thiết kế kiến trúc}
 \subsection{Lựa chọn kiến trúc phần mềm}
 \textbf{a, Lựa chọn kiến trúc: MVC với frontend tách rời}
 
-Trong đồ án này, kiến trúc MVC (Model -- View -- Controller) với frontend tách rời được lựa chọn để xây dựng hệ thống dịch tài liệu đa ngôn ngữ. Đây là biến thể thường gặp trong các ứng dụng web hiện đại, còn có thể gọi là API-driven MVC. Khác với MVC truyền thống, nơi View thường được render ở phía server bằng template, hệ thống này đặt View ở phía client thông qua React SPA. Frontend lấy dữ liệu từ backend bằng REST API và tự render giao diện trên trình duyệt.
+Trong đồ án này, kiến trúc MVC (Model - View - Controller) với frontend tách rời được lựa chọn để xây dựng hệ thống dịch tài liệu đa ngôn ngữ. Đây là biến thể thường gặp trong các ứng dụng web hiện đại, còn có thể gọi là API-driven MVC. Khác với MVC truyền thống, nơi View thường được render ở phía server bằng template, hệ thống này đặt View ở phía client thông qua React SPA. Frontend lấy dữ liệu từ backend bằng REST API và tự render giao diện trên trình duyệt.
 
 Việc tách rời frontend khỏi backend mang lại một số lợi ích phù hợp với yêu cầu của hệ thống. Thứ nhất, frontend và backend có thể được phát triển, kiểm thử và triển khai độc lập, giúp giảm sự phụ thuộc lẫn nhau trong quá trình xây dựng. Thứ hai, backend chỉ cần cung cấp REST API, không ràng buộc với một công nghệ giao diện cụ thể, tạo điều kiện mở rộng hoặc thay thế frontend sau này nếu cần. Thứ ba, mô hình này phù hợp với cách tổ chức triển khai theo container, trong đó frontend và backend được đóng gói riêng và giao tiếp qua mạng nội bộ thông qua Nginx.
 
 Về bản chất, hệ thống vẫn tuân theo tư tưởng chính của MVC: Model quản lý dữ liệu, Controller xử lý yêu cầu và điều phối nghiệp vụ, còn View hiển thị dữ liệu cho người dùng. Cách tổ chức này giúp tách rõ trách nhiệm giữa giao diện người dùng, xử lý nghiệp vụ và quản lý dữ liệu, đồng thời phù hợp với định hướng xây dựng frontend và backend độc lập.
 
-\textbf{b, Model (M) -- Xử lý dữ liệu và nghiệp vụ ứng dụng}
+\textbf{b, Model (M): Xử lý dữ liệu và nghiệp vụ ứng dụng}
 
 Model là nơi quản lý dữ liệu, thực hiện các thao tác đọc/ghi vào cơ sở dữ liệu và đảm bảo các ràng buộc dữ liệu chính của hệ thống. Trong đồ án, Model được hiện thực bằng Django ORM. Các model đóng vai trò biểu diễn dữ liệu nghiệp vụ, giúp backend thao tác với cơ sở dữ liệu thông qua lớp đối tượng Python thay vì viết trực tiếp các câu lệnh SQL trong từng chức năng.
 
 Trong hệ thống dịch tài liệu đa ngôn ngữ, Model đảm nhiệm: (i) định nghĩa các thực thể dữ liệu gồm người dùng, công ty, ngôn ngữ, tệp đã dịch, thuật ngữ cá nhân, đề xuất thuật ngữ, thông báo và refresh token; (ii) lưu trữ trạng thái nghiệp vụ như vai trò người dùng, lịch sử dịch, trạng thái đề xuất thuật ngữ và cấu hình ngôn ngữ theo công ty; (iii) thiết lập quan hệ dữ liệu giữa người dùng, công ty, tệp dịch, thuật ngữ và các bản ghi cấu hình; (iv) hỗ trợ backend truy xuất và cập nhật dữ liệu thông qua Django ORM.
 
-\textbf{c, View (V) -- Giao diện người dùng}
+\textbf{c, View (V): Giao diện người dùng}
 
 View chịu trách nhiệm hiển thị dữ liệu và cung cấp giao diện tương tác giữa người dùng và hệ thống. Trong kiến trúc của đồ án, View không được render bởi Django template ở phía server mà được hiện thực bằng React SPA ở phía client. View nhận dữ liệu từ Controller thông qua REST API, sau đó hiển thị kết quả trên trình duyệt và gửi các thao tác tiếp theo của người dùng về backend.
 
 Trong hệ thống, View đảm nhiệm: (i) xây dựng các màn hình giao diện cho người dùng và quản trị viên; (ii) hiển thị dữ liệu trả về từ backend như kết quả dịch, lịch sử tệp, danh sách thuật ngữ, thông báo và thông tin cấu hình; (iii) thu thập thao tác của người dùng như nhập văn bản, chọn tệp, chọn ngôn ngữ, gửi đề xuất thuật ngữ hoặc thực hiện thao tác quản trị; (iv) giao tiếp với Controller thông qua các service gọi API.
 
-\textbf{d, Controller (C) -- Cầu nối xử lý giữa người dùng và hệ thống}
+\textbf{d, Controller (C): Cầu nối xử lý giữa người dùng và hệ thống}
 
 Controller đóng vai trò trung gian giữa View và Model. Controller tiếp nhận yêu cầu từ frontend, kiểm tra dữ liệu đầu vào, xác thực và phân quyền người dùng, sau đó tương tác với Model hoặc các dịch vụ bên ngoài để xử lý nghiệp vụ. Kết quả xử lý được trả về cho View dưới dạng JSON để frontend hiển thị.
 
@@ -86,11 +86,11 @@ Gói frontend được tổ chức thành năm thành phần. \textit{Routes} x�
 
 Gói backend được tổ chức thành năm thành phần. \textit{Urls} định tuyến các request API đến đúng view xử lý. \textit{Views} đóng vai trò Controller trong kiến trúc MVC, tiếp nhận request, kiểm tra dữ liệu, gọi serializer và service rồi trả response về frontend. \textit{Serializers} chuyển đổi dữ liệu giữa Django model và JSON phục vụ giao tiếp qua REST API. \textit{Services} chứa các xử lý nghiệp vụ và tích hợp dùng chung như upload tệp lên S3, quản lý glossary, gọi ConvertAPI và xử lý cấu hình ngôn ngữ theo công ty. \textit{Models} định nghĩa các bảng dữ liệu bằng Django ORM gồm người dùng, công ty, ngôn ngữ, tệp đã dịch, thuật ngữ riêng, đề xuất thuật ngữ, thông báo và token làm mới.
 
-\textbf{d, Database}
+\textbf{c, Database}
 
 Gói database lưu trữ dữ liệu bền vững của hệ thống. Frontend không truy cập trực tiếp database; mọi thao tác đọc/ghi đều đi qua backend thông qua Django ORM.
 
-\textbf{e, External services}
+\textbf{d, External services}
 
 Gói external\_services đại diện cho các dịch vụ ngoài được hệ thống tích hợp gồm Google Cloud Translation, Google Cloud Storage, Amazon S3, ConvertAPI và Azure Document Intelligence.
 
@@ -100,9 +100,9 @@ Giao diện của hệ thống được thiết kế cho ứng dụng web nội 
 
 \textbf{a, Thông số kỹ thuật}
 
-Bảng~\ref{tab:ui-specification} trình bày các thông số kỹ thuật chính được áp dụng trong thiết kế giao diện.
+Bảng~\ref{tab:ui-specification} trình bày các thông số kỹ thuật chính được áp dụng trong thiết kế giao~diện.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Thông số kỹ thuật thiết kế giao diện}
 \label{tab:ui-specification}
@@ -253,13 +253,13 @@ Hình~\ref{fig:database-diagram} thể hiện biểu đồ thực thể liên k�
 
 Cơ sở dữ liệu gồm mười thực thể chính. \textbf{Customuser} lưu thông tin tài khoản người dùng, vai trò, trạng thái hoạt động và công ty trực thuộc. \textbf{Company} lưu thông tin công ty hoặc đơn vị sử dụng hệ thống. \textbf{Language} lưu danh mục ngôn ngữ được hỗ trợ. \textbf{CompanyLanguage} lưu cấu hình ngôn ngữ được bật cho từng công ty, bao gồm ngôn ngữ mặc định. \textbf{TranslatedFile} lưu lịch sử dịch file của người dùng gồm file gốc, file đã dịch, ngôn ngữ nguồn, ngôn ngữ đích và loại file. \textbf{PrivateKeyword} lưu thư viện thuật ngữ cá nhân của từng người dùng. \textbf{KeywordSuggestion} lưu các đề xuất thuật ngữ gửi lên thư viện chung kèm trạng thái pending, approved hoặc rejected. \textbf{KeywordQueue} lưu dữ liệu hàng đợi xử lý thuật ngữ. \textbf{Notification} lưu thông báo gửi tới người dùng, trong đó có thông báo liên quan đến thuật ngữ. \textbf{RefreshToken} lưu token làm mới đã được băm phục vụ xác thực.
 
-Các mối quan hệ chính trong cơ sở dữ liệu như sau. Một Company có nhiều CustomUser; mỗi người dùng có thể thuộc một công ty. Một Company có nhiều CompanyLanguage, còn một Language có thể xuất hiện trong nhiều cấu hình công ty khác nhau. Một CustomUser liên kết với nhiều TranslatedFile, PrivateKeyword, KeywordSuggestion, Notification và RefreshToken. Một KeywordSuggestion có thể liên kết với nhiều PrivateKeyword thông qua khóa ngoại và có thể được phê duyệt bởi một CustomUser thông qua trường approved\_by.
+Các mối quan hệ chính trong cơ sở dữ liệu như sau. Một Company có nhiều CustomUser; mỗi người dùng có thể thuộc một công ty. Một Company có nhiều CompanyLanguage, còn một Language có thể xuất hiện trong nhiều cấu hình công ty khác nhau. Một CustomUser liên kết với nhiều TranslatedFile, PrivateKeyword, KeywordSuggestion, Notification và RefreshToken. Một KeywordSuggestion có thể liên kết với nhiều PrivateKeyword thông qua khóa ngoại và có thể được phê duyệt bởi một CustomUse.
 
 \textbf{c, Thiết kế chi tiết một số bảng quan trọng}
 
 Dưới đây là thiết kế chi tiết các bảng trong hệ thống. Các kiểu dữ liệu được mô tả theo kiểu trường của Django ORM và tương ứng với kiểu dữ liệu trong hệ quản trị cơ sở dữ liệu khi migrate. Bảng~\ref{table:db-custom-user} đến Bảng~\ref{table:db-company-language} lần lượt mô tả cấu trúc của mười bảng chính trong cơ sở dữ liệu.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Mô tả bảng CustomUser}
 \label{table:db-custom-user}
@@ -284,7 +284,7 @@ company & ForeignKey & Khóa ngoại tới bảng Company, có thể rỗng. \\ 
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Mô tả bảng Company}
 \label{table:db-company}
@@ -303,7 +303,7 @@ updated\_\allowbreak at & DateTimeField & Thời điểm cập nhật công ty g
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Mô tả bảng Language}
 \label{table:db-language}
@@ -323,7 +323,7 @@ sort\_\allowbreak order & PositiveSmallIntegerField & Thứ tự hiển thị c�
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Mô tả bảng TranslatedFile}
 \label{table:db-translated-file}
@@ -346,7 +346,7 @@ updated\_\allowbreak at & DateTimeField & Thời điểm cập nhật bản ghi 
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Mô tả bảng PrivateKeyword}
 \label{table:db-private-keyword}
@@ -366,7 +366,7 @@ updated\_\allowbreak at & DateTimeField & Thời điểm cập nhật thuật ng
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Mô tả bảng KeywordSuggestion}
 \label{table:db-keyword-suggestion}
@@ -388,7 +388,7 @@ updated\_\allowbreak at & DateTimeField & Thời điểm cập nhật đề xu�
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Mô tả bảng KeywordQueue}
 \label{table:db-keyword-queue}
@@ -407,7 +407,7 @@ created\_\allowbreak at & DateTimeField & Thời điểm tạo bản ghi hàng �
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Mô tả bảng Notification}
 \label{table:db-notification}
@@ -428,7 +428,7 @@ created\_\allowbreak at & DateTimeField & Thời điểm tạo thông báo. \\ \
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Mô tả bảng RefreshToken}
 \label{table:db-refresh-token}
@@ -446,7 +446,7 @@ created\_\allowbreak at & DateTimeField & Thời điểm tạo token. \\ \hline
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Mô tả bảng CompanyLanguage}
 \label{table:db-company-language}
@@ -469,7 +469,7 @@ enabled\_\allowbreak at & DateTimeField & Thời điểm ngôn ngữ được b�
 \subsection{Thư viện và công cụ sử dụng}
 Bảng~\ref{table:tools-and-libraries} tóm tắt các ngôn ngữ lập trình, framework, API, thư viện và công cụ chính được sử dụng trong quá trình xây dựng hệ thống. Các phiên bản được tổng hợp từ Dockerfile, requirements.txt và package.json của dự án.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Thư viện và công cụ sử dụng}
 \label{table:tools-and-libraries}
@@ -505,9 +505,7 @@ Hệ thống hoàn thành với bốn thành phần có thể triển khai độ
 
 Về ý nghĩa thực tiễn, hệ thống hỗ trợ người dùng dịch nhanh văn bản và tài liệu với nhiều định dạng phổ biến, cung cấp nền tảng quản lý thuật ngữ nhằm tăng tính nhất quán của bản dịch, và tách rõ các tầng giao diện, backend, cơ sở dữ liệu cùng dịch vụ ngoài để thuận lợi cho bảo trì và mở rộng.
 
-Bảng~\ref{table:application-statistics} thống kê các thông tin về ứng dụng:
-
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Thống kê thông tin ứng dụng}
 \label{table:application-statistics}
@@ -630,7 +628,7 @@ Kỹ thuật phân tích giá trị biên cũng được sử dụng đối vớ
 
 Bảng~\ref{table:test-main-cases} trình bày các trường hợp kiểm thử tiêu biểu cho ba chức năng quan trọng nhất. Mỗi trường hợp được thiết kế dựa trên yêu cầu đầu vào, điều kiện thực hiện và kết quả mong đợi của hệ thống.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Các trường hợp kiểm thử tiêu biểu cho ba chức năng chính}
 \label{table:test-main-cases}
@@ -659,7 +657,7 @@ TC-12 & Thống kê với khoảng ngày không hợp lệ & Ngày bắt đầu 
 
 Hệ thống đã được chạy thực nghiệm theo các kịch bản kiểm thử thiết kế cho ba nhóm chức năng trọng tâm. Quá trình kiểm thử tập trung vào việc kiểm tra khả năng xử lý đúng của từng luồng nghiệp vụ, phản hồi của hệ thống trong các trường hợp dữ liệu hợp lệ và không hợp lệ, cũng như khả năng duy trì tính nhất quán khi người dùng thao tác qua nhiều bước liên tiếp. Kết quả tổng hợp chung được trình bày trong Bảng~\ref{table:test-main-summary}.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Thống kê kết quả kiểm thử các chức năng chính}
 \label{table:test-main-summary}
@@ -683,11 +681,17 @@ Trong quá trình kiểm thử tích hợp, các trường hợp phụ thuộc v
 
 Hệ thống được triển khai thử nghiệm trên máy chủ ảo theo mô hình container hóa sử dụng Docker Compose. Cách triển khai này phù hợp với kiến trúc đã thiết kế vì hệ thống gồm nhiều thành phần độc lập là frontend, backend và reverse proxy, có thể đóng gói riêng và phối hợp thông qua mạng nội bộ Docker.
 
+\subsection{Mô hình triển khai}
+
+Hệ thống được đóng gói bằng Docker Compose, gồm ba thành phần chính là frontend, backend và Nginx reverse proxy. Frontend chịu trách nhiệm cung cấp giao diện người dùng sau khi được build thành các tài nguyên tĩnh. Backend chịu trách nhiệm xử lý nghiệp vụ, xác thực, phân quyền, dịch tài liệu, quản lý thuật ngữ và ghi nhận lịch sử xử lý. Nginx reverse proxy là điểm truy cập bên ngoài, thực hiện điều hướng yêu cầu đến đúng thành phần xử lý phía sau.
+
+Mô hình triển khai gồm ba container chạy trong cùng mạng bridge nội bộ của Docker. \textbf{Frontend} được phát triển bằng React kết hợp Vite và được phục vụ thông qua Nginx trong container riêng sau khi build. \textbf{Backend} được xây dựng bằng Django và Django REST Framework, chạy trên cổng nội bộ 8000 và không được public trực tiếp ra bên ngoài. \textbf{Reverse proxy} sử dụng Nginx để tiếp nhận yêu cầu HTTP và HTTPS, chuyển hướng HTTP sang HTTPS và định tuyến yêu cầu đến đúng thành phần. Các container trao đổi dữ liệu qua mạng bridge nội bộ mà không cần mở toàn bộ cổng dịch vụ ra bên ngoài. Ngoài ra, hệ thống tích hợp các dịch vụ bên ngoài hỗ trợ dịch máy, OCR, lưu trữ file và chuyển đổi định dạng; các dịch vụ này cần được cấu hình đầy đủ trước khi triển khai.
+
 \subsection{Cấu hình máy chủ triển khai}
 
 Cấu hình máy chủ sử dụng cho môi trường triển khai thử nghiệm được trình bày trong Bảng~\ref{table:server-config}.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Cấu hình máy chủ triển khai thử nghiệm}
 \label{table:server-config}
@@ -708,33 +712,9 @@ Tên miền & aitranslate.torayhk.com \\ \hline
 \end{tabular}
 \end{table}
 
-\subsection{Mô hình triển khai}
-
-Các dịch vụ chính được khai báo trong \texttt{docker-compose.yml} và chạy trong cùng mạng bridge nội bộ \texttt{app\_net}. Bảng~\ref{table:deployment-components} mô tả vai trò của từng thành phần.
-
-\begin{table}[H]
-\centering
-\caption{Các thành phần triển khai chính của hệ thống}
-\label{table:deployment-components}
-\small
-\setlength{\tabcolsep}{4pt}
-\renewcommand{\arraystretch}{1.16}
-\begin{tabular}{|p{0.22\linewidth}|p{0.28\linewidth}|p{0.38\linewidth}|}
-\hline
-\textbf{Thành phần} & \textbf{Container/Image} & \textbf{Vai trò trong hệ thống} \\ \hline
-Frontend & Node.js 22.14 build $\rightarrow$ Nginx 1.27-alpine & Phục vụ giao diện web React SPA cho người dùng, expose cổng nội bộ 80. \\ \hline
-Backend & Python 3.12.9-slim, Django REST Framework & Xử lý nghiệp vụ, xác thực, dịch tài liệu, quản lý thuật ngữ; expose cổng nội bộ 8000. \\ \hline
-Nginx & nginx:latest & Reverse proxy, phân phối HTTPS và định tuyến yêu cầu đến frontend hoặc backend. \\ \hline
-\end{tabular}
-\end{table}
-
-Nginx đóng vai trò điểm truy cập duy nhất từ bên ngoài, lắng nghe cổng 80 và 443. Mọi yêu cầu HTTP được chuyển hướng tự động sang HTTPS. Các yêu cầu đến đường dẫn \texttt{/api/} được định tuyến đến backend, các yêu cầu còn lại được chuyển đến frontend. Giới hạn tải lên được cấu hình là 100 MB và timeout cho các yêu cầu xử lý tài liệu là 300--600 giây.
-
 \subsection{Kết quả triển khai}
 
 Sau triển khai, hệ thống khởi chạy thành công với đầy đủ ba thành phần theo mô hình container. Frontend phục vụ giao diện web qua HTTPS. Backend tiếp nhận yêu cầu API qua cổng nội bộ mà không cần mở trực tiếp ra ngoài. Reverse proxy xử lý SSL termination, chuyển hướng HTTP sang HTTPS và định tuyến yêu cầu đến đúng thành phần. Việc tách riêng các thành phần giúp quá trình bảo trì và mở rộng hệ thống thuận lợi hơn.
 
-\section{Tổng kết}
-Chương này đã trình bày thiết kế kiến trúc MVC với frontend tách rời của hệ thống, bao gồm React SPA ở vai trò View, backend Django REST Framework ở vai trò Controller và Django ORM ở vai trò Model. Thiết kế cơ sở dữ liệu xác định mười hai thực thể chính với quan hệ rõ ràng, trong đó người dùng là trung tâm liên kết tới file dịch, thuật ngữ riêng, đề xuất thuật ngữ và cấu hình công ty. Quá trình xây dựng tạo ra ba thành phần có thể triển khai độc lập là giao diện web, backend API và hệ thống container. Quy trình dịch file được kiểm thử qua luồng API thống kê từ khóa, xác thực phân quyền và xử lý tham số đầu vào. Hệ thống được triển khai theo mô hình container Nginx trên tên miền có HTTPS. Các đóng góp kỹ thuật nổi bật sẽ được phân tích chi tiết trong Chương 5.
 
 \end{document}

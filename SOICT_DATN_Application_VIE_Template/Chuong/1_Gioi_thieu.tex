@@ -1,12 +1,13 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
+
+Chương này trình bày tổng quan về đề tài, bao gồm bối cảnh và vấn đề thực tiễn dẫn đến sự cần thiết của hệ thống, mục tiêu và phạm vi của đồ án, định hướng giải pháp được lựa chọn, cũng như bố cục của toàn bộ báo cáo.
+
 \section{Đặt vấn đề}
 \label{section:1.1}
 Trong bối cảnh hội nhập kinh tế quốc tế, các doanh nghiệp ngày càng thường xuyên làm việc với đối tác, khách hàng và chi nhánh ở nhiều quốc gia khác nhau. Điều này làm cho nhu cầu xử lý, trao đổi và dịch tài liệu bằng nhiều ngôn ngữ trở nên phổ biến hơn. Các tài liệu trong doanh nghiệp không chỉ là văn bản thuần mà còn tồn tại dưới nhiều định dạng khác nhau như DOCX, XLSX, PPTX, PDF hoặc hình ảnh.
 
-Vấn đề thứ nhất là sự thiếu nhất quán trong thuật ngữ chuyên ngành. Khi sử dụng các công cụ dịch rời rạc hoặc dịch thủ công, doanh nghiệp khó kiểm soát việc cùng một thuật ngữ được dịch nhất quán giữa các tài liệu, phòng ban hay dự án khác nhau. Điều này ảnh hưởng trực tiếp đến tính chính xác và tính chuyên nghiệp của nội dung tài liệu.
-
-Vấn đề thứ hai là việc mất cấu trúc và định dạng tài liệu sau khi dịch. Với các tài liệu có bảng biểu, hình ảnh, bố cục phức tạp hoặc nhiều thành phần trình bày, phần lớn công cụ dịch hiện tại chỉ trả về văn bản thuần, buộc người dùng phải tốn thêm thời gian chỉnh sửa lại định dạng thủ công sau khi dịch.
+Vấn đề thứ nhất là sự thiếu nhất quán trong thuật ngữ chuyên ngành: khi sử dụng các công cụ dịch rời rạc hoặc dịch thủ công, doanh nghiệp khó kiểm soát việc cùng một thuật ngữ được dịch nhất quán giữa các tài liệu, phòng ban hay dự án khác nhau, ảnh hưởng trực tiếp đến tính chính xác và chuyên nghiệp của nội dung. Vấn đề thứ hai là việc mất cấu trúc và định dạng tài liệu sau khi dịch: với các tài liệu có bảng biểu, hình ảnh, bố cục phức tạp hoặc nhiều thành phần trình bày, phần lớn công cụ dịch hiện tại chỉ trả về văn bản thuần, buộc người dùng phải tốn thêm thời gian chỉnh sửa lại định dạng thủ công sau khi dịch.
 
 Từ những vấn đề trên, bài toán đặt ra là cần xây dựng một hệ thống hỗ trợ dịch tài liệu đa ngôn ngữ tích hợp, vừa đảm bảo tính nhất quán thuật ngữ, vừa giữ nguyên cấu trúc và định dạng tài liệu gốc, vừa tập trung toàn bộ quy trình trong một nền tảng duy nhất. Nếu giải quyết được bài toán này, doanh nghiệp có thể nâng cao hiệu quả xử lý tài liệu, giảm thao tác thủ công và cải thiện chất lượng trao đổi thông tin đa ngôn ngữ. Ngoài lĩnh vực doanh nghiệp, bài toán này cũng có thể được áp dụng trong giáo dục, thương mại, pháp lý và nhiều lĩnh vực khác có nhu cầu xử lý tài liệu đa ngôn ngữ.
 
@@ -29,9 +30,22 @@ Mục tiêu của đồ án là tích hợp quá trình dịch nội dung, xử 
 
 Hệ thống cho phép người dùng dịch văn bản hoặc tải lên các tệp tài liệu để dịch sang nhiều ngôn ngữ khác nhau. Các định dạng được hỗ trợ bao gồm DOCX, XLSX, PPTX, PDF, ảnh và nội dung cần xử lý OCR. Bên cạnh việc dịch nội dung, hệ thống còn hướng tới việc giữ lại cấu trúc và định dạng của tài liệu gốc sau khi dịch, đồng thời cho phép người dùng lựa chọn sử dụng thư viện thuật ngữ chung, thư viện thuật ngữ riêng hoặc không dùng thư viện thuật ngữ tùy theo nhu cầu. Ngoài các chức năng dịch, hệ thống còn hỗ trợ quản lý lịch sử tệp đã dịch, quản lý người dùng, quản lý ngôn ngữ theo từng công ty và quản lý thư viện thuật ngữ. 
 
-Đóng góp chính của đồ án là xây dựng được một hệ thống web tích hợp quá trình dịch tài liệu đa định dạng, xử lý định dạng và quản lý thuật ngữ trong cùng một nền tảng. Kết quả đạt được là hệ thống hoàn thiện các chức năng cốt lõi trong phạm vi thử nghiệm, có khả năng hỗ trợ người dùng dịch tài liệu nhanh hơn, giảm thao tác chỉnh sửa thủ công và cải thiện tính nhất quán của thuật ngữ chuyên ngành.
-\section{Bố cục đồ án}
+\section{Đóng góp của đồ án}
 \label{section:1.4}
+
+Đóng góp chính của đồ án là xây dựng được một hệ thống web tích hợp quá trình dịch tài liệu đa định dạng, xử lý định dạng và quản lý thuật ngữ trong cùng một nền tảng. Cụ thể, đồ án đóng góp các điểm sau:
+
+\begin{itemize}
+    \item Xây dựng quy trình dịch thống nhất hỗ trợ nhiều định dạng tài liệu văn phòng phổ biến gồm DOCX, XLSX, PPTX, PDF, ảnh và OCR trong một API duy nhất.
+    \item Giữ nguyên cấu trúc và định dạng tài liệu gốc sau khi dịch, giảm thiểu thao tác chỉnh sửa thủ công của người dùng.
+    \item Xây dựng cơ chế thư viện thuật ngữ hai cấp (chung và riêng) tích hợp trực tiếp vào quá trình dịch, cải thiện tính nhất quán của thuật ngữ chuyên ngành.
+    \item Xây dựng hệ thống quản lý người dùng, phân quyền theo vai trò và quản lý lịch sử tệp đã dịch phục vụ môi trường doanh nghiệp.
+\end{itemize}
+
+Kết quả đạt được là hệ thống hoàn thiện các chức năng cốt lõi trong phạm vi thử nghiệm, có khả năng hỗ trợ doanh nghiệp dịch tài liệu nhanh hơn và quản lý thuật ngữ nhất quán hơn so với việc sử dụng các công cụ dịch rời rạc.
+
+\section{Bố cục đồ án}
+\label{section:1.5}
 
 Phần còn lại của báo cáo đồ án tốt nghiệp được tổ chức như sau.
 

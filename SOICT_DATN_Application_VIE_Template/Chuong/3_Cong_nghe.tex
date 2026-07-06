@@ -1,6 +1,6 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
-Chương~\ref{chapter:Related_works} đã phân tích yêu cầu và xác định phạm vi hệ thống cần xây dựng. Chương~\ref{chapter:Methodology} này trình bày các công nghệ, nền tảng và công cụ được lựa chọn để triển khai hệ thống, bao gồm: (i) React.js và Vite cho giao diện người dùng trong Mục~\ref{section:3.1}, (ii) Django và Django REST Framework cho backend trong Mục~\ref{section:3.2}, (iii) JWT và SimpleJWT cho xác thực trong Mục~\ref{section:3.3}, (iv) Django ORM cùng cơ sở dữ liệu trong Mục~\ref{section:3.4}, (v) Google Cloud Translation và Google Cloud Storage trong Mục~\ref{section:3.5}, (vi) các thư viện xử lý tài liệu và OCR trong Mục~\ref{section:3.6}, (vii) ConvertAPI trong Mục~\ref{section:3.7}, (viii) Amazon S3 trong Mục~\ref{section:3.8}, và (ix) Docker cùng Nginx trong Mục~\ref{section:3.9}.
+Chương này trình bày các công nghệ, nền tảng và công cụ được lựa chọn để xây dựng hệ thống dịch tài liệu đa ngôn ngữ. Về phía giao diện, hệ thống sử dụng React.js và Vite; phía backend sử dụng Django cùng Django REST Framework với xác thực dựa trên JWT và SimpleJWT, kết hợp Django ORM và PostgreSQL để quản lý dữ liệu. Chức năng dịch máy được thực hiện qua Google Cloud Translation, tích hợp glossary lưu trên Google Cloud Storage. Xử lý tài liệu đa định dạng dựa trên tập thư viện Python chuyên biệt theo từng định dạng và Azure Document Intelligence cho OCR. Các dịch vụ hỗ trợ bao gồm ConvertAPI cho chuyển đổi định dạng PDF và Amazon S3 cho lưu trữ tệp. Toàn bộ hệ thống được đóng gói và triển khai bằng Docker và Nginx.
 
 \section{React.js và Vite}
 \label{section:3.1}
@@ -40,6 +40,7 @@ Trong đồ án, Google Cloud Translation đóng vai trò nhân tố dịch máy
 \section{Thư viện xử lý tài liệu và OCR}
 \label{section:3.6}
 
+\looseness=-1
 Để xử lý các định dạng tài liệu phổ biến trong môi trường doanh nghiệp, hệ thống sử dụng một tập thư viện Python chuyên biệt theo từng định dạng: python-docx \cite{python-docx} cho DOCX, openpyxl \cite{openpyxl} cho XLSX, python-pptx \cite{python-pptx} cho PPTX, pypdf và PyMuPDF \cite{pymupdf} cho PDF, Pillow cho xử lý ảnh. Đối với tài liệu PDF dạng ảnh quét không có văn bản trích xuất được, hệ thống sử dụng Azure Document Intelligence \cite{azure-document-intelligence}, dịch vụ OCR dựa trên mô hình học sâu có khả năng nhận dạng văn bản, phát hiện bố cục và xác định tọa độ từng khối chữ trên trang. Cách tiếp cận theo từng định dạng riêng biệt phù hợp hơn với yêu cầu giữ lại cấu trúc tài liệu, vì mỗi định dạng có cách tổ chức XML và cấu trúc nội dung hoàn toàn khác nhau.
 
 Trong đồ án, các thư viện này được sử dụng để đọc, trích xuất nội dung, xử lý dịch và ghi lại kết quả vào đúng cấu trúc tài liệu gốc. Azure Document Intelligence được sử dụng trong luồng xử lý PDF ảnh để nhận dạng văn bản và xác định tọa độ nhằm dựng lại tài liệu kết quả.
@@ -65,8 +66,5 @@ Docker là nền tảng đóng gói ứng dụng thành container, đảm bảo 
 
 Trong đồ án, Docker Compose được sử dụng để đóng gói và khởi động đồng thời các service frontend, backend và cơ sở dữ liệu. Nginx đóng vai trò reverse proxy duy nhất, định tuyến request đến đúng service và hỗ trợ cấu hình HTTPS cho môi trường triển khai thử nghiệm.
 
-\section{Tổng kết}
-
-Chương này đã trình bày các công nghệ chính được lựa chọn để xây dựng hệ thống dịch tài liệu đa ngôn ngữ. React.js và Vite đảm nhiệm giao diện người dùng; Django và Django REST Framework xây dựng backend API; JWT và SimpleJWT xử lý xác thực; Django ORM cùng SQLite hoặc PostgreSQL quản lý dữ liệu. Google Cloud Translation và Google Cloud Storage phục vụ dịch máy và quản lý glossary; các thư viện xử lý tài liệu cùng Azure Document Intelligence xử lý từng định dạng tệp; ConvertAPI chuyển đổi PDF; Amazon S3 lưu trữ tệp kết quả. Docker và Nginx đóng gói và triển khai hệ thống. Các công nghệ này tạo nền tảng kỹ thuật cho Chương~\ref{chapter:Experiment}, nơi trình bày thiết kế và triển khai chi tiết của hệ thống.
 
 \end{document}
