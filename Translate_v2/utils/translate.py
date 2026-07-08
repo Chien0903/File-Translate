@@ -92,9 +92,9 @@ def process_csv(
     df.to_csv(output_path, index=False, encoding="utf-8-sig")
 
 if __name__ == "__main__":
-    input_csv = "/Users/loclinh/Documents/TORAY/OCR/newapp1/output/paragraph1.csv"
-    output_csv = "/Users/loclinh/Documents/TORAY/OCR/newapp1/output/paragraph1_translated.csv"
-    glossary_id = "toray_translation_glossary_2"
+    input_csv = "/Users/loclinh/Documents/PROJECT/OCR/newapp1/output/paragraph1.csv"
+    output_csv = "/Users/loclinh/Documents/PROJECT/OCR/newapp1/output/paragraph1_translated.csv"
+    glossary_id = "company_translation_glossary_2"
     source_lang_code = "ja"  # Ví dụ: tiếng Nhật
     target_lang_code = "vi"  # Ví dụ: tiếng Việt
 

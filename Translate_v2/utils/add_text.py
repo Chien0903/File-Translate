@@ -921,15 +921,15 @@ def add_textboxes_to_pdf_from_csv(base_pdf_path, output_pdf_path, csv_file_path,
 
 def main():
 
-    pdf_output = "/Users/loclinh/Documents/TORAY/OCR/newapp1/output_final_vi_1.pdf"
+    pdf_output = "/Users/loclinh/Documents/PROJECT/OCR/newapp1/output_final_vi_1.pdf"
     # xóa chữ
-    input_pdf = "/Users/loclinh/Documents/TORAY/OCR/自転車の違反にも青切符2026年4月1日適用.pdf"
-    output_folder = "/Users/loclinh/Documents/TORAY/OCR/newapp1/output_images"
+    input_pdf = "/Users/loclinh/Documents/PROJECT/OCR/自転車の違反にも青切符2026年4月1日適用.pdf"
+    output_folder = "/Users/loclinh/Documents/PROJECT/OCR/newapp1/output_images"
     image_folder = output_folder
-    json_path = "/Users/loclinh/Documents/TORAY/OCR/newapp1/input/自転車の違反にも青切符2026年4月1日適用.pdf.json"
-    df_paragraph_path = "/Users/loclinh/Documents/TORAY/OCR/newapp1/output/paragraph1.csv"
-    df_paragraph_translate_path="/Users/loclinh/Documents/TORAY/OCR/newapp1/output/paragraph1_translated.csv"
-    df_line_style_path = "/Users/loclinh/Documents/TORAY/OCR/newapp1/output/line_style1.csv"
+    json_path = "/Users/loclinh/Documents/PROJECT/OCR/newapp1/input/自転車の違反にも青切符2026年4月1日適用.pdf.json"
+    df_paragraph_path = "/Users/loclinh/Documents/PROJECT/OCR/newapp1/output/paragraph1.csv"
+    df_paragraph_translate_path="/Users/loclinh/Documents/PROJECT/OCR/newapp1/output/paragraph1_translated.csv"
+    df_line_style_path = "/Users/loclinh/Documents/PROJECT/OCR/newapp1/output/line_style1.csv"
 
     # #get dataframe
     # with open(json_path, 'r', encoding='utf-8') as f:

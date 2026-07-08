@@ -597,7 +597,7 @@ class GCSUploadStatusView(APIView):
             approved = KeywordSuggestion.objects.filter(status='approved').count()
             pending = KeywordSuggestion.objects.filter(status='pending').count()
 
-            bucket_name = os.getenv("BUCKET_NAME", "toray-buckets")
+            bucket_name = os.getenv("BUCKET_NAME", "company-buckets")
             gcs_info = None
             try:
                 sc = storage.Client()

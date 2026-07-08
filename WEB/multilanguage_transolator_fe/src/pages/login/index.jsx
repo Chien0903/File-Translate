@@ -42,10 +42,10 @@ const LoginPage = () => {
           <span className="text-white font-bold text-3xl">T</span>
         </div>
         <h1 className="text-3xl font-bold text-center mb-3">Multi-Language Translator</h1>
-        <p className="text-indigo-200 text-center text-sm mb-8">Breaking language barriers at Toray.</p>
+        <p className="text-indigo-200 text-center text-sm mb-8">Breaking language barriers across your company.</p>
         <div className="w-12 border-t border-white/30" />
         <p className="text-indigo-300 text-xs tracking-widest uppercase mt-6">
-          Toray Industries · Internal Tool
+          Internal Tool
         </p>
       </div>
 
@@ -56,7 +56,7 @@ const LoginPage = () => {
           <div className="w-12 h-12 bg-indigo-700 rounded-xl flex items-center justify-center mx-auto mb-3">
             <span className="text-white font-bold text-xl">T</span>
           </div>
-          <p className="text-sm text-gray-400">Toray Industries · Internal Tool</p>
+          <p className="text-sm text-gray-400">Internal Tool</p>
         </div>
 
         <div className="w-full max-w-sm">
@@ -74,7 +74,7 @@ const LoginPage = () => {
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setError(""); }}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  placeholder="you@toray.co.jp"
+                  placeholder="you@company.com"
                   autoComplete="email"
                 />
               </div>
@@ -117,7 +117,7 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <p className="text-center text-xs text-gray-300 mt-8">© Toray Industries, Inc.</p>
+          <p className="text-center text-xs text-gray-300 mt-8">© Multilanguage Translator</p>
         </div>
       </div>
     </div>

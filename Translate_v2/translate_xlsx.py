@@ -196,6 +196,6 @@ def translate_xlsx(xlsx_file, target_lang, source_lang=None):
 
 # Ví dụ sử dụng:
 if __name__ == "__main__":
-    xlsx_files = [r"D:\Projects\Toray_Multilanguage_transolator\Translate_v2\files\0226BULK 294F083A Ultra stretch Airism dress(SS)-ASEAN LENGTH.xlsx"]
+    xlsx_files = [r"D:\Projects\multilanguage_transolator\Translate_v2\files\0226BULK 294F083A Ultra stretch Airism dress(SS)-ASEAN LENGTH.xlsx"]
     for xlsx_file in xlsx_files:
         translate_xlsx(xlsx_file, target_lang="ja")

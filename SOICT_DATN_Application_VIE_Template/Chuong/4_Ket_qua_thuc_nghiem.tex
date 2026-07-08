@@ -296,7 +296,7 @@ company & ForeignKey & Khóa ngoại tới bảng Company, có thể rỗng. \\ 
 \textbf{Thuộc tính} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
 id & AutoField/BigAutoField & Khóa chính của công ty. \\ \hline
 name & CharField(255), unique & Tên công ty, không được trùng lặp. \\ \hline
-slug & SlugField(100), unique & Định danh ngắn của công ty, ví dụ toray-vn hoặc toray-jp. \\ \hline
+slug & SlugField(100), unique & Định danh ngắn của công ty, ví dụ company-vn hoặc company-jp. \\ \hline
 is\_\allowbreak active & BooleanField & Trạng thái hoạt động của công ty. \\ \hline
 created\_\allowbreak at & DateTimeField & Thời điểm tạo công ty. \\ \hline
 updated\_\allowbreak at & DateTimeField & Thời điểm cập nhật công ty gần nhất. \\ \hline
@@ -708,7 +708,7 @@ Hệ điều hành & Ubuntu Server 22.04 LTS \\ \hline
 Container runtime & Docker \\ \hline
 Công cụ điều phối & Docker Compose \\ \hline
 Reverse proxy/HTTPS & Nginx và Let's Encrypt (Certbot) \\ \hline
-Tên miền & aitranslate.torayhk.com \\ \hline
+Tên miền & aitranslate.example.com \\ \hline
 \end{tabular}
 \end{table}
 

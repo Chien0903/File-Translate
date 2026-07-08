@@ -308,11 +308,11 @@ def get_element_dataframe(json_data):
 
 if __name__ == "__main__":
     import json
-    json_path = "/Users/loclinh/Documents/TORAY/OCR/newapp1/input/自転車の違反にも青切符2026年4月1日適用.pdf.json"
+    json_path = "/Users/loclinh/Documents/PROJECT/OCR/newapp1/input/自転車の違反にも青切符2026年4月1日適用.pdf.json"
     with open(json_path, 'r', encoding='utf-8') as f:
         sample_json = json.load(f)
     df_style, df_paragraph, df_line_style = get_element_dataframe(sample_json)
     # print(df_table)
     print(df_paragraph["role"].unique())
-    df_paragraph.to_csv("/Users/loclinh/Documents/TORAY/OCR/newapp1/output/paragraph1.csv", index=False)
-    df_line_style.to_csv("/Users/loclinh/Documents/TORAY/OCR/newapp1/output/line_style1.csv", index=False)
+    df_paragraph.to_csv("/Users/loclinh/Documents/PROJECT/OCR/newapp1/output/paragraph1.csv", index=False)
+    df_line_style.to_csv("/Users/loclinh/Documents/PROJECT/OCR/newapp1/output/line_style1.csv", index=False)

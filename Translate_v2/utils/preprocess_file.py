@@ -463,9 +463,9 @@ def process_pdf_fill_color(input_pdf, output_folder, polygons_dict, pages_width,
 
 
 if __name__ == "__main__":
-    input_pdf = "/Users/loclinh/Documents/TORAY/OCR/自転車の違反にも青切符2026年4月1日適用.pdf"
-    output_folder = "/Users/loclinh/Documents/TORAY/OCR/newapp1/output_images"
-    json_file_path = "/Users/loclinh/Documents/TORAY/OCR/newapp/input/自転車の違反にも青切符2026年4月1日適用.pdf.json"
+    input_pdf = "/Users/loclinh/Documents/PROJECT/OCR/自転車の違反にも青切符2026年4月1日適用.pdf"
+    output_folder = "/Users/loclinh/Documents/PROJECT/OCR/newapp1/output_images"
+    json_file_path = "/Users/loclinh/Documents/PROJECT/OCR/newapp/input/自転車の違反にも青切符2026年4月1日適用.pdf.json"
     
     try:
         polygons_dict, pages_width, pages_height = get_polygons_from_json(json_file_path, type='line')

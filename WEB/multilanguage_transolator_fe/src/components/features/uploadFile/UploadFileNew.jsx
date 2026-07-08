@@ -13,7 +13,6 @@ import {
   MdCheck,
 } from "react-icons/md";
 
-// Use CDN URL matching react-pdf's internal pdfjs-dist version (avoids Vite resolution mismatch)
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 

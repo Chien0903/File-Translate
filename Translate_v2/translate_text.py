@@ -227,14 +227,14 @@ def translate_file(file_path, source_lang, target_lang, translate_func, file_typ
             lang_a, lang_b = sorted([source_lang, target_lang])
             safe_a = lang_a.replace("-", "_")
             safe_b = lang_b.replace("-", "_")
-            glossary_id = f"toray_glossary_{safe_a}_{safe_b}_user_{user_id}"
+            glossary_id = f"company_glossary_{safe_a}_{safe_b}_user_{user_id}"
             print(f"[TRANSLATE FILE] => PRIVATE glossary: {glossary_id}", flush=True)
         elif library_mode == "common" and source_lang in LANGUAGES:
             pair_code = f"{source_lang}-{target_lang}"
             if pair_code not in language_pair:
                 pair_code = f"{target_lang}-{source_lang}"
             if pair_code in language_pair:
-                glossary_id = f"toray_translation_glossary_{language_pair[pair_code]}"
+                glossary_id = f"company_translation_glossary_{language_pair[pair_code]}"
                 print(f"[TRANSLATE FILE] => COMMON glossary: {glossary_id}", flush=True)
             else:
                 print(f"[TRANSLATE FILE] => Không tìm thấy cặp ngôn ngữ {source_lang}-{target_lang}, dịch không có glossary", flush=True)

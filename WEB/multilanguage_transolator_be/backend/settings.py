@@ -45,7 +45,7 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL', 'False').lower() in ('true', '1', 'yes')
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    os.getenv("PRODUCTION_URL", "https://aitranslate.torayhk.com"),
+    os.getenv("PRODUCTION_URL", "https://aitranslate.example.com"),
     os.getenv("FRONTEND_URL", "https://fhk-dev.quant-nexus.com"),
     "http://localhost:5173",
     "http://127.0.0.1:5173",

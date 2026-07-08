@@ -120,7 +120,7 @@ def manage_glossary(
     """
     project_id = os.getenv("PROJECT_ID")
     if input_uri is None:
-        input_uri = os.getenv("INPUT_URI", "gs://toray-buckets/glossary_term.csv")
+        input_uri = os.getenv("INPUT_URI", "gs://company-buckets/glossary_term.csv")
 
     client = translate.TranslationServiceClient()
     parent = f"projects/{project_id}/locations/{location}"
@@ -165,10 +165,10 @@ def manage_glossary(
 def make_glossary_id(lang1: str, lang2: str) -> str:
     """
     Tạo glossary ID từ 2 language codes — luôn sort để đảm bảo commutative.
-    Ví dụ: make_glossary_id('vi', 'en') == make_glossary_id('en', 'vi') == 'toray_glossary_en_vi'
+    Ví dụ: make_glossary_id('vi', 'en') == make_glossary_id('en', 'vi') == 'company_glossary_en_vi'
     """
     pair = sorted([lang1, lang2])
-    return "toray_glossary_" + "_".join(c.replace("-", "_") for c in pair)
+    return "company_glossary_" + "_".join(c.replace("-", "_") for c in pair)
 
 
 def generate_pairs_from_db():
@@ -193,7 +193,7 @@ def generate_pairs_from_db():
 
 
 # DEPRECATED: dùng make_glossary_id() + generate_pairs_from_db() thay thế.
-# Giữ lại để tương thích với các glossary cũ đã tạo trên GCS (toray_translation_glossary_1..44).
+# Giữ lại để tương thích với các glossary cũ đã tạo trên GCS (company_translation_glossary_1..44).
 LANGUAGE_PAIRS = {
     "vi-en": 1,
     "vi-ja": 2,
@@ -465,7 +465,7 @@ def upload_csv_to_gcs(source_file_path: str, custom_blob_name: str = None):
 
         # Fallback defaults
         if bucket_name is None:
-            bucket_name = os.getenv("BUCKET_NAME", "toray-buckets")
+            bucket_name = os.getenv("BUCKET_NAME", "company-buckets")
         
         if custom_blob_name is not None:
             destination_blob_name = custom_blob_name
@@ -512,7 +512,7 @@ def create_user_glossary_csv_file(user):
 
 def upload_user_csv_to_gcs(source_file_path: str, user_id: int):
     try:
-        bucket_name = os.getenv("BUCKET_NAME", "toray-buckets")
+        bucket_name = os.getenv("BUCKET_NAME", "company-buckets")
         destination_blob_name = f"glossary_term_user_{user_id}.csv"
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)

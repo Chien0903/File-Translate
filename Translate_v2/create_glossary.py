@@ -7,7 +7,7 @@ from google.protobuf import field_mask_pb2
 
 load_dotenv()
 project_id = os.getenv("PROJECT_ID")
-input_uri = os.getenv("INPUT_URI", "gs://toray-buckets/glossary_term.csv")
+input_uri = os.getenv("INPUT_URI", "gs://company-buckets/glossary_term.csv")
 google_credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 if google_credentials_path:
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials_path
@@ -21,10 +21,10 @@ CURRENT_LANGUAGES = ['vi', 'ja', 'en', 'zh-CN', 'zh-TW', 'th', 'bn', 'hi', 'id',
 def make_glossary_id(lang1: str, lang2: str) -> str:
     """
     Tạo glossary ID từ 2 language codes — luôn sort để commutative.
-    Ví dụ: make_glossary_id('vi', 'en') == make_glossary_id('en', 'vi') == 'toray_glossary_en_vi'
+    Ví dụ: make_glossary_id('vi', 'en') == make_glossary_id('en', 'vi') == 'company_glossary_en_vi'
     """
     pair = sorted([lang1, lang2])
-    return "toray_glossary_" + "_".join(c.replace("-", "_") for c in pair)
+    return "company_glossary_" + "_".join(c.replace("-", "_") for c in pair)
 
 
 def generate_pairs(language_codes: list) -> list:

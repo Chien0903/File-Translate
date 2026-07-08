@@ -405,7 +405,7 @@ def detect_text_with_coords(image_path, target_lang, source_lang = None,output_p
 
     if pair_code:
         try:
-            glossary_id = f"toray_translation_glossary_{language_pair[pair_code]}"
+            glossary_id = f"company_translation_glossary_{language_pair[pair_code]}"
         except Exception as e:
             logging.warning(f"Glossary lookup failed for pair {pair_code}: {e}")
             glossary_id = None
@@ -489,9 +489,9 @@ def detect_text_with_coords(image_path, target_lang, source_lang = None,output_p
     return results, output_path
 
 if __name__ == "__main__":
-    font_path = r"D:\Document\Code\Projects\TorayTranslator\Translate\OCR\OCR_IMAGE\NotoSerifCJK-Regular.ttc"
+    font_path = r"D:\Document\Code\Projects\MultilangTranslator\Translate\OCR\OCR_IMAGE\NotoSerifCJK-Regular.ttc"
     detect_text_with_coords(
-        r"D:\Document\Code\Projects\TorayTranslator\Translate\OCR\OCR_IMAGE\input\image11.emf",
+        r"D:\Document\Code\Projects\MultilangTranslator\Translate\OCR\OCR_IMAGE\input\image11.emf",
         target_lang="vi",
         font_path=font_path,
         font_size=14

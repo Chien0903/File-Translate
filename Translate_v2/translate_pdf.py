@@ -19,7 +19,7 @@ def docx_to_pdf(docx_file):
     convert(docx_file, pdf_output)
 
 if __name__ == "__main__":
-    pdf_file = r"C:\Users\User\OneDrive - Hanoi University of Science and Technology\Documents\Lập trình cơ bản\Projects\[ISE] Toray translator project\pdf\The Ultimate IQ Test Book-trang-3.pdf"
+    pdf_file = r"C:\Users\User\OneDrive - Hanoi University of Science and Technology\Documents\Lập trình cơ bản\Projects\[ISE] Multilanguage translator project\pdf\The Ultimate IQ Test Book-trang-3.pdf"
     docx_file = pdf_file.replace(".pdf", ".docx")
 
     # Chuyển đổi PDF sang DOCX

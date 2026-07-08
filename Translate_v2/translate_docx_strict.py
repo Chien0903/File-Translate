@@ -292,7 +292,7 @@ def translate_docx_strict(docx_file, source_lang, target_lang):
 # Ví dụ sử dụng:
 if __name__ == "__main__":  
     docx_file = r"D:\Dowloads\123.docx"
-    # docx_file = r"D:\Dowloads\Mr. Suzuki Akihiro GĐ Công ty TNHH Toray Industries-S-d.docx"
+    # docx_file = r"D:\Dowloads\Mr. Suzuki Akihiro GĐ Công ty TNHH Example Industries-S-d.docx"
     # output_dir = r"D:\Dowloads"
     translate_docx_strict(docx_file)
     # pdf_to_docx(docx_file, output_dir)

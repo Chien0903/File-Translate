@@ -97,5 +97,5 @@ def suggestion_statistic(input_path, min_percentage: float = 2.0):
 
 if __name__ == "__main__":
     # Ví dụ chạy tay: cập nhật đường dẫn và ngưỡng theo nhu cầu
-    user_suggestion_file = r"C:\\Users\\User\\OneDrive - Hanoi University of Science and Technology\\Documents\\Lập trình cơ bản\\Projects\\[ISE] Toray translator project\\Libary_statistic\\suggestion.xlsx"
+    user_suggestion_file = r"C:\\Users\\User\\OneDrive - Hanoi University of Science and Technology\\Documents\\Lập trình cơ bản\\Projects\\[ISE] Multilanguage translator project\\Libary_statistic\\suggestion.xlsx"
     suggestion_statistic(user_suggestion_file, min_percentage=2.0)

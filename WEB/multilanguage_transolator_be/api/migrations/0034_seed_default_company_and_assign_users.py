@@ -1,7 +1,7 @@
 from django.db import migrations
 
-DEFAULT_COMPANY_NAME = "Toray"
-DEFAULT_COMPANY_SLUG = "toray"
+DEFAULT_COMPANY_NAME = "Company"
+DEFAULT_COMPANY_SLUG = "company"
 
 
 def seed_company_and_assign(apps, schema_editor):

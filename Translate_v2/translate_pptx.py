@@ -202,7 +202,7 @@ def translate_pptx(pptx_file, target_lang, source_lang=None):
     translate_file(file_path=pptx_file, source_lang=source_lang, target_lang=target_lang, translate_func=translate_all_xml_in_folder, file_type='pptx')
 # Ví dụ sử dụng:
 if __name__ == "__main__":
-    pptx_files = [r"D:\Document\Code\Projects\TorayTranslator\OCR\A.pptx"]
+    pptx_files = [r"D:\Document\Code\Projects\MultilangTranslator\OCR\A.pptx"]
     for pptx_file in pptx_files:
         # Gọi hàm dịch
         translate_pptx(pptx_file, target_lang="vi")

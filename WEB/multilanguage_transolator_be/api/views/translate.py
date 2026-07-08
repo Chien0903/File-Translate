@@ -602,14 +602,14 @@ class TranslateTextView(APIView):
                 lang_a, lang_b = sorted([source_language, target_language])
                 safe_a = lang_a.replace("-", "_")
                 safe_b = lang_b.replace("-", "_")
-                glossary_id = f"toray_glossary_{safe_a}_{safe_b}"
+                glossary_id = f"company_glossary_{safe_a}_{safe_b}"
                 logger.info(f"📚 Private glossary base: {glossary_id}")
             elif library_mode == "common" and source_language in LANGUAGES:
                 pair_code = f"{source_language}-{target_language}"
                 if pair_code not in language_pair:
                     pair_code = f"{target_language}-{source_language}"
                 if pair_code in language_pair:
-                    glossary_id = f"toray_translation_glossary_{language_pair[pair_code]}"
+                    glossary_id = f"company_translation_glossary_{language_pair[pair_code]}"
                     logger.info(f"📚 Common glossary: {glossary_id}")
                 else:
                     logger.info(f"ℹ No common glossary for pair {source_language}->{target_language}.")

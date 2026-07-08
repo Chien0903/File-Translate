@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     try:
         load_dotenv(find_dotenv())
-        analyze_layout_azure("/home/ubuntu/Toray_Multilanguage_transolator/Translate_v2/OCR/自転車の違反にも青切符2026年4月1日適用.pdf", "/home/ubuntu/Toray_Multilanguage_transolator/Translate_v2/OCR/自転車の違反にも青切符2026年4月1日適用_layout.json")
+        analyze_layout_azure("/home/ubuntu/multilanguage_transolator/Translate_v2/OCR/自転車の違反にも青切符2026年4月1日適用.pdf", "/home/ubuntu/multilanguage_transolator/Translate_v2/OCR/自転車の違反にも青切符2026年4月1日適用_layout.json")
     except HttpResponseError as error:
         # Examples of how to check an HttpResponseError
         if error.error is not None:

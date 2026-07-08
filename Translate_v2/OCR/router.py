@@ -158,10 +158,10 @@ def is_pdf_truly_editable(pdf_path: str) -> bool:
 if __name__ == "__main__":
     # pdf_file = r"D:\Dowloads\QĐ THÀNH LẬP ĐOÀN ĐÁNH GIÁ.pdf"
     # pdf_file = r"D:\Dowloads\KẾ HOẠCH ĐÁNH GIÁ.pdf"
-    # pdf_file = r"D:\Dowloads\東レ仕様書TS-2402半袖 Tシャツ.pdf"
-    # pdf_file = r"D:\Document\Lập trình\Projects\[ISE] Toray translator project\pdf\200785 - Saturday Stripe Skort-2ND PROTO COMMENTS 73025-en.pdf"
-    # pdf_file = r"D:\Document\Lập trình\Projects\[ISE] Toray translator project\pdf\BTNB 工場概要 2025.7.1改訂.pdf"
-    pdf_file = r"D:\Document\Lập trình\Projects\[ISE] Toray translator project\pdf\test.pdf"
+    # pdf_file = r"D:\Dowloads\サンプル仕様書TS-2402半袖 Tシャツ.pdf"
+    # pdf_file = r"D:\Document\Lập trình\Projects\[ISE] Multilanguage translator project\pdf\200785 - Saturday Stripe Skort-2ND PROTO COMMENTS 73025-en.pdf"
+    # pdf_file = r"D:\Document\Lập trình\Projects\[ISE] Multilanguage translator project\pdf\BTNB 工場概要 2025.7.1改訂.pdf"
+    pdf_file = r"D:\Document\Lập trình\Projects\[ISE] Multilanguage translator project\pdf\test.pdf"
     ok = is_pdf_truly_editable(pdf_file)
     if ok:
         print("PDF là editable (có trang native text).")

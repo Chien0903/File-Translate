@@ -31,8 +31,8 @@ def translate_docx(docx_file, target_lang, source_lang=None):
         except Exception as e2:
             logging.error(f"Strict translation also failed: {e2}")
 if __name__ == "__main__":  
-    docx_file = r"D:\W00138 SOFT V SCOOP NECK ...WITH POWER MESH PCING -PPS Evaluation TP - Supplier Specific - Toray-en (1) (1).docx"
-    # docx_file = r"D:\Dowloads\Mr. Suzuki Akihiro GĐ Công ty TNHH Toray Industries-S-d.docx"
+    docx_file = r"D:\W00138 SOFT V SCOOP NECK ...WITH POWER MESH PCING -PPS Evaluation TP - Supplier Specific - Company-en (1) (1).docx"
+    # docx_file = r"D:\Dowloads\Mr. Suzuki Akihiro GĐ Công ty TNHH Example Industries-S-d.docx"
     # output_dir = r"D:\Dowloads"
     translate_docx(docx_file, target_lang="ja")
     # pdf_to_docx(docx_file, output_dir)

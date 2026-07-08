@@ -88,7 +88,7 @@ def translate_pdf_ocr(input_pdf, target_language=None, source_language=None):
         print("Translate with glossary")
         pair_code = f"{source_language}-{target_language}" if f"{source_language}-{target_language}" in language_pair.keys() else f"{target_language}-{source_language}"
         if pair_code in language_pair:
-            glossary_id = f"toray_translation_glossary_{language_pair[pair_code]}"
+            glossary_id = f"company_translation_glossary_{language_pair[pair_code]}"
         else:
             print(f"ℹ No glossary for pair {source_language}->{target_language}. Translating without glossary.")
     else:
@@ -181,4 +181,4 @@ def translate_pdf_ocr(input_pdf, target_language=None, source_language=None):
 
     
 if __name__ == "__main__":
-    translate_pdf_ocr("/home/ubuntu/Toray_Multilanguage_transolator/Translate_v2/OCR/自転車の違反にも青切符2026年4月1日適用.pdf", target_language ="vi")
+    translate_pdf_ocr("/home/ubuntu/multilanguage_transolator/Translate_v2/OCR/自転車の違反にも青切符2026年4月1日適用.pdf", target_language ="vi")

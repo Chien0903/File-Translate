@@ -100,7 +100,7 @@ class ConvertFileView(APIView):
                 converted_filename = f"{base_name}.{target_format}"
                 
                 # Upload converted file to S3
-                bucket_name = os.getenv('AWS_STORAGE_BUCKET_NAME', 'torays3')  # Use same var as upload_to_s3.py
+                bucket_name = os.getenv('AWS_STORAGE_BUCKET_NAME', 'company-s3')  # Use same var as upload_to_s3.py
                 logger.info(f"Uploading converted file to S3: {s3_filename}")
                 
                 converted_file_url = upload_file_path_to_s3(
