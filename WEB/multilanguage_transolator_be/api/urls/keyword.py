@@ -9,8 +9,6 @@ from ..views.keyword import (
     KeywordSuggestionListCreateView,
     SuggestionQueueSettingsView,
     SuggestionQueueListView,
-    DuplicateAlertsListView,
-    DuplicateAlertDismissView,
     PrivateKeywordListCreateView,
     PrivateKeywordDetailView,
     PrivateKeywordSuggestView,
@@ -25,10 +23,6 @@ urlpatterns = [
     path('suggestions/<int:pk>/approve/', ApproveSuggestionView.as_view(), name='keyword-approve'),
     path('<int:pk>/update/', UpdateKeywordView.as_view(), name='keyword-update'),
     path('<int:pk>/delete/', DeleteSuggestionView.as_view(), name='keyword-delete'),
-
-    # Duplicate alerts - accessed via /api/keywords/
-    path('duplicate-alerts/', DuplicateAlertsListView.as_view(), name='duplicate-alerts-list'),
-    path('duplicate-alerts/<int:pk>/dismiss/', DuplicateAlertDismissView.as_view(), name='duplicate-alert-dismiss'),
 
     # GCS Upload endpoints - accessed via /api/keywords/
     path('upload-to-gcs/', UploadKeywordsToGCSView.as_view(), name='upload-to-gcs'),

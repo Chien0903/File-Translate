@@ -42,13 +42,6 @@ const keywordService = {
 
   updateKeyword: (id, data) => api.put(`/api/keywords/${id}/update/`, data),
 
-  // ─── Duplicate Alerts ────────────────────────────────────────────────────
-
-  getDuplicateAlerts: () => api.get("/api/keywords/duplicate-alerts/"),
-
-  dismissDuplicateAlert: (notificationId) =>
-    api.post(`/api/keywords/duplicate-alerts/${notificationId}/dismiss/`),
-
   // ─── GCS ───────────────────────────────────────────────────────────────────
 
   getGCSStatus: () => api.get("/api/keywords/gcs-status/"),

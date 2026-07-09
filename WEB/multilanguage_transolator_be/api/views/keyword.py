@@ -115,17 +115,23 @@ def _find_thk_pair_conflict(candidate_translations, exclude_suggestion_id=None):
     return None
 
 
-def _check_keyword_duplicates(keyword):
-    """Check if any single non-empty translation value matches an approved record."""
+def _check_keyword_duplicates(keyword, approved_rows=None):
+    """Check if any single non-empty translation value matches an approved record.
+
+    `approved_rows` lets callers that check many suggestions in one request
+    (e.g. the queue list) pass a single pre-fetched list instead of re-querying
+    the approved set for every row.
+    """
     duplicates = []
     t = keyword.translations or {}
-    approved_qs = KeywordSuggestion.objects.filter(status='approved')
+    if approved_rows is None:
+        approved_rows = KeywordSuggestion.objects.filter(status='approved').only('id', 'translations')
     for code, value in t.items():
         normalized = str(value or "").strip()
         if not normalized:
             continue
         conflicts = [
-            obj.id for obj in approved_qs.only('id', 'translations')
+            obj.id for obj in approved_rows
             if str((obj.translations or {}).get(code, "")).strip().lower() == normalized.lower()
         ]
         if conflicts:
@@ -150,27 +156,6 @@ def _reject_other_pending_same_content(approved_suggestion):
         if _content_signature(s) == sig:
             s.status = 'rejected'
             s.save(update_fields=['status', 'updated_at'])
-
-
-def _notify_admins_about_duplicate_suggestion(suggestion, duplicates):
-    User = get_user_model()
-    admins = User.objects.filter(Q(is_staff=True) | Q(role__in=['Admin', 'Library Keeper']))
-    dup_fields = ', '.join(f'{d["field"]}="{d["value"]}"' for d in duplicates[:3])
-    for admin in admins:
-        Notification.objects.create(
-            user=admin,
-            title=DUPLICATE_ALERT_TITLE,
-            message=(
-                f"A suggestion reached the review threshold but conflicts "
-                f"with an existing library entry. Overlapping: {dup_fields}. "
-                f"Please review manually in the Suggestion Queue."
-            ),
-            details=True,
-            keyword_details=[{
-                "suggestion_id": suggestion.id,
-                "translations": suggestion.translations,
-            }],
-        )
 
 
 def _notify_threshold_reached(suggestion):
@@ -207,19 +192,6 @@ def _notify_threshold_reached(suggestion):
                 "translations": suggestion.translations,
             }],
         )
-
-
-def _check_full_duplicate_for_auto_approve(suggestion):
-    t = suggestion.translations or {}
-    if not t:
-        return []
-    conflicts = [
-        obj for obj in KeywordSuggestion.objects.filter(status='approved').only('id', 'translations')
-        if (obj.translations or {}) == t
-    ]
-    if not conflicts:
-        return []
-    return [{'field': 'all_fields', 'conflict_ids': [c.id for c in conflicts[:5]]}]
 
 
 def _group_pending_by_threshold(pending):
@@ -283,12 +255,6 @@ def _try_auto_approve_on_threshold():
 
     for rep_id, group in reps.items():
         rep = group[0]
-
-        duplicates = _check_full_duplicate_for_auto_approve(rep)
-        if duplicates:
-            _notify_admins_about_duplicate_suggestion(rep, duplicates)
-            continue
-
         _notify_threshold_reached(rep)
         notified_ids.add(rep.id)
 
@@ -557,65 +523,7 @@ class UploadKeywordsToGCSView(APIView):
                     pass
 
 
-DUPLICATE_ALERT_TITLE = "Duplicate Suggestion Detected"
 THRESHOLD_REACHED_TITLE = "Keyword Ready for Review"
-
-
-class DuplicateAlertsListView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        if not _check_admin_or_keeper(request.user):
-            return Response({'error': 'Permission denied.'}, status=403)
-
-        notifs = Notification.objects.filter(
-            user=request.user, title=DUPLICATE_ALERT_TITLE, read=False
-        ).order_by('-created_at')
-
-        results = []
-        for n in notifs:
-            kd = (n.keyword_details or [{}])[0] if n.keyword_details else {}
-            suggestion_id = kd.get('suggestion_id')
-            suggestion_data = existing_data = None
-
-            if suggestion_id:
-                try:
-                    s = KeywordSuggestion.objects.get(id=suggestion_id)
-                    suggestion_data = {'id': s.id, 'status': s.status, 'translations': s.translations}
-                    dups = _check_keyword_duplicates(s)
-                    if dups:
-                        try:
-                            ex = KeywordSuggestion.objects.get(id=dups[0]['conflict_ids'][0], status='approved')
-                            existing_data = {'id': ex.id, 'translations': ex.translations}
-                        except KeywordSuggestion.DoesNotExist:
-                            pass
-                except KeywordSuggestion.DoesNotExist:
-                    pass
-
-            results.append({
-                'notification_id': n.id,
-                'message': n.message,
-                'created_at': n.created_at.isoformat() if n.created_at else None,
-                'suggestion': suggestion_data,
-                'existing_library': existing_data,
-            })
-
-        return Response({'alerts': results, 'total': len(results)})
-
-
-class DuplicateAlertDismissView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, pk):
-        if not _check_admin_or_keeper(request.user):
-            return Response({'error': 'Permission denied.'}, status=403)
-        try:
-            n = Notification.objects.get(id=pk, user=request.user, title=DUPLICATE_ALERT_TITLE)
-        except Notification.DoesNotExist:
-            return Response({'error': 'Not found.'}, status=404)
-        n.read = True
-        n.save(update_fields=['read'])
-        return Response({'message': 'Dismissed.'})
 
 
 class GCSUploadStatusView(APIView):
@@ -747,6 +655,8 @@ class SuggestionQueueListView(APIView):
         total_pages = max(1, (total + page_size - 1) // page_size)
         page = min(page, total_pages)
 
+        approved_rows = list(KeywordSuggestion.objects.filter(status='approved').only('id', 'translations'))
+
         start = (page - 1) * page_size
         result = []
         for s in queryset[start:start + page_size]:
@@ -774,6 +684,8 @@ class SuggestionQueueListView(APIView):
                     email = None
                 suggesters.append({'user_id': member.user_id, 'name': name, 'email': email})
 
+            duplicates = _check_keyword_duplicates(s, approved_rows=approved_rows)
+
             result.append({
                 'id': s.id,
                 'user_id': s.user_id,
@@ -784,6 +696,8 @@ class SuggestionQueueListView(APIView):
                 'created_at': s.created_at.isoformat() if s.created_at else None,
                 'suggesters': suggesters,
                 'suggester_count': len(suggesters),
+                'is_duplicate': bool(duplicates),
+                'duplicates': duplicates,
             })
 
         return Response({'suggestions': result, 'total': total, 'page': page, 'page_size': page_size, 'total_pages': total_pages})

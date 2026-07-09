@@ -25,7 +25,6 @@ import {
   QueueThresholdModal,
   SuggestionQueueModal,
   DuplicateLibraryCompareModal,
-  DuplicateAlertsModal,
 } from "../../components/features/admin/LibrarySuggestionQueueModals";
 
 
@@ -87,13 +86,6 @@ const CommonLibraryManagement = () => {
     payload: null,
     pendingId: null,
   });
-
-  // Duplicate alerts
-  const [showDupAlerts, setShowDupAlerts] = useState(false);
-  const [dupAlerts, setDupAlerts] = useState([]);
-  const [dupAlertCount, setDupAlertCount] = useState(0);
-  const [loadingDupAlerts, setLoadingDupAlerts] = useState(false);
-  const [dupAlertBusyId, setDupAlertBusyId] = useState(null);
 
   // When libraryLanguages loads, initialise or migrate visibleColumns
   useEffect(() => {
@@ -231,30 +223,6 @@ const CommonLibraryManagement = () => {
       setQueueMinSuggesters(res.data.min_suggesters_for_queue ?? 2);
     }).catch(() => {});
   }, [role]);
-
-  const fetchDuplicateAlerts = useCallback(async (silent = false) => {
-    if (role !== "Admin" && role !== "Library Keeper") return;
-    if (!silent) setLoadingDupAlerts(true);
-    try {
-      const res = await keywordService.getDuplicateAlerts();
-      setDupAlerts(res.data.alerts || []);
-      setDupAlertCount(res.data.total ?? 0);
-    } catch {
-      if (!silent) console.error("Failed to load duplicate alerts");
-    } finally {
-      if (!silent) setLoadingDupAlerts(false);
-    }
-  }, [role]);
-
-  useEffect(() => {
-    fetchDuplicateAlerts(true);
-  }, [fetchDuplicateAlerts]);
-
-  useEffect(() => {
-    if (role !== "Admin" && role !== "Library Keeper") return;
-    const id = setInterval(() => fetchDuplicateAlerts(true), 15000);
-    return () => clearInterval(id);
-  }, [role, fetchDuplicateAlerts]);
 
   /** Debounce search; reset to page 1 when the debounced query changes. */
   useEffect(() => {
@@ -406,7 +374,6 @@ const CommonLibraryManagement = () => {
         }
       );
       await fetchKeywords();
-      await fetchDuplicateAlerts(true);
       setShowThresholdModal(false);
     } catch (e) {
       toast.error(
@@ -458,63 +425,6 @@ const CommonLibraryManagement = () => {
       );
     } finally {
       setApprovingQueueId(null);
-    }
-  };
-
-  const handleOpenDuplicateAlerts = () => {
-    setShowDupAlerts(true);
-    fetchDuplicateAlerts(false);
-  };
-
-  const handleDupAlertApprove = async (suggestionId, resolution, notifId) => {
-    setDupAlertBusyId(notifId);
-    try {
-      await keywordService.approveSuggestion(suggestionId, {
-        duplicate_resolution: resolution,
-      });
-      await keywordService.dismissDuplicateAlert(notifId);
-      toast.success(
-        resolution === "keep_library"
-          ? "Library entry kept. Suggestion rejected."
-          : "Library updated from the suggestion.",
-        {
-          style: { backgroundColor: "green", color: "white" },
-          icon: <FiAlertCircle />,
-        }
-      );
-      await fetchDuplicateAlerts(true);
-      await fetchKeywords();
-    } catch (e) {
-      toast.error(
-        e.response?.data?.error ||
-          e.response?.data?.detail ||
-          "Could not process this alert.",
-        {
-          style: { backgroundColor: "red", color: "white" },
-          icon: <FiAlertCircle />,
-        }
-      );
-    } finally {
-      setDupAlertBusyId(null);
-    }
-  };
-
-  const handleDupAlertDismiss = async (notifId) => {
-    setDupAlertBusyId(notifId);
-    try {
-      await keywordService.dismissDuplicateAlert(notifId);
-      toast.success("Alert dismissed.", {
-        style: { backgroundColor: "green", color: "white" },
-        icon: <FiAlertCircle />,
-      });
-      await fetchDuplicateAlerts(true);
-    } catch {
-      toast.error("Could not dismiss alert.", {
-        style: { backgroundColor: "red", color: "white" },
-        icon: <FiAlertCircle />,
-      });
-    } finally {
-      setDupAlertBusyId(null);
     }
   };
 
@@ -1049,8 +959,6 @@ const CommonLibraryManagement = () => {
             onApprove={handleApproveFromQueue}
             onReject={handleRejectFromQueue}
             approvingId={approvingQueueId}
-            onOpenDuplicateAlerts={handleOpenDuplicateAlerts}
-            duplicateAlertCount={dupAlertCount}
           />
           <DuplicateLibraryCompareModal
             isOpen={compareModal.open}
@@ -1063,15 +971,6 @@ const CommonLibraryManagement = () => {
             onKeepLibrary={() => handleDuplicateResolution("keep_library")}
             onUseSuggestion={() => handleDuplicateResolution("use_pending")}
             busy={approvingQueueId !== null}
-          />
-          <DuplicateAlertsModal
-            isOpen={showDupAlerts}
-            onClose={() => setShowDupAlerts(false)}
-            alerts={dupAlerts}
-            loading={loadingDupAlerts}
-            onApprove={handleDupAlertApprove}
-            onDismiss={handleDupAlertDismiss}
-            busyId={dupAlertBusyId}
           />
         </>
       )}

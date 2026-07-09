@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FiX, FiUsers, FiCheck, FiTrash2, FiSearch, FiAlertTriangle, FiEyeOff } from "react-icons/fi";
+import { FiX, FiUsers, FiCheck, FiTrash2, FiSearch } from "react-icons/fi";
 import { FaExclamationTriangle } from "react-icons/fa";
 import Pagination from "../../Pagination";
 import { useLibraryLanguages } from "../../../hooks/useLibraryLanguages";
@@ -176,8 +176,6 @@ export function SuggestionQueueModal({
   onApprove,
   onReject,
   approvingId,
-  onOpenDuplicateAlerts,
-  duplicateAlertCount,
 }) {
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min(page * pageSize, total);
@@ -205,22 +203,6 @@ export function SuggestionQueueModal({
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {onOpenDuplicateAlerts && (
-              <button
-                type="button"
-                onClick={() => { onClose(); onOpenDuplicateAlerts(); }}
-                className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium transition-colors shadow-sm"
-                title="Suggestions that conflict with existing library entries"
-              >
-                <FaExclamationTriangle size={14} className="shrink-0" />
-                Duplicate alerts
-                {typeof duplicateAlertCount === "number" && duplicateAlertCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1 min-w-[1.35rem] h-[1.35rem] px-1 flex items-center justify-center rounded-full bg-red-600 text-white text-[11px] font-bold ring-2 ring-indigo-700">
-                    {duplicateAlertCount > 99 ? "99+" : duplicateAlertCount}
-                  </span>
-                )}
-              </button>
-            )}
             <button
               type="button"
               onClick={onClose}
@@ -295,9 +277,28 @@ export function SuggestionQueueModal({
                       return (
                         <div
                           key={row.id}
-                          className="border border-gray-200 rounded-xl p-4 flex flex-col lg:flex-row gap-4 bg-white shadow-sm"
+                          className={`border rounded-xl p-4 flex flex-col lg:flex-row gap-4 bg-white shadow-sm ${
+                            row.is_duplicate
+                              ? "border-amber-300 ring-1 ring-amber-200 bg-amber-50/40"
+                              : "border-gray-200"
+                          }`}
                         >
                           <div className="flex shrink-0 flex-col gap-2 text-sm lg:w-[11rem]">
+                            {row.is_duplicate && (
+                              <span
+                                className="inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800"
+                                title={
+                                  row.duplicates?.length
+                                    ? `Overlaps existing library entry: ${row.duplicates
+                                        .map((d) => `${d.field}="${d.value}"`)
+                                        .join(", ")}`
+                                    : "Overlaps an existing library entry"
+                                }
+                              >
+                                <FaExclamationTriangle className="shrink-0" size={12} />
+                                Duplicate
+                              </span>
+                            )}
                             <div className="flex flex-wrap gap-1.5">
                               {(row.suggesters && row.suggesters.length > 0
                                 ? row.suggesters
@@ -452,150 +453,6 @@ export function DuplicateLibraryCompareModal({
           >
             Use suggestion (update library)
           </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-export function DuplicateAlertsModal({
-  isOpen,
-  onClose,
-  alerts,
-  loading,
-  onApprove,
-  onDismiss,
-  busyId,
-}) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
-      <div
-        className={`${modalShell} max-w-5xl w-full max-h-[90vh] min-h-0`}
-      >
-        <div className="flex justify-between items-start gap-3 px-5 py-4 bg-[#b45309] text-white shrink-0">
-          <div>
-            <h3 className="text-base font-semibold tracking-tight flex items-center gap-2">
-              <FiAlertTriangle size={18} /> Duplicate alerts
-            </h3>
-            <p className="text-sm text-white/85 mt-1">
-              Suggestions that reached the threshold but conflict with existing
-              library entries. Compare both versions and choose to{" "}
-              <strong className="text-white">keep the library version</strong>{" "}
-              or <strong className="text-white">replace with the suggestion</strong>.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/15 text-white/90 shrink-0 transition-colors"
-            aria-label="Close"
-          >
-            <FiX size={20} />
-          </button>
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f8fafc]">
-          <div className="min-h-0 flex-1 overflow-auto p-5">
-            {loading ? (
-              <div className="text-center py-16 text-gray-500 text-sm">
-                Loading…
-              </div>
-            ) : !alerts || alerts.length === 0 ? (
-              <div className="text-center py-16 text-gray-500 text-sm border border-dashed border-gray-300 rounded-xl bg-white">
-                No duplicate alerts at the moment.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {alerts.map((alert) => {
-                  const s = alert.suggestion;
-                  const ex = alert.existing_library;
-                  const busy = busyId === alert.notification_id;
-                  const suggestionGone = !s || s.status !== "pending";
-
-                  return (
-                    <div
-                      key={alert.notification_id}
-                      className="border border-amber-200 rounded-xl bg-white shadow-sm overflow-hidden"
-                    >
-                      <div className="px-4 py-3 bg-amber-50 border-b border-amber-200 flex items-start justify-between gap-3">
-                        <div className="text-sm text-amber-900">
-                          {alert.message}
-                          {alert.created_at && (
-                            <span className="ml-2 text-xs text-amber-600">
-                              {new Date(alert.created_at).toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {suggestionGone ? (
-                        <div className="p-4 text-sm text-gray-500 italic">
-                          The pending suggestion has already been processed or removed.
-                          You can dismiss this alert.
-                        </div>
-                      ) : (
-                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {ex && (
-                            <div className="rounded-lg border border-gray-200 p-3">
-                              <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2 pb-1.5 border-b border-gray-100">
-                                In library (approved)
-                              </h4>
-                              <LangTable data={ex} />
-                            </div>
-                          )}
-                          <div className="rounded-lg border border-gray-200 p-3 ring-2 ring-indigo-500/20">
-                            <h4 className="text-xs font-semibold uppercase tracking-wide text-indigo-700 mb-2 pb-1.5 border-b border-gray-100">
-                              Pending suggestion #{s?.id}
-                            </h4>
-                            <LangTable data={s} />
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="px-4 py-3 border-t border-gray-100 flex flex-wrap justify-end gap-2 bg-gray-50/80">
-                        {suggestionGone ? (
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => onDismiss(alert.notification_id)}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 disabled:opacity-50 transition-colors"
-                          >
-                            <FiEyeOff size={15} /> Dismiss
-                          </button>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() =>
-                                onApprove(s.id, "keep_library", alert.notification_id)
-                              }
-                              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-400 text-gray-800 text-sm font-medium hover:bg-gray-100 disabled:opacity-50 transition-colors"
-                            >
-                              Keep library version
-                            </button>
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() =>
-                                onApprove(s.id, "use_pending", alert.notification_id)
-                              }
-                              className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-indigo-700 text-white text-sm font-medium hover:bg-indigo-800 disabled:opacity-50 transition-colors"
-                            >
-                              Use suggestion (update library)
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
