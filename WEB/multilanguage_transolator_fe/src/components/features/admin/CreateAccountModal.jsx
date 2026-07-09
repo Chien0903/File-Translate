@@ -1,4 +1,13 @@
+import { useState } from "react";
 import PropTypes from "prop-types";
+
+const generateRandomPassword = (length = 10) => {
+    const alphabet =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const values = new Uint32Array(length);
+    window.crypto.getRandomValues(values);
+    return Array.from(values, (v) => alphabet[v % alphabet.length]).join("");
+};
 
 const CreateAccountModal = ({
     newAccount,
@@ -6,6 +15,8 @@ const CreateAccountModal = ({
     onSubmit,
     onClose,
 }) => {
+    const [showPassword, setShowPassword] = useState(false);
+
     return (
         <div
             className="fixed inset-0 flex justify-center items-center z-50 bg-black/20 backdrop-blur-[1px]"
@@ -126,6 +137,66 @@ const CreateAccountModal = ({
                                 />
                             </svg>
                         </div>
+                    </div>
+
+                    {/* Password Field */}
+                    <div className="space-y-2">
+                        <label className="block text-gray-700 text-sm font-semibold">
+                            Password
+                        </label>
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={newAccount.password}
+                                    onChange={(e) =>
+                                        onFieldChange({
+                                            ...newAccount,
+                                            password: e.target.value,
+                                        })
+                                    }
+                                    className="w-full p-3 pl-10 pr-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-700 focus:ring-2 focus:ring-indigo-700/20 transition-all duration-200"
+                                    placeholder="Leave blank to auto-generate"
+                                    autoComplete="new-password"
+                                />
+                                <svg
+                                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                    />
+                                </svg>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-semibold"
+                                >
+                                    {showPassword ? "Hide" : "Show"}
+                                </button>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onFieldChange({
+                                        ...newAccount,
+                                        password: generateRandomPassword(),
+                                    })
+                                }
+                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold text-sm border border-gray-300 whitespace-nowrap"
+                            >
+                                Generate
+                            </button>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                            Leave blank and the system will generate a temporary password
+                            automatically.
+                        </p>
                     </div>
 
                     {/* Department Field */}

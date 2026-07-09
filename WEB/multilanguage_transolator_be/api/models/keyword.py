@@ -5,7 +5,6 @@ from .user import CustomUser
 class PrivateKeyword(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='private_keywords')
     translations = models.JSONField(default=dict, blank=True)
-    note = models.TextField(blank=True, null=True)
     suggestion = models.ForeignKey(
         'KeywordSuggestion',
         on_delete=models.SET_NULL,
@@ -24,25 +23,9 @@ class PrivateKeyword(models.Model):
         return f"PrivateKeyword by {self.user} | {t.get('en') or t.get('ja') or '—'}"
 
 
-class KeywordQueue(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
-    translations = models.JSONField(default=dict, blank=True)
-    is_processed = models.BooleanField(default=False, db_index=True)
-    processed_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"Queue item by {self.user} - {self.created_at}"
-
-
 class KeywordSuggestion(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
     translations = models.JSONField(default=dict, blank=True)
-    suggestion_count = models.IntegerField(default=1)
-    frequency_percentage = models.FloatField(default=0.0)
     status = models.CharField(
         max_length=20,
         choices=[

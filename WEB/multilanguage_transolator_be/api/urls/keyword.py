@@ -7,8 +7,6 @@ from ..views.keyword import (
     UploadKeywordsToGCSView,
     GCSUploadStatusView,
     KeywordSuggestionListCreateView,
-    ProcessKeywordQueueView,
-    QueueStatusView,
     SuggestionQueueSettingsView,
     SuggestionQueueListView,
     DuplicateAlertsListView,
@@ -31,11 +29,7 @@ urlpatterns = [
     # Duplicate alerts - accessed via /api/keywords/
     path('duplicate-alerts/', DuplicateAlertsListView.as_view(), name='duplicate-alerts-list'),
     path('duplicate-alerts/<int:pk>/dismiss/', DuplicateAlertDismissView.as_view(), name='duplicate-alert-dismiss'),
-    
-    # Queue Management endpoints - accessed via /api/keywords/
-    path('queue/status/', QueueStatusView.as_view(), name='queue-status'),
-    path('queue/process/', ProcessKeywordQueueView.as_view(), name='process-queue'),
-    
+
     # GCS Upload endpoints - accessed via /api/keywords/
     path('upload-to-gcs/', UploadKeywordsToGCSView.as_view(), name='upload-to-gcs'),
     path('gcs-status/', GCSUploadStatusView.as_view(), name='get-gcs-status'),

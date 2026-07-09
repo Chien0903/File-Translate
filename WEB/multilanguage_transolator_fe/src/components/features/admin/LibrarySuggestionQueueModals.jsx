@@ -298,10 +298,26 @@ export function SuggestionQueueModal({
                           className="border border-gray-200 rounded-xl p-4 flex flex-col lg:flex-row gap-4 bg-white shadow-sm"
                         >
                           <div className="flex shrink-0 flex-col gap-2 text-sm lg:w-[11rem]">
-                            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                              <FiUsers className="shrink-0" size={14} />
-                              {row.user_display || row.user_email || "Unknown"}
-                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {(row.suggesters && row.suggesters.length > 0
+                                ? row.suggesters
+                                : [{ name: row.user_display || row.user_email || "Unknown" }]
+                              ).map((suggester, idx) => (
+                                <span
+                                  key={suggester.user_id ?? idx}
+                                  className="inline-flex w-fit items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700"
+                                  title={suggester.email || undefined}
+                                >
+                                  <FiUsers className="shrink-0" size={14} />
+                                  {suggester.name}
+                                </span>
+                              ))}
+                            </div>
+                            {row.suggester_count > 1 && (
+                              <span className="text-xs text-gray-500">
+                                {row.suggester_count} suggesters
+                              </span>
+                            )}
                             <span className="text-xs text-gray-500">
                               Suggestion #{row.id}
                             </span>

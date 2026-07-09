@@ -1,20 +1,5 @@
 from rest_framework import serializers
-from api.models.keyword import KeywordSuggestion, KeywordQueue, PrivateKeyword
-
-
-class KeywordQueueSerializer(serializers.ModelSerializer):
-    user_email = serializers.CharField(source='user.email', read_only=True)
-    user_name = serializers.SerializerMethodField()
-
-    class Meta:
-        model = KeywordQueue
-        fields = '__all__'
-        read_only_fields = ['user', 'is_processed', 'processed_at', 'created_at']
-
-    def get_user_name(self, obj):
-        if obj.user:
-            return f"{obj.user.first_name} {obj.user.last_name}".strip()
-        return "Unknown User"
+from api.models.keyword import KeywordSuggestion, PrivateKeyword
 
 
 class PrivateKeywordSerializer(serializers.ModelSerializer):
@@ -53,10 +38,6 @@ class KeywordSuggestionSerializer(serializers.ModelSerializer):
         request = self.context.get('request') if hasattr(self, 'context') else None
         if request and getattr(request, 'user', None) and request.user.is_authenticated:
             validated_data['user'] = request.user
-        if validated_data.get('suggestion_count') is None:
-            validated_data['suggestion_count'] = 1
-        if validated_data.get('frequency_percentage') is None:
-            validated_data['frequency_percentage'] = 0.0
         return KeywordSuggestion.objects.create(**validated_data)
 
     class Meta:

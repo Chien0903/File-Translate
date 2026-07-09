@@ -7,9 +7,9 @@ import re
 import unicodedata
 from itertools import combinations
 
-from ..models.keyword import KeywordSuggestion, KeywordQueue, PrivateKeyword, LibraryQueueSettings
+from ..models.keyword import KeywordSuggestion, PrivateKeyword, LibraryQueueSettings
 from ..models.notification import Notification
-from ..serializers.keyword import KeywordSuggestionSerializer, KeywordQueueSerializer, PrivateKeywordSerializer
+from ..serializers.keyword import KeywordSuggestionSerializer, PrivateKeywordSerializer
 from django.contrib.auth import get_user_model
 from django.db.models import Q, Value, CharField
 from django.db.models.functions import Concat
@@ -179,10 +179,18 @@ def _notify_threshold_reached(suggestion):
     keepers = User.objects.filter(Q(is_staff=True) | Q(role__in=['Admin', 'Library Keeper']))
     if not keepers.exists():
         return
-    already_notified = Notification.objects.filter(
-        title=THRESHOLD_REACHED_TITLE,
-        keyword_details__contains=[{"suggestion_id": suggestion.id}],
-    ).exists()
+    # Avoid the JSONField "contains" lookup: it isn't supported on SQLite
+    # (raises NotSupportedError), only on backends like PostgreSQL. Check
+    # in Python instead so this works on every configured database backend.
+    already_notified = any(
+        isinstance(details, list) and any(
+            isinstance(item, dict) and item.get("suggestion_id") == suggestion.id
+            for item in details
+        )
+        for details in Notification.objects.filter(
+            title=THRESHOLD_REACHED_TITLE
+        ).values_list('keyword_details', flat=True)
+    )
     if already_notified:
         return
     for keeper in keepers:
@@ -214,20 +222,23 @@ def _check_full_duplicate_for_auto_approve(suggestion):
     return [{'field': 'all_fields', 'conflict_ids': [c.id for c in conflicts[:5]]}]
 
 
-def _try_auto_approve_on_threshold():
+def _group_pending_by_threshold(pending):
     """
-    When enough distinct users suggest the same translation pair (>= min_suggesters_for_queue),
-    notify Library Keepers/Admins to review the suggestion rather than auto-approving.
-    Returns a list of suggestion IDs that reached the threshold this call.
+    Group a list of pending KeywordSuggestion rows by matching (language pair,
+    normalized value) across every pair of active languages, keeping only the
+    groups whose number of distinct suggesters reaches the configured
+    min_suggesters_for_queue threshold.
+
+    Returns {representative_suggestion_id: group_list}, where the
+    representative is the lowest-id suggestion in that group.
     """
+    if not pending:
+        return {}
+
     settings = LibraryQueueSettings.load()
     min_n = settings.min_suggesters_for_queue
-    pending = list(KeywordSuggestion.objects.filter(status='pending').select_related('user'))
-    if not pending:
-        return []
-
     codes = _get_active_language_codes()
-    notified_ids = set()
+    reps = {}
 
     for ca, cb in combinations(codes, 2):
         groups = {}
@@ -252,13 +263,34 @@ def _try_auto_approve_on_threshold():
             if rep.status != 'pending':
                 continue
 
-            duplicates = _check_full_duplicate_for_auto_approve(rep)
-            if duplicates:
-                _notify_admins_about_duplicate_suggestion(rep, duplicates)
-                continue
+            reps[rep.id] = group
 
-            _notify_threshold_reached(rep)
-            notified_ids.add(rep.id)
+    return reps
+
+
+def _try_auto_approve_on_threshold():
+    """
+    When enough distinct users suggest the same translation pair (>= min_suggesters_for_queue),
+    notify Library Keepers/Admins to review the suggestion rather than auto-approving.
+    Returns a list of suggestion IDs that reached the threshold this call.
+    """
+    pending = list(KeywordSuggestion.objects.filter(status='pending').select_related('user'))
+    if not pending:
+        return []
+
+    reps = _group_pending_by_threshold(pending)
+    notified_ids = set()
+
+    for rep_id, group in reps.items():
+        rep = group[0]
+
+        duplicates = _check_full_duplicate_for_auto_approve(rep)
+        if duplicates:
+            _notify_admins_about_duplicate_suggestion(rep, duplicates)
+            continue
+
+        _notify_threshold_reached(rep)
+        notified_ids.add(rep.id)
 
     return list(notified_ids)
 
@@ -470,8 +502,6 @@ class KeywordSuggestionListCreateView(APIView):
             payload = {
                 'translations': translations,
                 'status': 'pending',
-                'suggestion_count': 1,
-                'frequency_percentage': 0.0,
             }
             serializer = KeywordSuggestionSerializer(data=payload, context={'request': request})
             if serializer.is_valid():
@@ -657,8 +687,17 @@ class SuggestionQueueListView(APIView):
         if not _check_admin_or_keeper(request.user):
             return Response({'error': 'Permission denied.'}, status=403)
 
+        # Only show suggestions whose group of matching proposals has reached
+        # the configured min_suggesters_for_queue threshold — suggestions still
+        # accumulating suggesters are not shown here yet.
+        all_pending = list(KeywordSuggestion.objects.filter(status='pending').select_related('user'))
+        reps_map = _group_pending_by_threshold(all_pending)
+        threshold_reached_ids = set(reps_map.keys())
+
         search = (request.GET.get('search') or '').strip()
-        base_qs = KeywordSuggestion.objects.filter(status='pending').select_related('user')
+        base_qs = KeywordSuggestion.objects.filter(
+            status='pending', id__in=threshold_reached_ids
+        ).select_related('user')
 
         if search:
             tokens = [t.strip() for t in search.split(',') if t.strip()]
@@ -715,6 +754,26 @@ class SuggestionQueueListView(APIView):
             if s.user:
                 full = f"{s.user.first_name or ''} {s.user.last_name or ''}".strip()
                 user_display = full or s.user.email
+
+            # All distinct suggesters behind this representative row (the group
+            # of matching pending proposals that pushed it past the threshold),
+            # not just the earliest one that ended up as `s`.
+            suggesters = []
+            seen_user_ids = set()
+            for member in reps_map.get(s.id, [s]):
+                key = member.user_id if member.user_id else f"row:{member.id}"
+                if key in seen_user_ids:
+                    continue
+                seen_user_ids.add(key)
+                if member.user:
+                    full_name = f"{member.user.first_name or ''} {member.user.last_name or ''}".strip()
+                    name = full_name or member.user.email
+                    email = member.user.email
+                else:
+                    name = 'Unknown'
+                    email = None
+                suggesters.append({'user_id': member.user_id, 'name': name, 'email': email})
+
             result.append({
                 'id': s.id,
                 'user_id': s.user_id,
@@ -723,92 +782,11 @@ class SuggestionQueueListView(APIView):
                 'translations': s.translations or {},
                 'status': s.status,
                 'created_at': s.created_at.isoformat() if s.created_at else None,
+                'suggesters': suggesters,
+                'suggester_count': len(suggesters),
             })
 
         return Response({'suggestions': result, 'total': total, 'page': page, 'page_size': page_size, 'total_pages': total_pages})
-
-
-# ======= Queue Management =======
-
-class ProcessKeywordQueueView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        try:
-            if not _check_admin_or_keeper(request.user):
-                return Response({'error': 'Permission denied.'}, status=403)
-            min_frequency = float(request.data.get('min_frequency', 2.0))
-            dry_run = request.data.get('dry_run', False)
-            from django.core.management import call_command
-            from io import StringIO
-            import sys
-            old_stdout = sys.stdout
-            sys.stdout = output = StringIO()
-            try:
-                call_command('process_keyword_queue', min_frequency=min_frequency, dry_run=dry_run)
-                command_output = output.getvalue()
-            finally:
-                sys.stdout = old_stdout
-
-            queue_stats = {
-                'total_queue_items': KeywordQueue.objects.count(),
-                'unprocessed_items': KeywordQueue.objects.filter(is_processed=False).count(),
-                'processed_items': KeywordQueue.objects.filter(is_processed=True).count(),
-                'total_suggestions': KeywordSuggestion.objects.count(),
-                'pending_suggestions': KeywordSuggestion.objects.filter(status='pending').count(),
-                'approved_suggestions': KeywordSuggestion.objects.filter(status='approved').count(),
-            }
-            return Response({'message': 'Queue processing completed.', 'details': {'command_output': command_output, 'statistics': queue_stats}})
-        except Exception as e:
-            return Response({'error': str(e)}, status=500)
-
-
-class QueueStatusView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        try:
-            user_only = request.GET.get('user_only', '').lower() == 'true'
-            page = int(request.GET.get('page', 1))
-            page_size = int(request.GET.get('page_size', 50))
-            start = (page - 1) * page_size
-
-            if user_only:
-                total = KeywordSuggestion.objects.filter(user=request.user).count()
-                pending = KeywordSuggestion.objects.filter(user=request.user, status='pending').count()
-                approved = KeywordSuggestion.objects.filter(user=request.user, status='approved').count()
-                queue_stats = {'total_queue_items': total, 'unprocessed_items': pending, 'processed_items': approved,
-                               'total_suggestions': total, 'pending_suggestions': pending, 'approved_suggestions': approved}
-                user_suggestions = KeywordSuggestion.objects.filter(user=request.user).order_by('-created_at')[start:start + page_size]
-                queue_items = [{
-                    'id': s.id, 'user': s.user_id, 'translations': s.translations or {},
-                    'is_processed': s.status == 'approved',
-                    'processed_at': s.updated_at if s.status == 'approved' else None,
-                    'created_at': s.created_at,
-                } for s in user_suggestions]
-                recent_suggestions = KeywordSuggestion.objects.filter(user=request.user, status='pending').order_by('-created_at')[:10]
-            else:
-                queue_stats = {
-                    'total_queue_items': KeywordQueue.objects.count(),
-                    'unprocessed_items': KeywordQueue.objects.filter(is_processed=False).count(),
-                    'processed_items': KeywordQueue.objects.filter(is_processed=True).count(),
-                    'total_suggestions': KeywordSuggestion.objects.count(),
-                    'pending_suggestions': KeywordSuggestion.objects.filter(status='pending').count(),
-                    'approved_suggestions': KeywordSuggestion.objects.filter(status='approved').count(),
-                }
-                queue_items = KeywordQueueSerializer(KeywordQueue.objects.all().order_by('-created_at')[start:start + page_size], many=True).data
-                recent_suggestions = KeywordSuggestion.objects.filter(status='pending').order_by('-created_at')[:10]
-
-            return Response({
-                'statistics': queue_stats,
-                'queue_items': queue_items,
-                'total_queue_items': queue_stats['total_queue_items'],
-                'recent_suggestions': KeywordSuggestionSerializer(recent_suggestions, many=True).data,
-                'can_process': queue_stats['unprocessed_items'] > 0,
-                'user_permissions': {'can_process_queue': _check_admin_or_keeper(request.user)},
-            })
-        except Exception as e:
-            return Response({'error': str(e)}, status=500)
 
 
 # ===== Private Library Views =====
@@ -926,8 +904,6 @@ class PrivateKeywordSuggestView(APIView):
                 user=request.user,
                 translations=kw.translations or {},
                 status='pending',
-                suggestion_count=1,
-                frequency_percentage=0.0,
             )
             kw.suggestion = suggestion
             kw.save(update_fields=['suggestion'])

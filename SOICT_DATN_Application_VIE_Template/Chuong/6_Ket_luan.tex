@@ -1,11 +1,11 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
-Chương~\ref{chapter:SolutionAndContribution} đã trình bày chi tiết năm đóng góp kỹ thuật nổi bật của đồ án. Chương~\ref{chapter:conclusion} này tổng kết toàn bộ quá trình thực hiện, đánh giá những gì đã đạt được và chưa đạt được, rồi đề xuất các hướng phát triển tiếp theo. Kết luận tập trung vào tính hoàn chỉnh của hệ thống đã xây dựng và các bài học rút ra trong quá trình thiết kế, triển khai.
+Chương~\ref{chapter:conclusion} này tổng kết toàn bộ quá trình thực hiện, đánh giá những gì đã đạt được và chưa đạt được, rồi đề xuất các hướng phát triển tiếp theo. Kết luận tập trung vào tính hoàn chỉnh của hệ thống đã xây dựng và các bài học rút ra trong quá trình thiết kế, triển khai.
 
 \section{Kết luận}
-Đồ án đã xây dựng được một hệ thống web dịch đa ngôn ngữ gồm giao diện React/Vite, backend Django REST Framework, khối xử lý tài liệu, lưu trữ S3, glossary trên Google Cloud và triển khai Docker/Nginx. Các chức năng chính gồm xác thực JWT, quản lý người dùng theo vai trò, dịch văn bản, dịch tài liệu DOCX/XLSX/PPTX/PDF, chuyển đổi PDF, lưu lịch sử file dịch, quản lý thư viện thuật ngữ chung và riêng, phê duyệt đề xuất thuật ngữ, thống kê từ khóa, thông báo và quản lý ngôn ngữ theo công ty. Đóng góp nổi bật là tích hợp dịch tài liệu đa định dạng với quản trị glossary, cho phép hệ thống hỗ trợ cả thuật ngữ chung của doanh nghiệp và thuật ngữ riêng của từng người dùng. Hạn chế còn lại là cần bổ sung kiểm thử toàn diện, benchmark hiệu năng, ảnh minh họa giao diện, dữ liệu khảo sát người dùng và tài liệu giám sát vận hành production.
+Đồ án đã xây dựng được một hệ thống web dịch đa ngôn ngữ gồm giao diện React/Vite, backend Django REST Framework, khối xử lý tài liệu, lưu trữ S3, thư viện thuật ngữ trên Google Cloud và triển khai Docker/Nginx. Các chức năng chính gồm xác thực JWT, quản lý người dùng theo vai trò, dịch văn bản, dịch tài liệu DOCX/XLSX/PPTX/PDF, chuyển đổi PDF, lưu lịch sử file dịch, quản lý thư viện thuật ngữ chung và riêng, phê duyệt đề xuất thuật ngữ, thống kê từ khóa, thông báo. Đóng góp nổi bật là tích hợp dịch tài liệu đa định dạng với quản trị thư viện thuật ngữ, cho phép hệ thống hỗ trợ cả thuật ngữ chung của doanh nghiệp và thuật ngữ riêng của từng người dùng. Hạn chế còn lại là cần bổ sung kiểm thử toàn diện, benchmark hiệu năng, ảnh minh họa giao diện, dữ liệu khảo sát người dùng và tài liệu giám sát vận hành production.
 
-Đồ án tập trung xây dựng một hệ thống dịch tài liệu đa ngôn ngữ phục vụ nhu cầu nội bộ doanh nghiệp, một lĩnh vực mà các công cụ dịch máy thương mại thông thường chưa đáp ứng được đầy đủ. Các công cụ như Google Translate hay DeepL hoạt động tốt với văn bản thuần nhưng không bảo toàn định dạng tài liệu Office và không có cơ chế quản lý thuật ngữ theo ngữ cảnh doanh nghiệp. Các hệ thống quản lý dịch thuật chuyên nghiệp như memoQ hay SDL Trados cung cấp nhiều tính năng hơn nhưng phức tạp, đắt và không phù hợp để tích hợp trực tiếp vào môi trường vận hành nội bộ. Hệ thống trong đồ án này đặt trọng tâm vào ba điểm khác biệt so với các công cụ thông thường: bảo toàn định dạng tài liệu sau dịch, quản lý thuật ngữ theo hai cấp với quy trình kiểm duyệt, và khả năng triển khai nội bộ để kiểm soát dữ liệu.
+Đồ án tập trung xây dựng một hệ thống dịch tài liệu đa ngôn ngữ phục vụ nhu cầu nội bộ doanh nghiệp, một lĩnh vực mà các công cụ dịch máy thương mại thông thường chưa đáp ứng được đầy đủ. Các công cụ như Google Translate hay DeepL hoạt động tốt với văn bản thuần nhưng không bảo toàn định dạng tài liệu Office và không có cơ chế quản lý thuật ngữ theo ngữ cảnh doanh nghiệp. Hệ thống trong đồ án này đặt trọng tâm vào ba điểm khác biệt so với các công cụ thông thường: bảo toàn định dạng tài liệu sau dịch, quản lý thuật ngữ theo hai cấp với quy trình kiểm duyệt, và khả năng triển khai nội bộ để kiểm soát dữ liệu.
 
 \subsection{Tự đánh giá kết quả thực hiện đồ án}
 
@@ -13,9 +13,9 @@ Chương~\ref{chapter:SolutionAndContribution} đã trình bày chi tiết năm 
 
 Đồ án đã hoàn thành việc phân tích yêu cầu, thiết kế và xây dựng một hệ thống dịch tài liệu đa ngôn ngữ có đầy đủ các thành phần từ giao diện người dùng đến backend xử lý nghiệp vụ và triển khai container hóa. Về phía kiến trúc, hệ thống được tổ chức theo mô hình MVC với frontend tách rời, trong đó React SPA đảm nhiệm giao diện, Django REST Framework đảm nhiệm xử lý nghiệp vụ và Django ORM đảm nhiệm truy xuất dữ liệu. Cách tổ chức này giúp ba thành phần có thể phát triển và triển khai độc lập.
 
-Về chức năng nghiệp vụ, hệ thống đã thực hiện được các nhóm chức năng chính gồm: (i) xác thực và phân quyền người dùng theo ba vai trò là User, Admin và Library Keeper; (ii) dịch văn bản và dịch tài liệu bốn định dạng phổ biến là DOCX, XLSX, PPTX và PDF, trong đó PDF được xử lý theo hai luồng khác nhau tùy đặc tính nội dung; (iii) quản lý thư viện thuật ngữ theo hai cấp với quy trình đề xuất và phê duyệt có trạng thái; (iv) chuyển đổi định dạng file, lưu lịch sử dịch, thông báo người dùng, thống kê từ khóa và quản lý cấu hình ngôn ngữ theo công ty.
+Về chức năng nghiệp vụ, hệ thống đã thực hiện được các nhóm chức năng chính gồm: (i) xác thực và phân quyền người dùng theo ba vai trò là User, Admin và Library Keeper; (ii) dịch văn bản và dịch tài liệu bốn định dạng phổ biến là DOCX, XLSX, PPTX và PDF, trong đó PDF được xử lý theo hai luồng khác nhau tùy đặc tính nội dung; (iii) quản lý thư viện thuật ngữ theo hai cấp với quy trình đề xuất và phê duyệt có trạng thái; (iv) chuyển đổi định dạng file, lưu lịch sử dịch, thông báo người dùng, thống kê từ khóa.
 
-Về mặt tích hợp dịch vụ bên ngoài, hệ thống đã kết nối thành công với Google Cloud Translation để thực hiện dịch máy, Google Cloud Storage để lưu trữ glossary, Amazon S3 để lưu trữ tệp, ConvertAPI để chuyển đổi định dạng và Azure Document Intelligence để nhận dạng văn bản trong tài liệu PDF ảnh. Hệ thống được đóng gói bằng Docker Compose và triển khai thử nghiệm với Nginx reverse proxy hỗ trợ HTTPS.
+Về mặt tích hợp dịch vụ bên ngoài, hệ thống đã kết nối thành công với Google Cloud Translation để thực hiện dịch máy, Google Cloud Storage để lưu trữ thư viện thuật ngữ, Amazon S3 để lưu trữ tệp, ConvertAPI để chuyển đổi định dạng và Azure Document Intelligence để nhận dạng văn bản trong tài liệu PDF ảnh. Hệ thống được đóng gói bằng Docker Compose và triển khai thử nghiệm với Nginx reverse proxy hỗ trợ HTTPS.
 
 \textbf{b, Những gì chưa làm được}
 
@@ -25,7 +25,7 @@ Hạn chế lớn nhất của hệ thống là mức độ phụ thuộc cao v�
 
 Đóng góp kỹ thuật quan trọng nhất là quy trình dịch tài liệu đa định dạng bảo toàn cấu trúc, trong đó hệ thống xử lý dịch trực tiếp ở cấp độ cấu trúc bên trong từng định dạng thay vì chỉ trích xuất văn bản thuần, kết hợp gộp đoạn văn bị phân mảnh và dịch theo lô để bảo toàn bố cục và giảm số lần gọi API.
 
-Đóng góp thứ hai là cơ chế thư viện thuật ngữ hai cấp tích hợp thực sự vào quy trình dịch, cho phép ba chế độ sử dụng thư viện hoạt động nhất quán xuyên suốt chuỗi xử lý tài liệu, kết hợp với quy trình đề xuất và phê duyệt thuật ngữ có phân quyền.
+Đóng góp thứ hai là cơ chế thư viện thuật ngữ hai cấp tích hợp thực sự vào quy trình dịch, cho phép ba chế độ sử dụng thư viện thuật ngữ hoạt động nhất quán xuyên suốt chuỗi xử lý tài liệu, kết hợp với quy trình đề xuất và phê duyệt thuật ngữ có phân quyền.
 
 Đóng góp thứ ba là pipeline xử lý PDF tự động phân loại theo đặc tính nội dung, cho phép hệ thống xử lý cả PDF văn bản lẫn PDF ảnh mà không yêu cầu người dùng can thiệp thủ công.
 
@@ -37,7 +37,7 @@ Quá trình thực hiện đồ án để lại một số bài học có giá t
 
 \subsection{Hoàn thiện các chức năng hiện tại}
 
-Hướng hoàn thiện trước mắt gồm: (i) xây dựng bộ kiểm thử tự động bao phủ các luồng tích hợp chính như dịch file, đồng bộ glossary và xác thực; (ii) chuyển luồng dịch tài liệu lớn sang xử lý bất đồng bộ bằng hàng đợi nền để tránh timeout khi dịch vụ bên ngoài phản hồi chậm; (iii) bổ sung cơ chế giám sát vận hành để theo dõi trạng thái các dịch vụ bên ngoài và tỷ lệ lỗi của từng luồng xử lý.
+Hướng hoàn thiện trước mắt gồm: (i) xây dựng bộ kiểm thử tự động bao phủ các luồng tích hợp chính như dịch file, đồng bộ thư viện thuật ngữ và xác thực; (ii) chuyển luồng dịch tài liệu lớn sang xử lý bất đồng bộ bằng hàng đợi nền để tránh timeout khi dịch vụ bên ngoài phản hồi chậm; (iii) bổ sung cơ chế giám sát vận hành để theo dõi trạng thái các dịch vụ bên ngoài và tỷ lệ lỗi của từng luồng xử lý.
 
 \subsection{Nâng cấp và mở rộng chức năng}
 

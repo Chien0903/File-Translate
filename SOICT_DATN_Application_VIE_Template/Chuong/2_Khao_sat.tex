@@ -1,6 +1,6 @@
 \documentclass[../DoAn.tex]{subfiles}
 \begin{document}
-Chương~\ref{chapter:Introduction} đã trình bày bối cảnh, bài toán đặt ra, phạm vi đề tài và định hướng giải pháp cho hệ thống dịch tài liệu đa ngôn ngữ trong môi trường doanh nghiệp. Trên cơ sở đó, Chương~\ref{chapter:Related_works} tập trung khảo sát hiện trạng và phân tích các yêu cầu cần thiết đối với hệ thống. Nội dung chương gồm ba phần chính. Phần đầu trình bày nhu cầu dịch văn bản và tài liệu văn phòng trong doanh nghiệp, đồng thời phân tích những hạn chế của các cách tiếp cận hiện nay như dịch thủ công hoặc sử dụng các công cụ dịch rời rạc. Phần tiếp theo xác định các nhóm người dùng, mô tả tổng quan chức năng hệ thống thông qua biểu đồ use case và đặc tả các use case quan trọng. Phần cuối trình bày các yêu cầu chức năng và phi chức năng, làm cơ sở cho việc thiết kế, xây dựng và đánh giá hệ thống ở các chương tiếp theo
+ Chương~\ref{chapter:Related_works} tập trung khảo sát hiện trạng và phân tích các yêu cầu cần thiết đối với hệ thống. Nội dung chương gồm ba phần chính. Phần đầu trình bày nhu cầu dịch văn bản và tài liệu văn phòng trong doanh nghiệp, đồng thời phân tích những hạn chế của các cách tiếp cận hiện nay như dịch thủ công hoặc sử dụng các công cụ dịch rời rạc. Phần tiếp theo xác định các nhóm người dùng, mô tả tổng quan chức năng hệ thống thông qua biểu đồ use case và đặc tả các use case quan trọng. Phần cuối trình bày các yêu cầu chức năng và phi chức năng, làm cơ sở cho việc thiết kế, xây dựng và đánh giá hệ thống ở các chương tiếp theo
 
 \section{Khảo sát hiện trạng}
 \label{section:2.1}
@@ -15,23 +15,23 @@ Nhóm đối tượng khảo sát gồm hai nhóm chính: người dùng cuối 
 
 Người dùng cuối là nhân viên trong doanh nghiệp có nhu cầu dịch văn bản hoặc tài liệu văn phòng sang một hoặc nhiều ngôn ngữ khác. Nhóm này yêu cầu hệ thống dễ sử dụng, hỗ trợ nhiều định dạng tệp phổ biến như DOCX, XLSX, PPTX và PDF, đồng thời cho phép lựa chọn ngôn ngữ nguồn và ngôn ngữ đích linh hoạt. Họ mong muốn kết quả dịch giữ được cấu trúc và định dạng gốc của tài liệu để hạn chế chỉnh sửa thủ công sau khi dịch. Ngoài ra, khả năng lưu lại lịch sử các tệp đã dịch để tra cứu và tải về sau là yêu cầu thực tế được đặt ra, đặc biệt khi khối lượng tài liệu cần xử lý lớn. Người dùng cuối cũng có nhu cầu quản lý thư viện thuật ngữ riêng để các thuật ngữ chuyên ngành được dịch nhất quán theo quy ước nội bộ.
 
-\textbf{b, Người quản trị và người quản lý thư viện}
+\textbf{b, Người quản trị và người quản lý thư viện thuật ngữ}
 
-Vai trò Admin và Library Keeper có phạm vi quyền khác nhau. Admin có toàn quyền quản trị hệ thống: thay đổi vai trò người dùng, xóa tài khoản, quyết định danh sách ngôn ngữ được phép sử dụng trong hệ thống và truy cập bảng thống kê đóng góp từ khóa theo người dùng và theo ngày. Library Keeper có phạm vi hẹp hơn, tập trung vào vận hành thư viện thuật ngữ chung. Quy trình quản lý thuật ngữ hoạt động theo cơ chế tích lũy đề xuất: người dùng gửi thuật ngữ, khi số lượng người đề xuất cùng một cặp dịch đạt ngưỡng đã cấu hình thì đề xuất đó được đưa vào hàng đợi chờ xét duyệt. Library Keeper xem xét các đề xuất trong hàng đợi, kiểm tra trùng lặp với thư viện hiện có, rồi phê duyệt hoặc từ chối. Khi một đề xuất được phê duyệt, glossary trên Google Cloud Storage được cập nhật và thông báo được gửi tới người dùng liên quan.
+Vai trò Admin và Library Keeper có phạm vi quyền khác nhau. Admin có toàn quyền quản trị hệ thống: thay đổi vai trò người dùng, xóa tài khoản và truy cập bảng thống kê đóng góp từ khóa theo người dùng và theo ngày. Library Keeper có phạm vi hẹp hơn, tập trung vào vận hành thư viện thuật ngữ chung. Quy trình quản lý thuật ngữ hoạt động theo cơ chế tích lũy đề xuất: người dùng gửi thuật ngữ, khi số lượng người đề xuất cùng một cặp dịch đạt ngưỡng đã cấu hình thì đề xuất đó được đưa vào hàng đợi chờ xét duyệt. Library Keeper xem xét các đề xuất trong hàng đợi, kiểm tra trùng lặp với thư viện thuật ngữ hiện có, rồi phê duyệt hoặc từ chối. Khi một đề xuất được phê duyệt, thư viện thuật ngữ trên Google Cloud Storage được cập nhật và thông báo được gửi tới người dùng liên quan.
 
 \subsection{Khảo sát từ các công cụ tương tự}
 \label{subsection:2.1.2}
 
 Để có cái nhìn tổng quan về các giải pháp dịch hiện nay, đồ án khảo sát một số công cụ phổ biến như Google Translate, DeepL, Microsoft Translator và SDL Trados. Đây là các công cụ được sử dụng rộng rãi trong việc dịch văn bản hoặc tài liệu, mỗi công cụ có những ưu điểm riêng về số lượng ngôn ngữ hỗ trợ, chất lượng dịch, khả năng xử lý tài liệu và hỗ trợ thuật ngữ.
 
-Google Translate có ưu điểm là dễ sử dụng, hỗ trợ nhiều ngôn ngữ và có thể dịch nhanh văn bản thuần cũng như một số định dạng tài liệu cơ bản. Tuy nhiên, công cụ này chủ yếu phù hợp với nhu cầu dịch nhanh, chưa hỗ trợ tốt việc kiểm soát thuật ngữ chuyên ngành theo ngữ cảnh riêng của từng tổ chức. DeepL được đánh giá cao về chất lượng dịch ở một số cặp ngôn ngữ và có hỗ trợ dịch tài liệu như DOCX hoặc PDF, nhưng khả năng tùy chỉnh thuật ngữ và xử lý các quy trình dịch tài liệu chuyên biệt vẫn còn hạn chế. Microsoft Translator cung cấp nền tảng dịch mạnh và có thể tích hợp thông qua API, phù hợp với các hệ thống cần tự động hóa quá trình dịch, nhưng việc đảm bảo định dạng tài liệu và thống nhất thuật ngữ vẫn cần được xử lý thêm ở tầng ứng dụng. Trong khi đó, SDL Trados là công cụ chuyên nghiệp cho dịch thuật, hỗ trợ glossary và translation memory, nhưng phù hợp hơn với người dịch chuyên môn, có chi phí cao và quy trình sử dụng phức tạp hơn so với nhu cầu dịch tài liệu nhanh trong doanh nghiệp.
+Google Translate phù hợp với nhu cầu dịch nhanh, nhưng chưa đáp ứng tốt bài toán quản lý thuật ngữ chuyên ngành và lịch sử dịch trong môi trường doanh nghiệp. DeepL có hỗ trợ dịch một số loại tài liệu, tuy nhiên phạm vi tùy chỉnh quy trình xử lý file, kiểm soát thư viện thuật ngữ và tích hợp vào hệ thống quản trị nội bộ còn hạn chế. Microsoft Translator mạnh ở khả năng tích hợp API, nhưng phần bảo toàn cấu trúc tài liệu, lưu kết quả dịch và quản lý thuật ngữ vẫn cần được xây dựng thêm ở tầng ứng dụng. SDL Trados hỗ trợ thư viện thuật ngữ và translation memory tốt hơn, nhưng thiên về quy trình của người dịch chuyên nghiệp, có chi phí cao và không thật sự thuận tiện cho nhu cầu dịch nhanh nhiều định dạng tài liệu của người dùng phổ thông trong doanh nghiệp.
 
-Từ khảo sát trên có thể thấy, các công cụ hiện có đã hỗ trợ tốt ở mức dịch văn bản hoặc dịch tài liệu cơ bản, nhưng vẫn còn khoảng trống trong việc kết hợp đồng thời ba yêu cầu: dịch tài liệu đa định dạng, giữ lại cấu trúc tài liệu sau khi dịch và kiểm soát thuật ngữ chuyên ngành một cách linh hoạt. Đây là cơ sở để đồ án tập trung vào bài toán xây dựng hệ thống hỗ trợ dịch tài liệu đa ngôn ngữ phù hợp hơn với nhu cầu sử dụng trong môi trường doanh nghiệp.
+Từ các hạn chế trên, đồ án tập trung khắc phục những điểm còn thiếu khi áp dụng công cụ dịch phổ thông vào môi trường doanh nghiệp. Hệ thống được xây dựng để hỗ trợ dịch nhiều định dạng tài liệu trong cùng một nền tảng, gồm DOCX, XLSX, PPTX, PDF, ảnh và tài liệu cần OCR; giữ lại cấu trúc chính của tài liệu sau khi dịch; tích hợp thư viện thuật ngữ chung và thư viện thuật ngữ riêng để kiểm soát cách dịch từ khóa chuyên ngành; đồng thời lưu lịch sử kết quả dịch để người dùng có thể tải lại và quản lý tập trung. Nhờ đó, hệ thống không chỉ dịch nội dung mà còn bổ sung các chức năng quản lý và vận hành còn thiếu ở các công cụ dịch rời rạc.
 
 \subsection{Các tính năng cần phát triển}
 \label{subsection:2.1.3}
 
-Dựa trên quá trình khảo sát, có thể thấy các công cụ hiện có đều có điểm mạnh riêng trong việc hỗ trợ dịch văn bản và tài liệu, nhưng vẫn còn một số hạn chế khi áp dụng trong môi trường doanh nghiệp. Các hạn chế chủ yếu nằm ở khả năng giữ nguyên định dạng tài liệu sau khi dịch, kiểm soát thuật ngữ chuyên ngành và tổ chức quy trình dịch cho nhiều người dùng. Từ đó, hệ thống được đề xuất cần tập trung phát triển sáu chức năng chính: (i) \textbf{dịch tài liệu đa định dạng}, hỗ trợ dịch văn bản và các tệp tài liệu phổ biến như DOCX, XLSX, PPTX, PDF và ảnh, trong đó với tài liệu PDF ảnh quét hệ thống cần xử lý OCR; (ii) \textbf{giữ nguyên cấu trúc tài liệu}, bảo toàn bố cục, bảng biểu, slide, đoạn văn và các thành phần định dạng cơ bản sau khi dịch nhằm giảm thời gian chỉnh sửa thủ công; (iii) \textbf{hỗ trợ dịch sang nhiều ngôn ngữ}, cho phép người dùng lựa chọn một hoặc nhiều ngôn ngữ đích trong cùng một yêu cầu; (iv) \textbf{quản lý thuật ngữ chuyên ngành}, hỗ trợ thư viện thuật ngữ chung và thư viện thuật ngữ riêng để kiểm soát cách dịch các từ khóa quan trọng và nâng cao tính nhất quán; (v) \textbf{quản lý kết quả dịch}, lưu lại lịch sử các tệp đã dịch để người dùng có thể tra cứu và tải về khi cần, giúp tổ chức quy trình dịch tập trung hơn so với các công cụ rời rạc; (vi) \textbf{hỗ trợ quản trị hệ thống}, bao gồm các chức năng vận hành như quản lý người dùng, cấu hình ngôn ngữ, quản lý đề xuất thuật ngữ, thông báo và lưu trữ tệp kết quả trên dịch vụ đám mây.
+Dựa trên quá trình khảo sát, có thể thấy các công cụ hiện có đều có điểm mạnh riêng trong việc hỗ trợ dịch văn bản và tài liệu, nhưng vẫn còn một số hạn chế khi áp dụng trong môi trường doanh nghiệp. Các hạn chế chủ yếu nằm ở khả năng giữ nguyên định dạng tài liệu sau khi dịch, kiểm soát thuật ngữ chuyên ngành và tổ chức quy trình dịch cho nhiều người dùng. Từ đó, hệ thống được đề xuất cần tập trung phát triển sáu chức năng chính: (i) \textbf{dịch tài liệu đa định dạng}, hỗ trợ dịch văn bản và các tệp tài liệu phổ biến như DOCX, XLSX, PPTX, PDF và ảnh, trong đó với tài liệu PDF ảnh quét hệ thống cần xử lý OCR; (ii) \textbf{giữ nguyên cấu trúc tài liệu}, bảo toàn bố cục, bảng biểu, slide, đoạn văn và các thành phần định dạng cơ bản sau khi dịch nhằm giảm thời gian chỉnh sửa thủ công; (iii) \textbf{hỗ trợ dịch sang nhiều ngôn ngữ}, cho phép người dùng lựa chọn một hoặc nhiều ngôn ngữ đích trong cùng một yêu cầu; (iv) \textbf{quản lý thuật ngữ chuyên ngành}, hỗ trợ thư viện thuật ngữ chung và thư viện thuật ngữ riêng để kiểm soát cách dịch các từ khóa quan trọng và nâng cao tính nhất quán; (v) \textbf{quản lý kết quả dịch}, lưu lại lịch sử các tệp đã dịch để người dùng có thể tra cứu và tải về khi cần, giúp tổ chức quy trình dịch tập trung hơn so với các công cụ rời rạc; (vi) \textbf{hỗ trợ quản trị hệ thống}, bao gồm các chức năng vận hành như quản lý người dùng, quản lý đề xuất thuật ngữ, thông báo và lưu trữ tệp kết quả trên dịch vụ đám mây.
 
 
 \section{Tổng quan chức năng}
@@ -47,9 +47,9 @@ Dựa trên quá trình khảo sát, có thể thấy các công cụ hiện có
   \label{fig:usecase_tong_quat}
 \end{figure}
 
-Biểu đồ use case tổng quát (Hình~\ref{fig:usecase_tong_quat}) xác định ba tác nhân chính trong hệ thống, mỗi tác nhân có vai trò và quyền hạn khác nhau: (i) \textbf{Người dùng (User)} là nhân viên doanh nghiệp có nhu cầu dịch văn bản hoặc tài liệu văn phòng sang một hoặc nhiều ngôn ngữ; (ii) \textbf{Quản trị viên (Admin)} là người quản trị hệ thống trong phạm vi công ty, có quyền quản lý tài khoản, cấu hình ngôn ngữ và xem thống kê từ khóa; (iii) \textbf{Quản lý thư viện (Library Keeper)} là người vận hành thư viện thuật ngữ chung, có quyền xét duyệt đề xuất thuật ngữ từ người dùng và quản lý nội dung thư viện chung.
+Biểu đồ use case tổng quát (Hình~\ref{fig:usecase_tong_quat}) xác định ba tác nhân chính trong hệ thống, mỗi tác nhân có vai trò và quyền hạn khác nhau: (i) \textbf{Người dùng (User)} là nhân viên doanh nghiệp có nhu cầu dịch văn bản hoặc tài liệu văn phòng sang một hoặc nhiều ngôn ngữ; (ii) \textbf{Quản trị viên (Admin)} là người quản trị hệ thống trong phạm vi công ty, có quyền quản lý tài khoản, cấu hình ngôn ngữ và xem thống kê từ khóa; (iii) \textbf{Quản lý thư viện thuật ngữ (Library Keeper)} là người vận hành thư viện thuật ngữ chung, có quyền xét duyệt đề xuất thuật ngữ từ người dùng và quản lý nội dung thư viện thuật ngữ chung.
 
-Các use case chính của hệ thống gồm: (i) \textbf{Dịch văn bản} và \textbf{dịch tệp tài liệu}, trong đó người dùng gửi văn bản thuần hoặc tệp Office/PDF và chọn một hoặc nhiều ngôn ngữ đích để nhận kết quả; (ii) \textbf{chuyển đổi định dạng tài liệu} mà không dịch nội dung, thông qua dịch vụ ConvertAPI; (iii) \textbf{xem lịch sử dịch} để tra cứu và tải lại các tệp đã xử lý; (iv) \textbf{quản lý thư viện thuật ngữ cá nhân} để người dùng tự tạo, chỉnh sửa và xóa bộ từ điển nội bộ của mình; (v) \textbf{đề xuất thuật ngữ} lên thư viện chung theo cơ chế tích lũy ngưỡng trước khi chuyển sang hàng đợi xét duyệt; (vi) \textbf{thông báo} khi thuật ngữ trong thư viện chung được cập nhật; (vii) các chức năng \textbf{quản lý người dùng, cấu hình ngôn ngữ và thống kê từ khóa} dành riêng cho Admin; và (viii) \textbf{duyệt đề xuất thuật ngữ} dành cho Admin và Library Keeper, khi phê duyệt hệ thống tự động cập nhật glossary lên Google Cloud Storage.
+Các use case chính của hệ thống gồm: (i) \textbf{Dịch văn bản} và \textbf{dịch tệp tài liệu}, trong đó người dùng gửi văn bản thuần hoặc tệp Office/PDF và chọn một hoặc nhiều ngôn ngữ đích để nhận kết quả; (ii) \textbf{chuyển đổi định dạng tài liệu} mà không dịch nội dung, thông qua dịch vụ ConvertAPI; (iii) \textbf{xem lịch sử dịch} để tra cứu và tải lại các tệp đã xử lý; (iv) \textbf{quản lý thư viện thuật ngữ cá nhân} để người dùng tự tạo, chỉnh sửa và xóa bộ từ điển nội bộ của mình; (v) \textbf{đề xuất thuật ngữ} lên thư viện thuật ngữ chung theo cơ chế tích lũy ngưỡng trước khi chuyển sang hàng đợi xét duyệt; (vi) \textbf{thông báo} khi thuật ngữ trong thư viện thuật ngữ chung được cập nhật; (vii) các chức năng \textbf{quản lý người dùng, cấu hình ngôn ngữ và thống kê từ khóa} dành riêng cho Admin; và (viii) \textbf{duyệt đề xuất thuật ngữ} dành cho Admin và Library Keeper, khi phê duyệt hệ thống tự động cập nhật thư viện thuật ngữ lên Google Cloud Storage.
 
 \subsection{Biểu đồ use case phân rã Dịch văn bản}
 \label{subsection:2.2.2}
@@ -61,7 +61,7 @@ Các use case chính của hệ thống gồm: (i) \textbf{Dịch văn bản} v�
   \label{fig:uc_dichvanban}
 \end{figure}
 
-Hình~\ref{fig:uc_dichvanban} thể hiện biểu đồ phân rã chức năng Dịch văn bản. Các bước thao tác của người dùng bao gồm: (i) nhập nội dung văn bản cần dịch vào ô nhập liệu; (ii) tùy chọn chỉ định ngôn ngữ nguồn, hoặc để hệ thống tự phát hiện (extend); (iii) chọn một hoặc nhiều ngôn ngữ đích từ danh sách ngôn ngữ đang kích hoạt của công ty; (iv) chọn chế độ thư viện thuật ngữ áp dụng (thư viện chung, thư viện cá nhân hoặc không dùng); (v) nhận và xem kết quả dịch hiển thị trực tiếp trên giao diện.
+Hình~\ref{fig:uc_dichvanban} thể hiện biểu đồ phân rã chức năng Dịch văn bản. Các bước thao tác của người dùng bao gồm: (i) nhập nội dung văn bản cần dịch vào ô nhập liệu; (ii) tùy chọn chỉ định ngôn ngữ nguồn, hoặc để hệ thống tự phát hiện; (iii) chọn một hoặc nhiều ngôn ngữ đích từ danh sách ngôn ngữ; (iv) chọn chế độ thư viện thuật ngữ áp dụng (thư viện thuật ngữ chung, thư viện thuật ngữ cá nhân hoặc không dùng); (v) nhận và xem kết quả dịch hiển thị trực tiếp trên giao diện.
 
 \subsection{Biểu đồ use case phân rã Dịch tệp tài liệu}
 \label{subsection:2.2.3phanra}
@@ -73,19 +73,19 @@ Hình~\ref{fig:uc_dichvanban} thể hiện biểu đồ phân rã chức năng D
   \label{fig:uc_dichfile}
 \end{figure}
 
-Hình~\ref{fig:uc_dichfile} thể hiện biểu đồ phân rã chức năng Dịch tệp tài liệu. Các bước thao tác của người dùng bao gồm: (i) chọn tệp cần dịch từ các nhóm định dạng được hỗ trợ gồm DOCX, XLSX, PPTX, PDF văn bản, PDF ảnh quét và các định dạng bảng tính; (ii) tùy chọn chỉ định ngôn ngữ nguồn, hoặc để hệ thống tự phát hiện (extend); (iii) chọn một hoặc nhiều ngôn ngữ đích, hệ thống tạo một tệp kết quả riêng cho mỗi ngôn ngữ; (iv) chọn chế độ thư viện thuật ngữ áp dụng; (v) nhận danh sách URL tệp kết quả và tải về, đồng thời tệp được lưu tự động vào lịch sử dịch.
+Hình~\ref{fig:uc_dichfile} thể hiện biểu đồ phân rã chức năng Dịch tệp tài liệu. Các bước thao tác của người dùng bao gồm: (i) chọn tệp cần dịch từ các nhóm định dạng được hỗ trợ gồm DOCX, XLSX, PPTX, PDF văn bản, PDF ảnh quét; (ii) tùy chọn chỉ định ngôn ngữ nguồn, hoặc để hệ thống tự phát hiện; (iii) chọn một hoặc nhiều ngôn ngữ đích, hệ thống tạo một tệp kết quả riêng cho mỗi ngôn ngữ; (iv) chọn chế độ thư viện thuật ngữ áp dụng; (v) nhận danh sách URL tệp kết quả và tải về, đồng thời tệp được lưu tự động vào lịch sử dịch.
 
-\subsection{Biểu đồ use case phân rã Đề xuất thuật ngữ}
+\subsection{Biểu đồ use case phân rã Quản lý thư viện thuật ngữ}
 \label{subsection:2.2.4phanra}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{../Hinhve/uc_quanlythuatngu.png}
-  \caption{Biểu đồ use case phân rã Đề xuất thuật ngữ}
-  \label{fig:uc_dexuatthuatngu}
+  \caption{Biểu đồ use case phân rã Quản lý thư viện thuật ngữ}
+  \label{fig:uc_quanlythuatngu}
 \end{figure}
 
-Hình~\ref{fig:uc_dexuatthuatngu} thể hiện biểu đồ phân rã chức năng Quản lý thư viện và Đề xuất thuật ngữ. Các thao tác của người dùng bao gồm: (i) xem danh sách toàn bộ thuật ngữ đã lưu trong thư viện cá nhân, có hỗ trợ phân trang và tìm kiếm; (ii) thêm thuật ngữ mới với giá trị dịch cho từng ngôn ngữ đang kích hoạt; (iii) chỉnh sửa nội dung dịch của thuật ngữ hiện có; (iv) xóa thuật ngữ khỏi thư viện cá nhân; (v) đề xuất thuật ngữ lên thư viện chung, trong đó hệ thống tích lũy số người đề xuất cùng một cặp từ và đưa vào hàng đợi xét duyệt khi đạt ngưỡng; (vi) theo dõi trạng thái các đề xuất đã gửi trực tiếp trong giao diện thư viện cá nhân.
+Hình~\ref{fig:uc_quanlythuatngu} thể hiện biểu đồ phân rã chức năng Quản lý thư viện thuật ngữ. Các thao tác của người dùng bao gồm: (i) xem danh sách toàn bộ thuật ngữ đã lưu trong thư viện thuật ngữ cá nhân, có hỗ trợ phân trang và tìm kiếm; (ii) thêm thuật ngữ mới với giá trị dịch cho từng ngôn ngữ đang kích hoạt; (iii) chỉnh sửa nội dung dịch của thuật ngữ hiện có; (iv) xóa thuật ngữ khỏi thư viện thuật ngữ cá nhân; (v) đề xuất thuật ngữ lên thư viện thuật ngữ chung, trong đó hệ thống tích lũy số người đề xuất cùng một cặp từ và đưa vào hàng đợi xét duyệt khi đạt ngưỡng; (vi) theo dõi trạng thái các đề xuất đã gửi trực tiếp trong giao diện thư viện thuật ngữ cá nhân.
 
 \subsection{Biểu đồ use case phân rã Duyệt đề xuất thuật ngữ}
 \label{subsection:2.2.5phanra}
@@ -97,7 +97,7 @@ Hình~\ref{fig:uc_dexuatthuatngu} thể hiện biểu đồ phân rã chức nă
   \label{fig:uc_duyetthuatngu}
 \end{figure}
 
-Hình~\ref{fig:uc_duyetthuatngu} thể hiện biểu đồ phân rã chức năng Duyệt đề xuất thuật ngữ thành ba thao tác của Quản trị viên và Quản lý thư viện: (i) xem danh sách đề xuất đang chờ duyệt với khả năng lọc theo từ khóa hoặc người đề xuất; (ii) phê duyệt đề xuất để bổ sung thuật ngữ vào thư viện chung; (iii) từ chối đề xuất khi nội dung không phù hợp, trong đó thư viện chung không thay đổi.
+Hình~\ref{fig:uc_duyetthuatngu} thể hiện biểu đồ phân rã chức năng Duyệt đề xuất thuật ngữ thành ba thao tác của Quản trị viên và Quản lý thư viện thuật ngữ: (i) xem danh sách đề xuất đang chờ duyệt với khả năng lọc theo từ khóa hoặc người đề xuất; (ii) phê duyệt đề xuất để bổ sung thuật ngữ vào thư viện thuật ngữ chung; (iii) từ chối đề xuất khi nội dung không phù hợp, trong đó thư viện thuật ngữ chung không thay đổi.
 
 \subsection{Biểu đồ use case phân rã Quản lý tài khoản người dùng}
 \label{subsection:2.2.7phanra}
@@ -109,7 +109,7 @@ Hình~\ref{fig:uc_duyetthuatngu} thể hiện biểu đồ phân rã chức năn
   \label{fig:uc_quanlyuser}
 \end{figure}
 
-Hình~\ref{fig:uc_quanlyuser} thể hiện biểu đồ phân rã chức năng Quản lý tài khoản người dùng thành bốn thao tác của Quản trị viên: (i) xem danh sách toàn bộ tài khoản trong hệ thống kèm vai trò, trạng thái và thông tin cơ bản, có hỗ trợ tìm kiếm và phân trang; (ii) tạo tài khoản mới với thông tin email, tên hiển thị và vai trò ban đầu; (iii) điều chỉnh vai trò tài khoản giữa ba cấp là Người dùng, Quản trị viên và Quản lý thư viện với hiệu lực ngay lập tức; (iv) vô hiệu hóa tài khoản để ngăn đăng nhập mà không xóa dữ liệu liên quan.
+Hình~\ref{fig:uc_quanlyuser} thể hiện biểu đồ phân rã chức năng Quản lý tài khoản người dùng thành bốn thao tác của Quản trị viên: (i) xem danh sách toàn bộ tài khoản trong hệ thống kèm vai trò, trạng thái và thông tin cơ bản, có hỗ trợ tìm kiếm và phân trang; (ii) tạo tài khoản mới với thông tin email, tên hiển thị và vai trò ban đầu; (iii) điều chỉnh vai trò tài khoản giữa ba cấp là Người dùng, Quản trị viên và Quản lý thư viện thuật ngữ với hiệu lực ngay lập tức; (iv) vô hiệu hóa tài khoản để ngăn đăng nhập mà không xóa dữ liệu liên quan.
 
 \subsection{Quy trình nghiệp vụ}
 \label{subsection:2.2.3}
@@ -143,7 +143,7 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 2 & Người dùng & Nhập nội dung văn bản cần dịch vào ô nhập liệu. \\ \hline
 3 & Người dùng & Chọn ngôn ngữ nguồn hoặc để hệ thống tự phát hiện ngôn ngữ. \\ \hline
 4 & Người dùng & Chọn một hoặc nhiều ngôn ngữ đích trong danh sách ngôn ngữ được phép sử dụng. \\ \hline
-5 & Người dùng & Chọn chế độ thư viện thuật ngữ: thư viện chung, thư viện cá nhân hoặc không sử dụng thư viện. \\ \hline
+5 & Người dùng & Chọn chế độ thư viện thuật ngữ: thư viện thuật ngữ chung, thư viện thuật ngữ cá nhân hoặc không sử dụng thư viện thuật ngữ. \\ \hline
 6 & Hệ thống & Kiểm tra nội dung đầu vào, ngôn ngữ đích và chế độ thư viện thuật ngữ. \\ \hline
 7 & Hệ thống & Thực hiện dịch văn bản theo ngôn ngữ và chế độ thuật ngữ đã chọn. \\ \hline
 8 & Hệ thống & Hiển thị kết quả dịch cho từng ngôn ngữ đích trên giao diện. \\ \hline
@@ -157,7 +157,6 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 \textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\ \hline
 2a & Hệ thống & Nếu văn bản đầu vào trống, hệ thống hiển thị thông báo yêu cầu nhập nội dung cần dịch. \\ \hline
 4a & Hệ thống & Nếu người dùng chưa chọn ngôn ngữ đích, hệ thống yêu cầu chọn ít nhất một ngôn ngữ đích. \\ \hline
-5a & Hệ thống & Nếu người dùng chọn thư viện cá nhân nhưng chưa có thuật ngữ phù hợp, hệ thống thông báo và cho phép tiếp tục dịch không dùng thư viện cá nhân. \\ \hline
 7a & Hệ thống & Nếu dịch thất bại do lỗi dịch vụ hoặc dữ liệu đầu vào không hợp lệ, hệ thống thông báo lỗi và không ghi nhận kết quả dịch. \\ \hline
 \end{longtable}
 
@@ -184,9 +183,9 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 2 & Người dùng & Chọn tệp tài liệu cần dịch từ thiết bị cá nhân. \\ \hline
 3 & Người dùng & Chọn ngôn ngữ nguồn hoặc để hệ thống tự phát hiện ngôn ngữ của tài liệu. \\ \hline
 4 & Người dùng & Chọn một hoặc nhiều ngôn ngữ đích cần dịch sang. \\ \hline
-5 & Người dùng & Chọn chế độ thư viện thuật ngữ: thư viện chung, thư viện cá nhân hoặc không sử dụng thư viện. \\ \hline
+5 & Người dùng & Chọn chế độ thư viện thuật ngữ: thư viện thuật ngữ chung, thư viện thuật ngữ cá nhân hoặc không sử dụng thư viện thuật ngữ. \\ \hline
 6 & Người dùng & Gửi yêu cầu dịch tệp tài liệu. \\ \hline
-7 & Hệ thống & Tiếp nhận tệp, kiểm tra phiên đăng nhập, thông tin ngôn ngữ, chế độ thư viện và giới hạn dung lượng tệp. \\ \hline
+7 & Hệ thống & Tiếp nhận tệp, kiểm tra phiên đăng nhập, thông tin ngôn ngữ, chế độ thư viện thuật ngữ và giới hạn dung lượng tệp. \\ \hline
 8 & Hệ thống & Kiểm tra định dạng tệp để xác định phương án xử lý phù hợp. \\ \hline
 9 & Hệ thống & Với tệp DOCX, hệ thống dịch nội dung và cố gắng bảo toàn cấu trúc văn bản, bảng biểu và định dạng cơ bản. \\ \hline
 10 & Hệ thống & Với tệp XLSX, XLS hoặc CSV, hệ thống chuẩn hóa dữ liệu nếu cần, dịch các ô có nội dung văn bản và tạo tệp kết quả tương ứng. \\ \hline
@@ -211,7 +210,7 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 8a & Hệ thống & Nếu định dạng tệp không được hỗ trợ, hệ thống thông báo lỗi và không thực hiện dịch. \\ \hline
 13a & Hệ thống & Nếu OCR thất bại hoặc không nhận dạng được nội dung, hệ thống thông báo không thể trích xuất văn bản từ tài liệu. \\ \hline
 14a & Hệ thống & Nếu quá trình dịch thất bại, hệ thống thông báo lỗi, không tạo tệp kết quả không hoàn chỉnh và cho phép người dùng gửi lại yêu cầu. \\ \hline
-15a & Hệ thống & Nếu lưu tệp kết quả hoặc lưu lịch sử thất bại, hệ thống thông báo trạng thái xử lý; nếu tệp kết quả đã tạo thành công, hệ thống ưu tiên trả kết quả cho người dùng và ghi nhận lỗi để xử lý sau. \\ \hline
+15a & Hệ thống & Nếu tệp kết quả đã tạo thành công, hệ thống ưu tiên trả kết quả cho người dùng và ghi nhận lỗi để xử lý sau. \\ \hline
 \end{longtable}
 
 \begin{longtable}{|p{4cm}|p{10.5cm}|}
@@ -225,7 +224,7 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 \hline
 \textbf{Mã usecase} & UC003 & \textbf{Tên usecase} & Quản lý thư viện thuật ngữ cá nhân \\ \hline
 \textbf{Tác nhân} & Người dùng & & \\ \hline
-\textbf{Tiền điều kiện} & \multicolumn{3}{p{11.5cm}|}{Người dùng đã đăng nhập vào hệ thống. Danh sách ngôn ngữ được phép sử dụng của công ty đã được cấu hình.} \\ \hline
+\textbf{Tiền điều kiện} & \multicolumn{3}{p{11.5cm}|}{Người dùng đã đăng nhập vào hệ thống.} \\ \hline
 \end{longtable}
 
 \textbf{Luồng sự kiện chính}
@@ -235,7 +234,7 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 \textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\ \hline
 1 & Người dùng & Truy cập chức năng quản lý thư viện thuật ngữ cá nhân. \\ \hline
 2 & Hệ thống & Hiển thị danh sách thuật ngữ cá nhân của người dùng, kèm thông tin bản dịch theo từng ngôn ngữ. \\ \hline
-3 & Người dùng & Tìm kiếm, thêm mới, chỉnh sửa hoặc xóa thuật ngữ trong thư viện cá nhân. \\ \hline
+3 & Người dùng & Tìm kiếm, thêm mới, chỉnh sửa hoặc xóa thuật ngữ trong thư viện thuật ngữ cá nhân. \\ \hline
 4 & Hệ thống & Kiểm tra dữ liệu thuật ngữ, bao gồm từ nguồn, ngôn ngữ tương ứng và nội dung bản dịch. \\ \hline
 5 & Hệ thống & Lưu thay đổi vào thư viện thuật ngữ cá nhân của người dùng. \\ \hline
 6 & Hệ thống & Cập nhật lại danh sách thuật ngữ trên giao diện để người dùng kiểm tra kết quả. \\ \hline
@@ -247,23 +246,22 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 \hline
 \textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\ \hline
 3a & Hệ thống & Nếu người dùng tìm kiếm nhưng không có kết quả phù hợp, hệ thống hiển thị danh sách rỗng và cho phép nhập từ khóa khác. \\ \hline
-4a & Hệ thống & Nếu thuật ngữ hoặc bản dịch bị bỏ trống, hệ thống thông báo lỗi và yêu cầu nhập đủ thông tin. \\ \hline
-4b & Hệ thống & Nếu thuật ngữ đã tồn tại trong thư viện cá nhân, hệ thống thông báo trùng lặp và cho phép người dùng chỉnh sửa bản ghi hiện có. \\ \hline
+4a & Hệ thống & Nếu thuật ngữ đã tồn tại trong thư viện thuật ngữ cá nhân, hệ thống thông báo trùng lặp và cho phép người dùng chỉnh sửa bản ghi hiện có. \\ \hline
 5a & Hệ thống & Nếu thao tác lưu thất bại, hệ thống giữ nguyên dữ liệu trước đó và thông báo để người dùng thực hiện lại. \\ \hline
 \end{longtable}
 
 \begin{longtable}{|p{4cm}|p{10.5cm}|}
 \hline
-\textbf{Hậu điều kiện} & Thư viện thuật ngữ cá nhân của người dùng được cập nhật theo thao tác hợp lệ. Các thuật ngữ này có thể được sử dụng khi người dùng chọn chế độ thư viện cá nhân trong chức năng dịch. \\ \hline
+\textbf{Hậu điều kiện} & Thư viện thuật ngữ cá nhân của người dùng được cập nhật theo thao tác hợp lệ. Các thuật ngữ này có thể được sử dụng khi người dùng chọn chế độ thư viện thuật ngữ cá nhân trong chức năng dịch. \\ \hline
 \end{longtable}
 
-\subsection{Đặc tả use case Đề xuất thuật ngữ lên thư viện chung}
+\subsection{Đặc tả use case Đề xuất thuật ngữ lên thư viện thuật ngữ chung}
 
 \begin{longtable}{|p{3cm}|p{4cm}|p{3cm}|p{4.5cm}|}
 \hline
-\textbf{Mã usecase} & UC004 & \textbf{Tên usecase} & Đề xuất thuật ngữ lên thư viện chung \\ \hline
+\textbf{Mã usecase} & UC004 & \textbf{Tên usecase} & Đề xuất thuật ngữ lên thư viện thuật ngữ chung \\ \hline
 \textbf{Tác nhân} & Người dùng & & \\ \hline
-\textbf{Tiền điều kiện} & \multicolumn{3}{p{11.5cm}|}{Người dùng đã đăng nhập. Thuật ngữ cần đề xuất đã có trong thư viện cá nhân hoặc được người dùng nhập đầy đủ thông tin đề xuất.} \\ \hline
+\textbf{Tiền điều kiện} & \multicolumn{3}{p{11.5cm}|}{Người dùng đã đăng nhập. Thuật ngữ cần đề xuất đã có trong thư viện thuật ngữ cá nhân hoặc được người dùng nhập đầy đủ thông tin đề xuất.} \\ \hline
 \end{longtable}
 
 \textbf{Luồng sự kiện chính}
@@ -272,10 +270,10 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 \hline
 \textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\ \hline
 1 & Người dùng & Truy cập thư viện thuật ngữ cá nhân hoặc màn hình đề xuất thuật ngữ. \\ \hline
-2 & Người dùng & Chọn thuật ngữ cần đề xuất lên thư viện chung. \\ \hline
+2 & Người dùng & Chọn thuật ngữ cần đề xuất lên thư viện thuật ngữ chung. \\ \hline
 3 & Người dùng & Kiểm tra nội dung thuật ngữ, bản dịch và gửi yêu cầu đề xuất. \\ \hline
 4 & Hệ thống & Kiểm tra tính hợp lệ của dữ liệu đề xuất và quyền gửi đề xuất của người dùng. \\ \hline
-5 & Hệ thống & Đối chiếu đề xuất với thư viện chung và các đề xuất đang chờ xử lý. \\ \hline
+5 & Hệ thống & Đối chiếu đề xuất với thư viện thuật ngữ chung và các đề xuất đang chờ xử lý. \\ \hline
 6 & Hệ thống & Ghi nhận người dùng là một người đề xuất cho cặp thuật ngữ tương ứng. \\ \hline
 7 & Hệ thống & Nếu số lượng người đề xuất đạt ngưỡng cấu hình, hệ thống đưa thuật ngữ vào hàng đợi chờ xét duyệt. \\ \hline
 8 & Hệ thống & Thông báo trạng thái tiếp nhận đề xuất cho người dùng. \\ \hline
@@ -286,15 +284,13 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 \begin{longtable}{|p{1cm}|p{3.3cm}|p{10.2cm}|}
 \hline
 \textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\ \hline
-4a & Hệ thống & Nếu dữ liệu đề xuất thiếu thuật ngữ hoặc bản dịch, hệ thống từ chối tiếp nhận và yêu cầu bổ sung thông tin. \\ \hline
-5a & Hệ thống & Nếu thuật ngữ đã tồn tại trong thư viện chung với cùng bản dịch, hệ thống thông báo trùng lặp và không tạo đề xuất mới. \\ \hline
-5b & Hệ thống & Nếu người dùng đã đề xuất cùng thuật ngữ trước đó, hệ thống thông báo đề xuất đã được ghi nhận và không tăng số lượt đề xuất. \\ \hline
+
 7a & Hệ thống & Nếu đề xuất chưa đạt ngưỡng xét duyệt, hệ thống lưu đề xuất ở trạng thái tích lũy và chờ thêm người dùng khác đề xuất. \\ \hline
 \end{longtable}
 
 \begin{longtable}{|p{4cm}|p{10.5cm}|}
 \hline
-\textbf{Hậu điều kiện} & Đề xuất hợp lệ được ghi nhận trong hệ thống. Khi đạt ngưỡng, đề xuất được chuyển sang hàng đợi xét duyệt để Quản trị viên hoặc Quản lý thư viện xử lý. \\ \hline
+\textbf{Hậu điều kiện} & Đề xuất hợp lệ được ghi nhận trong hệ thống. Khi đạt ngưỡng, đề xuất được chuyển sang hàng đợi xét duyệt để Quản trị viên hoặc Quản lý thư viện thuật ngữ xử lý. \\ \hline
 \end{longtable}
 
 \subsection{Đặc tả use case Xét duyệt đề xuất thuật ngữ}
@@ -302,8 +298,8 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 \begin{longtable}{|p{3cm}|p{4cm}|p{3cm}|p{4.5cm}|}
 \hline
 \textbf{Mã usecase} & UC005 & \textbf{Tên usecase} & Xét duyệt đề xuất thuật ngữ \\ \hline
-\textbf{Tác nhân} & Quản trị viên, Quản lý thư viện & & \\ \hline
-\textbf{Tiền điều kiện} & \multicolumn{3}{p{11.5cm}|}{Tác nhân đã đăng nhập với quyền Quản trị viên hoặc Quản lý thư viện. Hệ thống có đề xuất thuật ngữ đang chờ xét duyệt.} \\ \hline
+\textbf{Tác nhân} & Quản trị viên, Quản lý thư viện thuật ngữ & & \\ \hline
+\textbf{Tiền điều kiện} & \multicolumn{3}{p{11.5cm}|}{Tác nhân đã đăng nhập với quyền Quản trị viên hoặc Quản lý thư viện thuật ngữ. Hệ thống có đề xuất thuật ngữ đang chờ xét duyệt.} \\ \hline
 \end{longtable}
 
 \textbf{Luồng sự kiện chính}
@@ -311,12 +307,11 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 \begin{longtable}{|p{1cm}|p{3.3cm}|p{10.2cm}|}
 \hline
 \textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\ \hline
-1 & Quản trị viên / Quản lý thư viện & Truy cập chức năng xét duyệt đề xuất thuật ngữ. \\ \hline
+1 & Quản trị viên / Quản lý thư viện thuật ngữ & Truy cập chức năng xét duyệt đề xuất thuật ngữ. \\ \hline
 2 & Hệ thống & Hiển thị danh sách đề xuất đang chờ duyệt, kèm thuật ngữ, bản dịch, người đề xuất và thời điểm gửi. \\ \hline
-3 & Quản trị viên / Quản lý thư viện & Chọn một đề xuất để xem chi tiết. \\ \hline
-4 & Hệ thống & Hiển thị chi tiết đề xuất và cảnh báo nếu có khả năng trùng lặp với thư viện chung. \\ \hline
-5 & Quản trị viên / Quản lý thư viện & Kiểm tra nội dung thuật ngữ và quyết định phê duyệt hoặc từ chối đề xuất. \\ \hline
-6 & Hệ thống & Nếu đề xuất được phê duyệt, hệ thống cập nhật thuật ngữ vào thư viện chung. \\ \hline
+3 & Quản trị viên / Quản lý thư viện thuật ngữ & Chọn một đề xuất để xem chi tiết. \\ \hline
+4 & Hệ thống & Hiển thị chi tiết đề xuất và cảnh báo nếu có khả năng trùng lặp với thư viện thuật ngữ chung. \\ \hline
+6 & Hệ thống & Nếu đề xuất được phê duyệt, hệ thống cập nhật thuật ngữ vào thư viện thuật ngữ chung. \\ \hline
 7 & Hệ thống & Cập nhật trạng thái đề xuất và ghi nhận người xét duyệt. \\ \hline
 8 & Hệ thống & Gửi thông báo kết quả xét duyệt tới người dùng liên quan. \\ \hline
 9 & Hệ thống & Cập nhật danh sách đề xuất chờ duyệt trên giao diện. \\ \hline
@@ -329,56 +324,14 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 \textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\ \hline
 1a & Hệ thống & Nếu tài khoản không có quyền xét duyệt, hệ thống từ chối truy cập chức năng. \\ \hline
 4a & Hệ thống & Nếu đề xuất đã được người khác xử lý trước đó, hệ thống thông báo trạng thái mới nhất và không cho phép xử lý lại. \\ \hline
-5a & Quản trị viên / Quản lý thư viện & Nếu từ chối đề xuất, tác nhân nhập lý do từ chối để hệ thống gửi thông báo cho người đề xuất. \\ \hline
-6a & Hệ thống & Nếu thuật ngữ phê duyệt bị trùng với thư viện chung, hệ thống yêu cầu tác nhân xác nhận cập nhật hoặc hủy thao tác. \\ \hline
-6b & Hệ thống & Nếu cập nhật thư viện chung thất bại, hệ thống giữ đề xuất ở trạng thái chờ xử lý và thông báo lỗi cho tác nhân. \\ \hline
+6a & Hệ thống & Nếu thuật ngữ phê duyệt bị trùng với thư viện thuật ngữ chung, hệ thống yêu cầu tác nhân xác nhận cập nhật hoặc hủy thao tác. \\ \hline
+6b & Hệ thống & Nếu cập nhật thư viện thuật ngữ chung thất bại, hệ thống giữ đề xuất ở trạng thái chờ xử lý và thông báo lỗi cho tác nhân. \\ \hline
 8a & Hệ thống & Nếu gửi thông báo thất bại, trạng thái xét duyệt vẫn được lưu và lỗi thông báo được ghi nhận để xử lý sau. \\ \hline
 \end{longtable}
 
 \begin{longtable}{|p{4cm}|p{10.5cm}|}
 \hline
-\textbf{Hậu điều kiện} & Đề xuất được chuyển sang trạng thái đã duyệt hoặc bị từ chối. Nếu được duyệt, thuật ngữ được phản ánh trong thư viện chung và có thể được sử dụng trong các lần dịch tiếp theo. \\ \hline
-\end{longtable}
-
-\noindent\textbf{Agent: Cập nhật theo mã nguồn hiện tại.} Luồng thay thế 5a của UC005 chưa khớp với bản cài đặt hiện hành. Trong frontend \verb|WEB/multilanguage_transolator_fe/src/pages/Admin/CommonLibraryManagement.jsx|, hàm \verb|handleRejectFromQueue| chỉ hiển thị hộp thoại xác nhận \verb|window.confirm| với nội dung reject và delete, sau đó gọi \verb|keywordService.deleteKeyword(id)|. Service này gửi request \verb|DELETE| tới \verb|/api/keywords/<id>/delete/|. Ở backend, \verb|DeleteSuggestionView.delete| trong \verb|WEB/multilanguage_transolator_be/api/views/keyword.py| lấy \verb|KeywordSuggestion| theo id và gọi trực tiếp \verb|suggestion.delete()|. Do đó, phiên bản hiện tại không có bước nhập lý do từ chối, không lưu trường lý do từ chối, không chuyển bản ghi sang trạng thái \verb|rejected| trong luồng này và cũng không tạo thông báo riêng cho người đề xuất khi bị từ chối. Mô tả UC005 nên được hiệu chỉnh thành: khi tác nhân chọn Reject, hệ thống yêu cầu xác nhận và xóa đề xuất khỏi hàng đợi; thông báo trên giao diện chỉ là toast cục bộ cho người đang thao tác.
-
-\subsection{Đặc tả use case Cấu hình ngôn ngữ theo công ty}
-
-\begin{longtable}{|p{3cm}|p{4cm}|p{3cm}|p{4.5cm}|}
-\hline
-\textbf{Mã usecase} & UC006 & \textbf{Tên usecase} & Cấu hình ngôn ngữ theo công ty \\ \hline
-\textbf{Tác nhân} & Quản trị viên & & \\ \hline
-\textbf{Tiền điều kiện} & \multicolumn{3}{p{11.5cm}|}{Quản trị viên đã đăng nhập. Hệ thống có danh mục ngôn ngữ có thể hỗ trợ ở cấp nền tảng.} \\ \hline
-\end{longtable}
-
-\textbf{Luồng sự kiện chính}
-
-\begin{longtable}{|p{1cm}|p{3.3cm}|p{10.2cm}|}
-\hline
-\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\ \hline
-1 & Quản trị viên & Truy cập chức năng cấu hình ngôn ngữ theo công ty. \\ \hline
-2 & Hệ thống & Hiển thị danh sách ngôn ngữ đang được phép sử dụng và danh sách ngôn ngữ có thể kích hoạt. \\ \hline
-3 & Quản trị viên & Chọn thêm, bỏ chọn hoặc thay đổi trạng thái các ngôn ngữ cho công ty. \\ \hline
-4 & Hệ thống & Kiểm tra cấu hình mới, bao gồm tính hợp lệ của mã ngôn ngữ và số lượng ngôn ngữ tối thiểu cần duy trì. \\ \hline
-5 & Hệ thống & Lưu cấu hình ngôn ngữ mới cho công ty. \\ \hline
-6 & Hệ thống & Áp dụng cấu hình mới cho các màn hình dịch văn bản, dịch tệp tài liệu và quản lý thuật ngữ. \\ \hline
-7 & Hệ thống & Thông báo cấu hình đã được cập nhật thành công. \\ \hline
-\end{longtable}
-
-\textbf{Luồng sự kiện thay thế}
-
-\begin{longtable}{|p{1cm}|p{3.3cm}|p{10.2cm}|}
-\hline
-\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\ \hline
-1a & Hệ thống & Nếu tài khoản không có quyền Quản trị viên, hệ thống từ chối truy cập chức năng. \\ \hline
-4a & Hệ thống & Nếu cấu hình không còn ngôn ngữ đích nào được kích hoạt, hệ thống từ chối lưu và yêu cầu chọn ít nhất một ngôn ngữ. \\ \hline
-4b & Hệ thống & Nếu mã ngôn ngữ không nằm trong danh mục hỗ trợ, hệ thống bỏ qua giá trị không hợp lệ và thông báo cho Quản trị viên. \\ \hline
-5a & Hệ thống & Nếu lưu cấu hình thất bại, hệ thống giữ nguyên cấu hình cũ và thông báo lỗi. \\ \hline
-\end{longtable}
-
-\begin{longtable}{|p{4cm}|p{10.5cm}|}
-\hline
-\textbf{Hậu điều kiện} & Danh sách ngôn ngữ được phép sử dụng của công ty được cập nhật. Người dùng chỉ có thể chọn các ngôn ngữ đang được kích hoạt trong các chức năng dịch và quản lý thuật ngữ. \\ \hline
+\textbf{Hậu điều kiện} & Đề xuất được chuyển sang trạng thái đã duyệt hoặc bị từ chối. Nếu được duyệt, thuật ngữ được phản ánh trong thư viện thuật ngữ chung và có thể được sử dụng trong các lần dịch tiếp theo. \\ \hline
 \end{longtable}
 
 \section{Yêu cầu phi chức năng}
@@ -389,21 +342,12 @@ Về bảo mật, hệ thống cần xác thực người dùng bằng JWT và p
 
 Về hiệu năng, hệ thống cần đảm bảo các thao tác thông thường như đăng nhập, xem lịch sử dịch, quản lý thuật ngữ và tải kết quả có thời gian phản hồi hợp lý. Đối với các tác vụ dịch tệp, do thời gian xử lý phụ thuộc vào kích thước và định dạng tài liệu, hệ thống cần cấu hình giới hạn kích thước upload, timeout phù hợp và cơ chế xử lý ổn định khi làm việc với các tệp lớn.
 
-Về độ tin cậy, hệ thống cần xử lý tốt các tệp tạm trong quá trình dịch và dọn dẹp sau khi hoàn tất để tránh phát sinh dữ liệu dư thừa. Với các lỗi tạm thời khi tải tệp lên dịch vụ lưu trữ, hệ thống cần có cơ chế thử lại phù hợp. Trong trường hợp glossary không khả dụng, hệ thống cần có phương án chuyển sang chế độ dịch thông thường để không làm gián đoạn toàn bộ quy trình dịch.
+Về độ tin cậy, hệ thống cần xử lý tốt các tệp tạm trong quá trình dịch và dọn dẹp sau khi hoàn tất để tránh phát sinh dữ liệu dư thừa. Với các lỗi tạm thời khi tải tệp lên dịch vụ lưu trữ, hệ thống cần có cơ chế thử lại phù hợp. Trong trường hợp thư viện thuật ngữ không khả dụng, hệ thống cần có phương án chuyển sang chế độ dịch thông thường để không làm gián đoạn toàn bộ quy trình dịch.
 
 Về tính dễ sử dụng, giao diện cần được thiết kế rõ ràng để người dùng có thể tải tệp, lựa chọn ngôn ngữ, chọn chế độ thuật ngữ, theo dõi trạng thái xử lý và tải về kết quả dịch mà không cần hướng dẫn bổ sung. Các thông báo lỗi và trạng thái xử lý cần được hiển thị dễ hiểu để người dùng có thể nắm được tiến trình dịch tài liệu.
 
 Về tính dễ bảo trì, mã nguồn và kiến trúc hệ thống cần được tổ chức rõ ràng theo các lớp như giao diện, API, dịch vụ nghiệp vụ, xử lý tài liệu và dữ liệu. Cách tổ chức này giúp việc mở rộng chức năng, sửa lỗi, thay đổi dịch vụ tích hợp hoặc bổ sung định dạng tài liệu mới trở nên thuận tiện hơn.
 
 Về triển khai, hệ thống cần tách biệt frontend và backend, đồng thời sử dụng reverse proxy để điều phối truy cập, cấu hình giới hạn upload và phục vụ ứng dụng trong môi trường triển khai thực tế. 
-
-Agent:
-
-Theo trạng thái mã nguồn hiện tại, nội dung mô tả hệ thống theo hướng đa công ty và cấu hình ngôn ngữ theo từng công ty cần được hiểu là nội dung lịch sử, không còn phản ánh đúng phạm vi chức năng đang được cài đặt. Bằng chứng trực tiếp nằm trong chuỗi migration của backend: migration \verb|api/migrations/0040_remove_company_models.py| đã xóa trường \verb|company| khỏi \verb|CustomUser|, xóa model \verb|CompanyLanguage| và xóa model \verb|Company|; migration \verb|api/migrations/0041_remove_language_is_active.py| đã xóa trường \verb|is_active| khỏi model \verb|Language|; migration \verb|api/migrations/0043_remove_language_is_default.py| đã xóa trường \verb|is_default|. Do đó, các đoạn mô tả Admin cấu hình ngôn ngữ theo công ty, cũng như use case UC006 về cấu hình ngôn ngữ theo công ty, không còn là chức năng tồn tại trong phiên bản mã nguồn hiện tại.
-
-Trong phiên bản hiện tại, danh sách ngôn ngữ được quản lý theo phạm vi toàn hệ thống. Model \verb|api/models/language.py| chỉ còn các trường \verb|code|, \verb|name|, \verb|native_name|, \verb|flag_emoji| và \verb|sort_order|. View \verb|api/views/language.py| mô tả endpoint \verb|GET /api/languages/| là danh sách bốn ngôn ngữ cố định của hệ thống, còn service \verb|api/services/language_service.py| trả về toàn bộ các bản ghi \verb|Language| theo \verb|sort_order|. Ở phía frontend, hook \verb|src/hooks/useCompanyLanguages.js| đã được thay bằng \verb|src/hooks/useEnabledLanguages.js| và comment trong hook này xác định danh sách ngôn ngữ đang được dùng ở phạm vi toàn hệ thống. Vì vậy, yêu cầu chức năng đúng với mã nguồn hiện tại cần được diễn đạt là hệ thống sử dụng danh sách ngôn ngữ cố định toàn cục cho các chức năng dịch, thư viện thuật ngữ và thống kê, thay vì cho phép Admin bật hoặc tắt ngôn ngữ theo từng công ty.
-
-Từ thay đổi trên, phạm vi quản trị của Admin trong Chương~\ref{chapter:Related_works} cần được hiệu chỉnh về mặt nội dung khi sử dụng trong bản báo cáo cuối. Admin hiện đảm nhiệm quản lý tài khoản, thay đổi vai trò người dùng, xóa tài khoản, xem thống kê từ khóa và phối hợp quản lý thư viện thuật ngữ chung. Library Keeper tập trung vào hàng đợi đề xuất thuật ngữ và thư viện thuật ngữ chung. Chức năng quản lý ngôn ngữ theo công ty không nên tiếp tục được xem là use case hiện hành; nếu vẫn giữ trong tài liệu để phản ánh quá trình phát triển, cần ghi rõ đây là chức năng đã bị loại bỏ khỏi phiên bản mã nguồn hiện tại.
-
 
 \end{document}

@@ -6,7 +6,7 @@ from django.db.models import Count, Q, Max
 from django.db.models.functions import TruncDate
 from django.utils.dateparse import parse_date
 from datetime import datetime, timedelta
-from ..models.keyword import KeywordSuggestion, KeywordQueue, PrivateKeyword
+from ..models.keyword import KeywordSuggestion, PrivateKeyword
 from ..models.user import CustomUser
 from ..serializers.keyword_stats import KeywordStatsResponseSerializer
 import logging

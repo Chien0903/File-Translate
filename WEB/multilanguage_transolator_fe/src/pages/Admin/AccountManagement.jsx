@@ -40,6 +40,7 @@ function AccountManagement() {
     email: "",
     department: "",
     role: "User",
+    password: "",
   });
 
   const [selectedUserId, setSelectedUserId] = useState(null);
@@ -145,15 +146,23 @@ function AccountManagement() {
     }
 
     try {
-      await userService.createUser({
+      const response = await userService.createUser({
         first_name: newAccount.firstName,
         last_name: newAccount.lastName,
         email: newAccount.email,
         department: newAccount.department,
         role: newAccount.role,
+        password: newAccount.password || undefined,
       });
 
+      const generatedPassword = response?.data?.generated_password;
       toast.success("Account created successfully!");
+      if (generatedPassword) {
+        toast.info(
+          `Temporary password for ${newAccount.email}: ${generatedPassword}`,
+          { autoClose: false }
+        );
+      }
 
       fetchUsers();
       setIsAddingAccount(false);
@@ -163,6 +172,7 @@ function AccountManagement() {
         email: "",
         department: "",
         role: "User",
+        password: "",
       });
     } catch (error) {
       const apiData = error?.response?.data || {};

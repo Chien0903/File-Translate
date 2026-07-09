@@ -450,10 +450,12 @@ class TranslateFileView(APIView):
             
         if library_mode not in ["none", "common", "private"]:
             return JsonResponse({"detail": f"Invalid library_mode: {library_mode}"}, status=400)
-            
+
+        library_warning = None
         if library_mode == "private":
             if not PrivateKeyword.objects.filter(user=request.user).exists():
-                return JsonResponse({"detail": "You do not have a private library. Please add keywords to your private library first."}, status=400)
+                library_warning = "You do not have a private library yet. Translated without a library."
+                library_mode = "none"
 
         file_ext = file_url.rsplit(".", 1)[-1].lower()
         file_name = original_file_name or os.path.basename(file_url)
@@ -511,10 +513,13 @@ class TranslateFileView(APIView):
                     original_file_url=file_url,
                 ).order_by('-id').values_list('original_language', flat=True).first()
             )
-            return JsonResponse({
+            response_data = {
                 "translated_files": results,
                 "source_language": detected_source or "unknown",
-            }, status=200)
+            }
+            if library_warning:
+                response_data["warning"] = library_warning
+            return JsonResponse(response_data, status=200)
         except Exception as e:
             logger.error(f"❌ Lỗi trong quá trình xử lý: {str(e)}")
             return JsonResponse({"detail": str(e)}, status=500)
@@ -580,10 +585,12 @@ class TranslateTextView(APIView):
                 
             if library_mode not in ["none", "common", "private"]:
                 return JsonResponse({"error": f"Invalid library_mode: {library_mode}"}, status=400)
-                
+
+            library_warning = None
             if library_mode == "private":
                 if not PrivateKeyword.objects.filter(user=request.user).exists():
-                    return JsonResponse({"error": "You do not have a private library. Please add keywords to your private library first."}, status=400)
+                    library_warning = "You do not have a private library yet. Translated without a library."
+                    library_mode = "none"
 
             # Check if source and target are the same
             if source_language == target_language:
@@ -631,12 +638,15 @@ class TranslateTextView(APIView):
             logger.info(f"✅ Translation successful")
             logger.info(f"📝 Translated text: {translated_text[:100]}{'...' if len(translated_text) > 100 else ''}")
 
-            return JsonResponse({
+            response_data = {
                 "translated_text": translated_text,
                 "source_language": source_language,
                 "target_language": target_language,
                 "source_text": source_text
-            }, status=200)
+            }
+            if library_warning:
+                response_data["warning"] = library_warning
+            return JsonResponse(response_data, status=200)
 
         except Exception as e:
             logger.error(f"❌ Error in text translation: {str(e)}")

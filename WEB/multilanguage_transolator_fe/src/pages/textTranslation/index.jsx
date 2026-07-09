@@ -161,6 +161,10 @@ const TextTranslation = () => {
       const detected = response.data.source_language;
       setTranslatedText(translated);
 
+      if (response.data.warning) {
+        toast.warning(response.data.warning);
+      }
+
       let detectedName = sourceLanguage;
       if (sourceLanguage === "Auto Detect" && detected) {
         detectedName = nameByCode[detected] || sourceLanguage;

@@ -257,6 +257,9 @@ const UploadFileNew = () => {
       };
       const response = await translationService.translateFile(payload);
       const detectedLang = response.data.source_language;
+      if (response.data.warning) {
+        toast.warning(response.data.warning, { autoClose: 8000 });
+      }
       navigate("/translation-results", {
         state: {
           originalFile: file,

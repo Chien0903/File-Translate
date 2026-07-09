@@ -395,8 +395,6 @@ class Command(BaseCommand):
                 translations=kw,
                 defaults={
                     "user": user,
-                    "suggestion_count": 10,
-                    "frequency_percentage": 5.0,
                     "status": "approved",
                     "approved_by": user,
                 },

@@ -54,11 +54,6 @@ const keywordService = {
   getGCSStatus: () => api.get("/api/keywords/gcs-status/"),
 
   uploadToGCS: () => api.post("/api/keywords/upload-to-gcs/"),
-
-  // ─── Queue ─────────────────────────────────────────────────────────────────
-
-  getQueueStatus: (params) =>
-    api.get("/api/keywords/queue/status/", { params }),
 };
 
 export default keywordService;

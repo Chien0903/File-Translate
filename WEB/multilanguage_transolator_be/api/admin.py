@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser, TranslatedFile, Notification
-from .models.keyword import KeywordSuggestion, KeywordQueue, PrivateKeyword
+from .models.keyword import KeywordSuggestion, PrivateKeyword
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
@@ -34,31 +34,16 @@ class NotificationAdmin(admin.ModelAdmin):
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Notification, NotificationAdmin)
 
-@admin.register(KeywordQueue)
-class KeywordQueueAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'is_processed', 'created_at', 'processed_at')
-    list_filter = ('is_processed', 'created_at', 'processed_at')
-    search_fields = ('user__username', 'translations')
-    readonly_fields = ('created_at', 'processed_at')
-
-    fieldsets = (
-        ('User Information', {'fields': ('user',)}),
-        ('Translation Content', {'fields': ('translations',)}),
-        ('Processing Status', {'fields': ('is_processed', 'processed_at')}),
-        ('Timestamps', {'fields': ('created_at',), 'classes': ('collapse',)}),
-    )
-
 @admin.register(KeywordSuggestion)
 class KeywordSuggestionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'status', 'suggestion_count', 'frequency_percentage', 'approved_by', 'created_at', 'updated_at')
+    list_display = ('id', 'user', 'status', 'approved_by', 'created_at', 'updated_at')
     list_filter = ('status', 'created_at')
     search_fields = ('user__username',)
-    readonly_fields = ('suggestion_count', 'frequency_percentage', 'created_at', 'updated_at')
+    readonly_fields = ('created_at', 'updated_at')
 
     fieldsets = (
         ('User Information', {'fields': ('user',)}),
         ('Translation Content', {'fields': ('translations',)}),
-        ('Statistics', {'fields': ('suggestion_count', 'frequency_percentage')}),
         ('Status Information', {'fields': ('status', 'approved_by')}),
         ('Timestamps', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
     )

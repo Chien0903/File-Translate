@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { MdNotificationsNone, MdLogout } from "react-icons/md";
+import { MdLogout } from "react-icons/md";
 import { HiMenu } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
+import Notifications from "../../Notifications";
 
 const Header = ({ onMobileMenuClick }) => {
   const { fullName, role, logout } = useAuth();
@@ -42,10 +43,9 @@ const Header = ({ onMobileMenuClick }) => {
       {/* Right */}
       <div className="flex items-center gap-2">
         {/* Notification bell */}
-        <button className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
-          <MdNotificationsNone size={22} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-        </button>
+        <div className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+          <Notifications />
+        </div>
 
         {/* User avatar + name */}
         <div
