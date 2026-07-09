@@ -9,10 +9,6 @@ from fastapi import HTTPException
 from google.cloud import translate
 from dotenv import load_dotenv
 try:
-    from .create_glossary import language_pair
-except ImportError:
-    from create_glossary import language_pair
-try:
     import mammoth  # type: ignore
 except Exception:
     mammoth = None
@@ -53,11 +49,6 @@ _LANGUAGES_FALLBACK = {
     'zh-CN': "Chinese (Simplified)",
     'zh-TW': "Chinese (Traditional)",
     'en': "English",
-    'th': "Thai",
-    'bn': "Bengali",
-    'hi': "Hindi",
-    'id': "Indonesian",
-    'or': "Oriya",
     'fr': "French",
 }
 
@@ -66,7 +57,6 @@ def _get_languages():
 
 LANGUAGES = _get_languages()
 
-# language_pair được import từ create_glossary.py để đồng bộ với backend
 def extract_content(file_path: str) -> str:
     """Trích xuất nội dung từ file (PDF, DOCX, XLSX) để phát hiện ngôn ngữ"""
     if not os.path.exists(file_path):

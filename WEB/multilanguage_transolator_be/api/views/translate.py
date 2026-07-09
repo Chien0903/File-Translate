@@ -42,7 +42,6 @@ try:
     translate_text_with_glossary = _translate_text_module.translate_text_with_glossary
     set_translation_context = _translate_text_module.set_translation_context
     clear_translation_context = _translate_text_module.clear_translation_context
-    from Translate_v2.create_glossary import language_pair
     # Sử dụng ConvertAPI cho chuyển đổi PDF -> DOCX trong luồng dịch
     from ..services.convert_api import pdf_to_docx as convertapi_pdf_to_docx
     logger.info("✅ Đã import thành công các module cần thiết")
@@ -557,9 +556,9 @@ class TranslateTextView(APIView):
                     "error": "target_language is required"
                 }, status=400)
 
-            # Validate target language against active languages in DB
+            # Validate target language against languages in DB
             from ..models.language import Language as LangModel
-            active_codes = set(LangModel.objects.filter(is_active=True).values_list('code', flat=True))
+            active_codes = set(LangModel.objects.all().values_list('code', flat=True))
             supported = active_codes if active_codes else set(LANGUAGES.keys())
             if target_language not in supported:
                 return JsonResponse({
@@ -595,24 +594,19 @@ class TranslateTextView(APIView):
                     "message": "Source and target languages are the same"
                 }, status=200)
 
-            # Determine glossary ID
+            # Determine glossary ID — built dynamically from the language pair
+            # (same naming as glossary_service.make_glossary_id(), which is what
+            # actually gets created/updated on GCP when keywords are approved).
+            # Existence on GCP is not checked here: translate_text_with_glossary()
+            # falls back to plain MT if the glossary doesn't exist yet, so this
+            # works for any language pair without needing a hardcoded lookup table.
             glossary_id = None
-            if library_mode == "private":
-                # Private glossary: named by sorted language pair + user_id (user_id appended in translate_text_with_glossary)
+            if library_mode in ("private", "common"):
                 lang_a, lang_b = sorted([source_language, target_language])
                 safe_a = lang_a.replace("-", "_")
                 safe_b = lang_b.replace("-", "_")
                 glossary_id = f"company_glossary_{safe_a}_{safe_b}"
-                logger.info(f"📚 Private glossary base: {glossary_id}")
-            elif library_mode == "common" and source_language in LANGUAGES:
-                pair_code = f"{source_language}-{target_language}"
-                if pair_code not in language_pair:
-                    pair_code = f"{target_language}-{source_language}"
-                if pair_code in language_pair:
-                    glossary_id = f"company_translation_glossary_{language_pair[pair_code]}"
-                    logger.info(f"📚 Common glossary: {glossary_id}")
-                else:
-                    logger.info(f"ℹ No common glossary for pair {source_language}->{target_language}.")
+                logger.info(f"📚 {library_mode.capitalize()} glossary: {glossary_id}")
             
             logger.info(f"🔄 Translating text from {source_language} to {target_language}")
             logger.info(f"📝 Source text: {source_text[:100]}{'...' if len(source_text) > 100 else ''}")

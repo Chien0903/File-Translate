@@ -843,7 +843,8 @@ const SuggestionReviewList = () => {
                 >
                   <FiFilter className="text-gray-600" />
                   <span className="font-medium text-gray-700">
-                    Columns ({effectiveVisibleColumns.length}/{libraryLanguages.length})
+                    {/* +1 for the English column, which is always shown (sticky, not toggleable) */}
+                    Columns ({effectiveVisibleColumns.length + 1}/{libraryLanguages.length + 1})
                   </span>
                 </button>
 

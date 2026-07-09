@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   FaFileExport,
   FaCloudUploadAlt,
-  FaInfoCircle,
   FaSlidersH,
   FaInbox,
 } from "react-icons/fa";
@@ -16,7 +15,6 @@ const LibraryActionButtons = ({
   role,
   gcsStatus,
   onRefreshKeywords,
-  onShowGcsInfo,
   onOpenSuggestionQueue,
   onOpenQueueThreshold,
 }) => {
@@ -102,87 +100,79 @@ const LibraryActionButtons = ({
 
   return (
     <>
-      {/* Left side - Export Buttons */}
-      <div className="flex flex-wrap items-center gap-[1rem]">
+      {/* Action buttons */}
+      <button
+        className="flex items-center gap-1.5 px-4 py-2 bg-[#359740] text-white rounded-full text-sm font-medium hover:bg-[#2e8237] transition-colors shadow-sm"
+        onClick={handleExport}
+        title="Export approved keywords to Excel"
+      >
+        <FaFileExport size={14} />
+        Export
+      </button>
+
+      {(role === "Library Keeper" || role === "Admin") && (
         <button
-          className="flex items-center justify-center px-4 py-2 bg-[#359740] text-white rounded-full hover:bg-[#2e8237] min-w-[130px]"
-          onClick={handleExport}
+          className={`flex items-center gap-1.5 px-4 py-2 text-white rounded-full text-sm font-medium transition-colors shadow-sm ${
+            isUploading
+              ? "bg-gray-400 cursor-not-allowed"
+              : gcsStatus?.can_upload &&
+                gcsStatus?.user_permissions?.can_upload
+              ? "bg-blue-500 hover:bg-blue-600"
+              : "bg-gray-400 cursor-not-allowed"
+          }`}
+          onClick={handleUploadToGCS}
+          disabled={
+            isUploading ||
+            !gcsStatus?.can_upload ||
+            !gcsStatus?.user_permissions?.can_upload
+          }
+          title={
+            !gcsStatus?.user_permissions?.can_upload
+              ? "Admin or Library Keeper permission required"
+              : !gcsStatus?.can_upload
+              ? "No approved keywords to upload"
+              : "Upload approved keywords to Google Cloud Storage"
+          }
         >
-          <FaFileExport className="mr-2" /> Export
+          {isUploading ? (
+            <>
+              <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white" />
+              Uploading...
+            </>
+          ) : (
+            <>
+              <FaCloudUploadAlt size={14} />
+              Upload Library
+            </>
+          )}
         </button>
+      )}
 
-        {(role === "Library Keeper" || role === "Admin") && (
+      {(role === "Library Keeper" || role === "Admin") &&
+        onOpenQueueThreshold && (
           <button
-            className={`flex items-center justify-center px-4 py-2 text-white rounded-full min-w-[150px] transition-colors ${
-              isUploading
-                ? "bg-gray-400 cursor-not-allowed"
-                : gcsStatus?.can_upload &&
-                  gcsStatus?.user_permissions?.can_upload
-                ? "bg-blue-500 hover:bg-blue-600"
-                : "bg-gray-400 cursor-not-allowed"
-            }`}
-            onClick={handleUploadToGCS}
-            disabled={
-              isUploading ||
-              !gcsStatus?.can_upload ||
-              !gcsStatus?.user_permissions?.can_upload
-            }
-            title={
-              !gcsStatus?.user_permissions?.can_upload
-                ? "Admin or Library Keeper permission required"
-                : !gcsStatus?.can_upload
-                ? "No approved keywords to upload"
-                : "Upload approved keywords to Google Cloud Storage"
-            }
+            type="button"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full border-2 border-indigo-700 text-indigo-700 bg-white text-sm font-medium hover:bg-indigo-50 transition-colors shadow-sm"
+            onClick={onOpenQueueThreshold}
+            title="Minimum distinct users who must suggest the same content before it appears in the queue"
           >
-            {isUploading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Uploading...
-              </>
-            ) : (
-              <>
-                <FaCloudUploadAlt className="mr-2" /> Upload Library
-              </>
-            )}
+            <FaSlidersH size={14} className="shrink-0" />
+            Queue threshold
           </button>
         )}
 
-        {(role === "Library Keeper" || role === "Admin") && (
+      {(role === "Library Keeper" || role === "Admin") &&
+        onOpenSuggestionQueue && (
           <button
-            className="flex items-center justify-center px-3 py-2 bg-gray-500 text-white rounded-full hover:bg-gray-600 transition-colors"
-            onClick={onShowGcsInfo}
-            title="Show GCS Status Info"
+            type="button"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-indigo-700 text-white text-sm font-medium hover:bg-[#003276] transition-colors shadow-sm"
+            onClick={onOpenSuggestionQueue}
+            title="Search pending suggestions by user name"
           >
-            <FaInfoCircle />
+            <FaInbox size={14} className="shrink-0" />
+            Suggestion search
           </button>
         )}
-
-        {(role === "Library Keeper" || role === "Admin") &&
-          onOpenQueueThreshold && (
-            <button
-              type="button"
-              className="flex items-center justify-center px-4 py-2 min-w-[140px] rounded-full border-2 border-indigo-700 text-indigo-700 bg-white hover:bg-indigo-50 transition-colors shadow-sm"
-              onClick={onOpenQueueThreshold}
-              title="Minimum distinct users who must suggest the same content before it appears in the queue"
-            >
-              <FaSlidersH className="mr-2 shrink-0" /> Queue threshold
-            </button>
-          )}
-
-        {(role === "Library Keeper" || role === "Admin") &&
-          onOpenSuggestionQueue && (
-            <button
-              type="button"
-              className="flex items-center justify-center px-4 py-2 min-w-[168px] rounded-full bg-indigo-700 text-white hover:bg-indigo-800 transition-colors shadow-sm"
-              onClick={onOpenSuggestionQueue}
-              title="Search pending suggestions by user name"
-            >
-              <FaInbox className="mr-2 shrink-0" /> Suggestion search
-            </button>
-          )}
-      </div>
-
     </>
   );
 };

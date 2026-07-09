@@ -9,7 +9,6 @@ import {
   MdMenuBook,
   MdPeopleOutline,
   MdBarChart,
-  MdLanguage,
   MdChevronLeft,
   MdChevronRight,
   MdClose,
@@ -31,7 +30,6 @@ const NAV_LIBRARIES = [
 const NAV_ADMIN = [
   { icon: MdPeopleOutline, label: "Account Management", path: "/admin" },
   { icon: MdBarChart, label: "Keyword Stats", path: "/admin/keyword-stats" },
-  { icon: MdLanguage, label: "Languages", path: "/admin/languages" },
 ];
 
 const NavItem = ({ icon: Icon, label, path, expanded, isMobile, onMobileClose }) => (

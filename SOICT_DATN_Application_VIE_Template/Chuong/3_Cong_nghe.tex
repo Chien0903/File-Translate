@@ -52,6 +52,8 @@ ConvertAPI là dịch vụ chuyển đổi định dạng tài liệu thông qua
 
 Trong đồ án, ConvertAPI được sử dụng trong luồng xử lý PDF văn bản: hệ thống chuyển PDF sang DOCX, dịch theo quy trình DOCX chuẩn rồi chuyển ngược kết quả về PDF để trả về cho người dùng.
 
+\noindent\textbf{Agent: Cập nhật theo mã nguồn hiện tại.} Trong \verb|WEB/multilanguage_transolator_be/api/views/translate.py|, nhánh PDF văn bản chỉ dùng ConvertAPI để chuyển PDF sang DOCX, sau đó gọi \verb|translate_docx| và trả về tệp DOCX đã dịch. Cụ thể, mã nguồn gán \verb|translated_file_path = translated_docx_path| và đặt \verb|final_extension| là \verb|docx| khi \verb|file_extension == "pdf"| và \verb|pdf_is_editable| đúng. Vì vậy, mô tả chính xác là: PDF văn bản được chuyển PDF sang DOCX, dịch theo luồng DOCX và người dùng nhận kết quả ở định dạng DOCX; hệ thống hiện không chuyển ngược kết quả này về PDF.
+
 \section{Amazon S3}
 \label{section:3.8}
 
@@ -65,6 +67,15 @@ Trong đồ án, Amazon S3 được sử dụng để lưu các tệp tài liệ
 Docker là nền tảng đóng gói ứng dụng thành container, đảm bảo môi trường chạy nhất quán giữa máy phát triển và máy triển khai \cite{docker}. Docker Compose cho phép định nghĩa và khởi động đồng thời nhiều service liên quan trong một cấu hình duy nhất. Nginx là web server và reverse proxy được sử dụng để tiếp nhận request từ bên ngoài, định tuyến đến frontend hoặc backend, hỗ trợ HTTPS và kiểm soát timeout cho các request xử lý lâu \cite{nginx}. So với triển khai thủ công từng thành phần, Docker giúp tái lập môi trường nhanh hơn và giảm sai lệch giữa các môi trường.
 
 Trong đồ án, Docker Compose được sử dụng để đóng gói và khởi động đồng thời các service frontend, backend và cơ sở dữ liệu. Nginx đóng vai trò reverse proxy duy nhất, định tuyến request đến đúng service và hỗ trợ cấu hình HTTPS cho môi trường triển khai thử nghiệm.
+
+
+Agent:
+
+Theo mã nguồn hiện tại, phần mô tả công nghệ dữ liệu và Django ORM cần được cập nhật để loại bỏ giả định về mô hình đa công ty. Các model \verb|Company| và \verb|CompanyLanguage| chỉ còn xuất hiện trong các migration cũ phục vụ lịch sử thay đổi schema, cụ thể là quá trình thêm ở \verb|api/migrations/0032_add_language_company_models.py| và quá trình xóa ở \verb|api/migrations/0040_remove_company_models.py|. Trong lớp model đang được import bởi ứng dụng, \verb|api/models/__init__.py| chỉ xuất các model \verb|CustomUser|, \verb|KeywordSuggestion|, \verb|PrivateKeyword|, \verb|TranslatedFile|, \verb|Notification| và \verb|Language|. Model người dùng trong \verb|api/models/user.py| hiện không còn khóa ngoại tới công ty, mà chỉ lưu các thông tin định danh, phòng ban, vai trò, trạng thái hoạt động và ngày tham gia.
+
+Model \verb|Language| hiện đóng vai trò bảng danh mục ngôn ngữ dùng chung cho toàn hệ thống, không phải cấu hình ngôn ngữ theo từng tenant. Bằng chứng là \verb|api/models/language.py| chỉ định nghĩa mã ngôn ngữ, tên, tên bản địa, biểu tượng cờ và thứ tự sắp xếp; các trường \verb|is_active| và \verb|is_default| đã bị loại bỏ lần lượt trong các migration \verb|0041_remove_language_is_active.py| và \verb|0043_remove_language_is_default.py|. Migration \verb|0042_fixed_four_languages.py| còn ghi rõ hệ thống hiện cố định bốn ngôn ngữ là English, Japanese, Vietnamese và Chinese, đồng thời không còn chức năng thêm hoặc xóa ngôn ngữ trên giao diện.
+
+Vì vậy, khi trình bày lựa chọn Django ORM, SQLite và PostgreSQL, mô hình dữ liệu đúng với mã nguồn hiện tại nên được mô tả theo hướng một hệ thống nội bộ có phân quyền theo vai trò, thư viện thuật ngữ chung và thư viện thuật ngữ riêng theo người dùng. Cụm tiền tố \verb|company_glossary| trong một số hàm của \verb|api/services/glossary_service.py| và \verb|Translate_v2/translate_text.py| chỉ là quy ước đặt tên glossary còn lại từ quá trình phát triển, không chứng minh rằng hệ thống hiện còn hỗ trợ multi-tenant theo công ty.
 
 
 \end{document}

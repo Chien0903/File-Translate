@@ -7,7 +7,10 @@ import {
   FiArrowDown,
   FiFilter,
   FiX,
+  FiEdit2,
+  FiTrash2,
 } from "react-icons/fi";
+import { MdMenuBook } from "react-icons/md";
 import keywordService from "../../services/keywordService";
 import notificationService from "../../services/notificationService";
 import { toast } from "react-toastify";
@@ -18,7 +21,6 @@ import KeywordDetailModal from "../../components/features/admin/KeywordDetailMod
 import KeywordEditModal from "../../components/features/admin/KeywordEditModal";
 import KeywordAddModal from "../../components/features/admin/KeywordAddModal";
 import DeleteConfirmModal from "../../components/features/admin/DeleteConfirmModal";
-import GcsStatusModal from "../../components/features/admin/GcsStatusModal";
 import {
   QueueThresholdModal,
   SuggestionQueueModal,
@@ -66,7 +68,6 @@ const CommonLibraryManagement = () => {
 
   // GCS Upload states
   const [gcsStatus, setGcsStatus] = useState(null);
-  const [showGcsInfo, setShowGcsInfo] = useState(false);
 
   // Suggestion search (Common Library — Admin / Library Keeper)
   const [showQueueModal, setShowQueueModal] = useState(false);
@@ -707,42 +708,52 @@ const CommonLibraryManagement = () => {
 
       {/* Controls Frame with Search, Sort, and Action Buttons */}
       <div className="bg-white p-[0.5rem] rounded-t-lg">
-        <div className="flex flex-wrap justify-between items-center gap-[1rem]">
-          <LibraryActionButtons
-            keywords={keywords}
-            role={role}
-            gcsStatus={gcsStatus}
-            onRefreshKeywords={handleRefreshGcsStatus}
-            onShowGcsInfo={() => setShowGcsInfo(!showGcsInfo)}
-            onOpenSuggestionQueue={
-              role === "Admin" || role === "Library Keeper"
-                ? handleOpenSuggestionQueue
-                : undefined
-            }
-            onOpenQueueThreshold={
-              role === "Admin" || role === "Library Keeper"
-                ? () => setShowThresholdModal(true)
-                : undefined
-            }
-          />
+        <div className="flex flex-wrap justify-between items-center gap-3">
+          {/* Left: title + action buttons */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <MdMenuBook className="text-indigo-700" size={22} />
+              <span className="text-base font-semibold text-indigo-700">
+                Common Library
+              </span>
+            </div>
+
+            <LibraryActionButtons
+              keywords={keywords}
+              role={role}
+              gcsStatus={gcsStatus}
+              onRefreshKeywords={handleRefreshGcsStatus}
+              onOpenSuggestionQueue={
+                role === "Admin" || role === "Library Keeper"
+                  ? handleOpenSuggestionQueue
+                  : undefined
+              }
+              onOpenQueueThreshold={
+                role === "Admin" || role === "Library Keeper"
+                  ? () => setShowThresholdModal(true)
+                  : undefined
+              }
+            />
+          </div>
 
           {/* Right side - Search Control and Column Filter */}
-          <div className="flex flex-wrap items-center gap-[1rem]">
+          <div className="flex flex-wrap items-center gap-3">
             {/* Column Filter */}
             <div className="relative" ref={columnFilterRef}>
               <button
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors text-sm"
                 onClick={() => setShowColumnFilter(!showColumnFilter)}
                 title="Filter visible columns"
               >
                 <FiFilter className="text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">
-                  Columns ({effectiveVisibleColumns.length}/{libraryLanguages.length})
+                <span className="font-medium text-gray-700">
+                  {/* +1 for the English column, which is always shown (sticky, not toggleable) */}
+                  Columns ({effectiveVisibleColumns.length + 1}/{libraryLanguages.length + 1})
                 </span>
               </button>
 
               {showColumnFilter && (
-                <div className="absolute right-0 mt-2 w-[280px] bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-[400px] overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
                   <div className="sticky top-0 bg-white border-b border-gray-200 p-3">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-gray-700 text-sm">Show/Hide Columns</h4>
@@ -750,7 +761,7 @@ const CommonLibraryManagement = () => {
                         onClick={() => setShowColumnFilter(false)}
                         className="text-gray-400 hover:text-gray-600"
                       >
-                        <FiX size={18} />
+                        <FiX size={16} />
                       </button>
                     </div>
                     <div className="flex gap-2">
@@ -779,7 +790,7 @@ const CommonLibraryManagement = () => {
                           type="checkbox"
                           checked={effectiveVisibleColumns.includes(lang.code)}
                           onChange={() => toggleColumnVisibility(lang.code)}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                          className="w-4 h-4 text-blue-600 rounded"
                         />
                         <span className="text-sm text-gray-700 flex-1">{lang.label}</span>
                       </label>
@@ -790,12 +801,12 @@ const CommonLibraryManagement = () => {
             </div>
 
             {/* Search Control */}
-            <div className="relative w-[20rem]">
-              <FiSearch className="absolute left-[0.75rem] top-[0.75rem] text-gray-500 z-10" />
+            <div className="relative w-72">
+              <FiSearch className="absolute left-3 top-2.5 text-gray-500 z-10" />
               <input
                 type="text"
                 placeholder="Search in all languages..."
-                className="p-[0.5rem] pl-[2.5rem] border border-gray-300 rounded-full w-full bg-white text-black placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-colors"
+                className="p-2 pl-10 border border-gray-300 rounded-full w-full bg-white text-black placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-colors text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -819,68 +830,78 @@ const CommonLibraryManagement = () => {
               <thead className="sticky top-0 z-20">
                 <tr className="bg-indigo-700 text-white font-bold">
                   <th
-                    className="p-[0.5rem] border-b border-gray-300 text-center cursor-pointer hover:bg-indigo-800 transition-colors sticky left-0 z-30 bg-indigo-700 border-r border-white/20"
-                    style={{ width: '70px', minWidth: '70px' }}
+                    className="p-2 border-b border-gray-300 text-center cursor-pointer hover:bg-indigo-800 transition-colors sticky left-0 z-30 bg-indigo-700 border-r border-white/20 text-xs"
+                    style={{ width: 60, minWidth: 60 }}
                     onClick={() => handleSort("id")}
                   >
-                    <div className="flex items-center justify-center gap-1 text-xs">
-                      <span>No</span>
-                      {getSortIcon("id")}
+                    <div className="flex items-center justify-center gap-1">
+                      No {getSortIcon("id")}
                     </div>
                   </th>
                   <th
-                    className="p-[0.5rem] border-b border-gray-300 text-center cursor-pointer border-r border-white/20 sticky left-[70px] z-30 bg-indigo-700"
-                    style={{ width: '220px', minWidth: '220px', boxShadow: '3px 0 8px rgba(0,0,0,0.15)' }}
+                    className="p-2 border-b border-gray-300 text-center border-r border-white/20 sticky left-[60px] z-30 bg-indigo-700 text-xs"
+                    style={{ width: 220, minWidth: 220, boxShadow: '3px 0 8px rgba(0,0,0,0.15)' }}
                   >
-                    <div className="flex items-center justify-center gap-1">
-                      <span>English</span>
-                    </div>
+                    English
                   </th>
                   {getVisibleLanguages().map((lang) => (
-                    <th key={lang.code} className="p-[0.5rem] border-b border-gray-300 text-center border-r border-white/20" style={{ width: '200px', minWidth: '200px' }}>
-                      <div className="flex items-center justify-center gap-1 text-sm">
-                        <span>{lang.label}</span>
-                      </div>
+                    <th key={lang.code} className="p-2 border-b border-gray-300 text-center border-r border-white/20 text-xs" style={{ width: 200, minWidth: 200 }}>
+                      {lang.label}
                     </th>
                   ))}
                   <th
-                    className="p-[0.5rem] border-b border-gray-300 text-center cursor-pointer hover:bg-indigo-800 transition-colors border-r border-white/20"
-                    style={{ width: '140px', minWidth: '140px' }}
+                    className="p-2 border-b border-gray-300 text-center cursor-pointer hover:bg-indigo-800 transition-colors border-r border-white/20 text-xs"
+                    style={{ width: 140, minWidth: 140 }}
                     onClick={() => handleSort("date_modified")}
                   >
-                    <div className="flex items-center justify-center gap-1 text-xs">
-                      <span>Modified</span>
-                      {getSortIcon("date_modified")}
+                    <div className="flex items-center justify-center gap-1">
+                      Modified {getSortIcon("date_modified")}
                     </div>
                   </th>
                   {(role === "Library Keeper" || role === "Admin") && (
                     <th
-                      className="p-[0.5rem] border-b border-gray-300 text-center text-xs sticky right-0 z-30 bg-indigo-700"
-                      style={{ width: '130px', minWidth: '130px', boxShadow: '-3px 0 8px rgba(0,0,0,0.15)' }}
+                      className="p-2 border-b border-gray-300 text-center border-r border-white/20 text-xs sticky right-0 z-30 bg-indigo-700"
+                      style={{ width: 80, minWidth: 80, boxShadow: '-3px 0 8px rgba(0,0,0,0.15)' }}
                     >
-                      Action
+                      Actions
                     </th>
                   )}
                 </tr>
               </thead>
               <tbody>
-                {currentItems.map((item, index) => (
+                {currentItems.length === 0 && !loading ? (
+                  <tr>
+                    <td
+                      colSpan={
+                        3 +
+                        getVisibleLanguages().length +
+                        (role === "Library Keeper" || role === "Admin" ? 1 : 0)
+                      }
+                      className="py-16 text-center text-gray-400"
+                    >
+                      {searchTerm
+                        ? "No keywords match your search."
+                        : "The common library is empty."}
+                    </td>
+                  </tr>
+                ) : (
+                currentItems.map((item, index) => (
                   <tr
                     key={item.id}
-                    className={`cursor-pointer transition-all duration-150 hover:bg-blue-50/40 ${index % 2 === 0 ? "bg-white" : "bg-[#F8F8F8]"
+                    className={`cursor-pointer transition-all duration-150 hover:brightness-95 ${index % 2 === 0 ? "bg-white" : "bg-[#F8F8F8]"
                       }`}
                     onClick={() => setSelectedKeyword(item)}
                   >
                     <td
-                      className={`p-[0.75rem] border-b border-gray-200 text-center sticky left-0 z-10 border-r`}
+                      className="p-2 border-b border-gray-200 text-center sticky left-0 z-10 border-r text-sm font-medium text-gray-700"
                       style={{
                         backgroundColor: index % 2 === 0 ? 'white' : '#F8F8F8',
                       }}
                     >
-                      <span className="text-sm font-medium text-gray-700">{indexOfFirstItem + index + 1}</span>
+                      {indexOfFirstItem + index + 1}
                     </td>
                     <td
-                      className={`p-[0.75rem] border-b border-gray-200 text-left sticky left-[70px] z-10 border-r`}
+                      className="p-2 border-b border-gray-200 text-left sticky left-[60px] z-10 border-r text-sm"
                       style={{
                         backgroundColor: index % 2 === 0 ? 'white' : '#F8F8F8',
                         boxShadow: '3px 0 8px rgba(0,0,0,0.05)',
@@ -896,7 +917,7 @@ const CommonLibraryManagement = () => {
                     {getVisibleLanguages().map((lang) => (
                       <td
                         key={lang.code}
-                        className="p-[0.75rem] border-b border-gray-200 text-left border-r border-gray-100"
+                        className="p-2 border-b border-gray-200 text-left border-r border-gray-100 text-sm"
                         style={{
                           maxWidth: '200px',
                           overflow: 'hidden',
@@ -905,45 +926,33 @@ const CommonLibraryManagement = () => {
                         }}
                         title={(item.translations || {})[lang.code] || ""}
                       >
-                        {(item.translations || {})[lang.code] || <span className="text-gray-400 italic">—</span>}
+                        {(item.translations || {})[lang.code] || <span className="text-gray-300 italic">—</span>}
                       </td>
                     ))}
-                    <td className="p-[0.75rem] border-b border-gray-200 text-center border-r border-gray-100">
-                      <span className="text-xs font-medium text-gray-600">{formatDate(item.updated_at)}</span>
+                    <td className="p-2 border-b border-gray-200 text-center border-r border-gray-100">
+                      <span className="text-xs text-gray-600">{formatDate(item.updated_at)}</span>
                     </td>
                     {(role === "Library Keeper" || role === "Admin") && (
                       <td
-                        className="p-[0.75rem] border-b border-gray-200 text-center sticky right-0 z-10"
+                        className="p-2 border-b border-gray-200 text-center sticky right-0 z-10"
                         style={{
                           backgroundColor: index % 2 === 0 ? 'white' : '#F8F8F8',
                           boxShadow: '-3px 0 8px rgba(0,0,0,0.05)',
                         }}
                       >
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-1.5">
                           <button
-                            className="p-2 bg-blue-50 rounded-lg hover:bg-blue-100 hover:scale-110 flex items-center justify-center transition-all duration-200 border border-blue-200"
+                            className="p-1.5 bg-blue-50 rounded-lg hover:bg-blue-100 border border-blue-200 transition-all"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEdit(item);
                             }}
-                            title="Edit Keyword"
+                            title="Edit"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="text-blue-600 w-4 h-4"
-                            >
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
+                            <FiEdit2 className="text-blue-600 w-3.5 h-3.5" />
                           </button>
                           <button
-                            className="p-2 bg-red-50 rounded-lg hover:bg-red-100 hover:scale-110 flex items-center justify-center transition-all duration-200 border border-red-200"
+                            className="p-1.5 bg-red-50 rounded-lg hover:bg-red-100 border border-red-200 transition-all"
                             onClick={(e) => {
                               e.stopPropagation();
                               setDeleteConfirmModal({
@@ -951,29 +960,16 @@ const CommonLibraryManagement = () => {
                                 keywordId: item.id,
                               });
                             }}
-                            title="Delete Keyword"
+                            title="Delete"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="text-red-600 w-4 h-4"
-                            >
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              <line x1="10" y1="11" x2="10" y2="17" />
-                              <line x1="14" y1="11" x2="14" y2="17" />
-                            </svg>
+                            <FiTrash2 className="text-red-600 w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
                     )}
                   </tr>
-                ))}
+                ))
+                )}
               </tbody>
             </table>
           </div>
@@ -1028,14 +1024,6 @@ const CommonLibraryManagement = () => {
             onCancel={() => setDeleteConfirmModal({ isOpen: false, keywordId: null })}
           />
         )}
-
-      {/* GCS Status Info Modal */}
-      {showGcsInfo && (
-        <GcsStatusModal
-          gcsStatus={gcsStatus}
-          onClose={() => setShowGcsInfo(false)}
-        />
-      )}
 
       {(role === "Admin" || role === "Library Keeper") && (
         <>

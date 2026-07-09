@@ -43,10 +43,6 @@ const LoginPage = () => {
         </div>
         <h1 className="text-3xl font-bold text-center mb-3">Multi-Language Translator</h1>
         <p className="text-indigo-200 text-center text-sm mb-8">Breaking language barriers across your company.</p>
-        <div className="w-12 border-t border-white/30" />
-        <p className="text-indigo-300 text-xs tracking-widest uppercase mt-6">
-          Internal Tool
-        </p>
       </div>
 
       {/* Right panel — form */}
@@ -56,7 +52,6 @@ const LoginPage = () => {
           <div className="w-12 h-12 bg-indigo-700 rounded-xl flex items-center justify-center mx-auto mb-3">
             <span className="text-white font-bold text-xl">T</span>
           </div>
-          <p className="text-sm text-gray-400">Internal Tool</p>
         </div>
 
         <div className="w-full max-w-sm">

@@ -173,7 +173,7 @@ def make_glossary_id(lang1: str, lang2: str) -> str:
 
 def generate_pairs_from_db():
     """
-    Tạo tất cả cặp (lang1, lang2) từ Language records active trong DB.
+    Tạo tất cả cặp (lang1, lang2) từ Language records trong DB.
     Dùng itertools.combinations để đảm bảo không trùng và đúng thứ tự.
     Trả về list of tuple: [('bn', 'en'), ('bn', 'hi'), ...]
     """
@@ -181,7 +181,7 @@ def generate_pairs_from_db():
     try:
         from ..models.language import Language
         codes = list(
-            Language.objects.filter(is_active=True)
+            Language.objects.all()
             .order_by('sort_order')
             .values_list('code', flat=True)
         )
@@ -349,12 +349,12 @@ def manage_all_glossaries(mode=1):
 
 
 def _get_active_language_codes():
-    """Return sorted ISO codes of all active languages."""
+    """Return sorted ISO codes of all languages in the system."""
     try:
         from ..models.language import Language
-        return list(Language.objects.filter(is_active=True).order_by('sort_order').values_list('code', flat=True))
+        return list(Language.objects.all().order_by('sort_order').values_list('code', flat=True))
     except Exception:
-        return ['en', 'ja', 'vi', 'zh-CN', 'zh-TW', 'th', 'bn', 'hi', 'id', 'or']
+        return ['en', 'ja', 'vi', 'zh-CN', 'th', 'bn', 'hi', 'id', 'or']
 
 
 def create_glossary_csv_file():
@@ -485,44 +485,6 @@ def upload_csv_to_gcs(source_file_path: str, custom_blob_name: str = None):
         raise Exception(f"Error uploading CSV to GCS: {str(e)}")
 
 
-def create_user_glossary_csv_file(user):
-    """Extract approved + user's private keywords -> CSV with active language columns."""
-    try:
-        approved_keywords = list(KeywordSuggestion.objects.filter(status='approved'))
-        private_keywords = list(PrivateKeyword.objects.filter(user=user))
-        lang_codes = _get_active_language_codes()
-
-        csv_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv', encoding='utf-8', newline='')
-        try:
-            writer = csv.writer(csv_file, quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(lang_codes)
-            for kw in approved_keywords + private_keywords:
-                t = kw.translations or {}
-                writer.writerow([t.get(c, '') for c in lang_codes])
-            csv_file.close()
-            return csv_file.name
-        except Exception as e:
-            csv_file.close()
-            if os.path.exists(csv_file.name):
-                os.unlink(csv_file.name)
-            raise e
-    except Exception as e:
-        logger.error(f"Error creating user CSV file: {str(e)}")
-        raise
-
-def upload_user_csv_to_gcs(source_file_path: str, user_id: int):
-    try:
-        bucket_name = os.getenv("BUCKET_NAME", "company-buckets")
-        destination_blob_name = f"glossary_term_user_{user_id}.csv"
-        storage_client = storage.Client()
-        bucket = storage_client.bucket(bucket_name)
-        blob = bucket.blob(destination_blob_name)
-        blob.upload_from_filename(source_file_path)
-        return f"gs://{bucket_name}/{destination_blob_name}"
-    except Exception as e:
-        logger.error(f"Error uploading user CSV to GCS: {str(e)}")
-        raise e
-
 import threading
 
 def _manage_user_glossaries_bg(user_id):
@@ -532,7 +494,7 @@ def _manage_user_glossaries_bg(user_id):
     try:
         user = User.objects.get(id=user_id)
         
-        print("[BACKGROUND THREAD] 1. Đang tạo file CSV (Common + Private keywords)...", flush=True)
+        print("[BACKGROUND THREAD] 1. Đang tải từ vựng (Common + Private keywords)...", flush=True)
 
         approved_keywords = list(KeywordSuggestion.objects.filter(status='approved'))
         private_keywords = list(PrivateKeyword.objects.filter(user=user))
@@ -542,31 +504,9 @@ def _manage_user_glossaries_bg(user_id):
             print("[BACKGROUND THREAD] => Dừng lại: Không có từ vựng nào.", flush=True)
             return
 
-        lang_codes = _get_active_language_codes()
-        csv_file_obj = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv', encoding='utf-8', newline='')
-        try:
-            import csv as csv_module
-            writer = csv_module.writer(csv_file_obj, quoting=csv_module.QUOTE_MINIMAL)
-            writer.writerow(lang_codes)
-            for kw in approved_keywords + private_keywords:
-                t = kw.translations or {}
-                writer.writerow([t.get(c, '') for c in lang_codes])
-            csv_file_obj.close()
-            csv_file_path = csv_file_obj.name
-        except Exception as e:
-            csv_file_obj.close()
-            if os.path.exists(csv_file_obj.name):
-                os.unlink(csv_file_obj.name)
-            raise e
-
-        print(f"[BACKGROUND THREAD] 2. Đang tải file lên Google Storage...", flush=True)
-        custom_blob_name = f"glossary_term_user_{user.id}.csv"
-        input_uri = upload_csv_to_gcs(csv_file_path, custom_blob_name=custom_blob_name)
-        print(f"[BACKGROUND THREAD] => Upload thành công: {input_uri}", flush=True)
-
         client = translate.TranslationServiceClient()
 
-        print(f"[BACKGROUND THREAD] 3. Bắt đầu gọi API Google per-pair...", flush=True)
+        print(f"[BACKGROUND THREAD] 2. Bắt đầu gọi API Google per-pair...", flush=True)
         # Determine which languages have data from translations JSONField
         pks = PrivateKeyword.objects.filter(user=user).only('translations')
         has_lang = set()
@@ -629,9 +569,6 @@ def _manage_user_glossaries_bg(user_id):
                 except Exception as e:
                     print(f"[BACKGROUND THREAD]    => THẤT BẠI cho {glossary_id}: {str(e)}", flush=True)
                     logger.error(f"Failed to manage private glossary {glossary_id}: {str(e)}")
-
-        if os.path.exists(csv_file_path):
-            os.unlink(csv_file_path)
 
         print("\n[BACKGROUND THREAD] --- HOÀN TẤT CẬP NHẬT TỪ ĐIỂN ---", flush=True)
     except Exception as e:

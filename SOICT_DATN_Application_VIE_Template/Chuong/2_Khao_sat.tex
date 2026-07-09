@@ -340,6 +340,8 @@ Nghiệp vụ này không chỉ giúp người dùng chuyển đổi nội dung 
 \textbf{Hậu điều kiện} & Đề xuất được chuyển sang trạng thái đã duyệt hoặc bị từ chối. Nếu được duyệt, thuật ngữ được phản ánh trong thư viện chung và có thể được sử dụng trong các lần dịch tiếp theo. \\ \hline
 \end{longtable}
 
+\noindent\textbf{Agent: Cập nhật theo mã nguồn hiện tại.} Luồng thay thế 5a của UC005 chưa khớp với bản cài đặt hiện hành. Trong frontend \verb|WEB/multilanguage_transolator_fe/src/pages/Admin/CommonLibraryManagement.jsx|, hàm \verb|handleRejectFromQueue| chỉ hiển thị hộp thoại xác nhận \verb|window.confirm| với nội dung reject và delete, sau đó gọi \verb|keywordService.deleteKeyword(id)|. Service này gửi request \verb|DELETE| tới \verb|/api/keywords/<id>/delete/|. Ở backend, \verb|DeleteSuggestionView.delete| trong \verb|WEB/multilanguage_transolator_be/api/views/keyword.py| lấy \verb|KeywordSuggestion| theo id và gọi trực tiếp \verb|suggestion.delete()|. Do đó, phiên bản hiện tại không có bước nhập lý do từ chối, không lưu trường lý do từ chối, không chuyển bản ghi sang trạng thái \verb|rejected| trong luồng này và cũng không tạo thông báo riêng cho người đề xuất khi bị từ chối. Mô tả UC005 nên được hiệu chỉnh thành: khi tác nhân chọn Reject, hệ thống yêu cầu xác nhận và xóa đề xuất khỏi hàng đợi; thông báo trên giao diện chỉ là toast cục bộ cho người đang thao tác.
+
 \subsection{Đặc tả use case Cấu hình ngôn ngữ theo công ty}
 
 \begin{longtable}{|p{3cm}|p{4cm}|p{3cm}|p{4.5cm}|}
@@ -394,6 +396,14 @@ Về tính dễ sử dụng, giao diện cần được thiết kế rõ ràng �
 Về tính dễ bảo trì, mã nguồn và kiến trúc hệ thống cần được tổ chức rõ ràng theo các lớp như giao diện, API, dịch vụ nghiệp vụ, xử lý tài liệu và dữ liệu. Cách tổ chức này giúp việc mở rộng chức năng, sửa lỗi, thay đổi dịch vụ tích hợp hoặc bổ sung định dạng tài liệu mới trở nên thuận tiện hơn.
 
 Về triển khai, hệ thống cần tách biệt frontend và backend, đồng thời sử dụng reverse proxy để điều phối truy cập, cấu hình giới hạn upload và phục vụ ứng dụng trong môi trường triển khai thực tế. 
+
+Agent:
+
+Theo trạng thái mã nguồn hiện tại, nội dung mô tả hệ thống theo hướng đa công ty và cấu hình ngôn ngữ theo từng công ty cần được hiểu là nội dung lịch sử, không còn phản ánh đúng phạm vi chức năng đang được cài đặt. Bằng chứng trực tiếp nằm trong chuỗi migration của backend: migration \verb|api/migrations/0040_remove_company_models.py| đã xóa trường \verb|company| khỏi \verb|CustomUser|, xóa model \verb|CompanyLanguage| và xóa model \verb|Company|; migration \verb|api/migrations/0041_remove_language_is_active.py| đã xóa trường \verb|is_active| khỏi model \verb|Language|; migration \verb|api/migrations/0043_remove_language_is_default.py| đã xóa trường \verb|is_default|. Do đó, các đoạn mô tả Admin cấu hình ngôn ngữ theo công ty, cũng như use case UC006 về cấu hình ngôn ngữ theo công ty, không còn là chức năng tồn tại trong phiên bản mã nguồn hiện tại.
+
+Trong phiên bản hiện tại, danh sách ngôn ngữ được quản lý theo phạm vi toàn hệ thống. Model \verb|api/models/language.py| chỉ còn các trường \verb|code|, \verb|name|, \verb|native_name|, \verb|flag_emoji| và \verb|sort_order|. View \verb|api/views/language.py| mô tả endpoint \verb|GET /api/languages/| là danh sách bốn ngôn ngữ cố định của hệ thống, còn service \verb|api/services/language_service.py| trả về toàn bộ các bản ghi \verb|Language| theo \verb|sort_order|. Ở phía frontend, hook \verb|src/hooks/useCompanyLanguages.js| đã được thay bằng \verb|src/hooks/useEnabledLanguages.js| và comment trong hook này xác định danh sách ngôn ngữ đang được dùng ở phạm vi toàn hệ thống. Vì vậy, yêu cầu chức năng đúng với mã nguồn hiện tại cần được diễn đạt là hệ thống sử dụng danh sách ngôn ngữ cố định toàn cục cho các chức năng dịch, thư viện thuật ngữ và thống kê, thay vì cho phép Admin bật hoặc tắt ngôn ngữ theo từng công ty.
+
+Từ thay đổi trên, phạm vi quản trị của Admin trong Chương~\ref{chapter:Related_works} cần được hiệu chỉnh về mặt nội dung khi sử dụng trong bản báo cáo cuối. Admin hiện đảm nhiệm quản lý tài khoản, thay đổi vai trò người dùng, xóa tài khoản, xem thống kê từ khóa và phối hợp quản lý thư viện thuật ngữ chung. Library Keeper tập trung vào hàng đợi đề xuất thuật ngữ và thư viện thuật ngữ chung. Chức năng quản lý ngôn ngữ theo công ty không nên tiếp tục được xem là use case hiện hành; nếu vẫn giữ trong tài liệu để phản ánh quá trình phát triển, cần ghi rõ đây là chức năng đã bị loại bỏ khỏi phiên bản mã nguồn hiện tại.
 
 
 \end{document}

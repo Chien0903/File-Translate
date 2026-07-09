@@ -10,7 +10,7 @@ import {
   MdCheck,
 } from "react-icons/md";
 import translationService from "../../services/translationService";
-import { useCompanyLanguages } from "../../hooks/useCompanyLanguages";
+import { useEnabledLanguages } from "../../hooks/useEnabledLanguages";
 
 const GlossaryToggle = ({ value, onChange }) => {
   const opts = [
@@ -54,7 +54,7 @@ const LangSelect = ({ label, value, options, onChange, prefixMap = {} }) => {
         {prefixMap[value] && (
           <span className="text-xs font-bold text-indigo-500 bg-indigo-50 rounded px-1">{prefixMap[value]}</span>
         )}
-        <span className="flex-1 text-left">{value}</span>
+        <span className="flex-1 text-left">{value || "Select language"}</span>
         <MdKeyboardArrowDown size={16} className={`text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
@@ -80,7 +80,7 @@ const LangSelect = ({ label, value, options, onChange, prefixMap = {} }) => {
 };
 
 const TextTranslation = () => {
-  const { codeByName, nameList, prefixByName } = useCompanyLanguages();
+  const { codeByName, nameList, prefixByName } = useEnabledLanguages();
 
   const allSourceLanguages = useMemo(() => ["Auto Detect", ...nameList], [nameList]);
   const codeMap = useMemo(() => ({ ...codeByName, "Auto Detect": "auto" }), [codeByName]);
@@ -90,7 +90,7 @@ const TextTranslation = () => {
   const [sourceText, setSourceText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
   const [sourceLanguage, setSourceLanguage] = useState("Auto Detect");
-  const [targetLanguage, setTargetLanguage] = useState("Japanese");
+  const [targetLanguage, setTargetLanguage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [availableTargetLanguages, setAvailableTargetLanguages] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -108,7 +108,7 @@ const TextTranslation = () => {
   useEffect(() => {
     if (nameList.length === 0) return;
     setAvailableTargetLanguages(nameList);
-    if (!nameList.includes(targetLanguage)) setTargetLanguage(nameList[0] || "");
+    if (targetLanguage && !nameList.includes(targetLanguage)) setTargetLanguage("");
   }, [nameList]);
 
   useEffect(() => {
@@ -127,7 +127,7 @@ const TextTranslation = () => {
     if (srcLang === "Chinese (Traditional)") filtered = filtered.filter((l) => l !== "Chinese (Simplified)");
     if (srcLang === "Chinese (Simplified)") filtered = filtered.filter((l) => l !== "Chinese (Traditional)");
     setAvailableTargetLanguages(filtered);
-    if (!filtered.includes(targetLanguage)) setTargetLanguage(filtered[0] || "");
+    if (targetLanguage && !filtered.includes(targetLanguage)) setTargetLanguage("");
   };
 
   const handleSourceChange = (lang) => {

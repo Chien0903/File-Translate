@@ -11,7 +11,7 @@ from azure.ai.documentintelligence.models import AnalyzeDocumentRequest
 from azure.core.credentials import AzureKeyCredential
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
-from detect_lang import detect_language, LANGUAGES, language_pair
+from detect_lang import detect_language, LANGUAGES
 from translate_text import translate_text_with_glossary, translate_texts_batch, translate_texts_batch
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
@@ -395,23 +395,13 @@ def detect_text_with_coords(image_path, target_lang, source_lang = None,output_p
         raise HTTPException(status_code=400, detail=f"Unsupported source language: {source_lang}")
     print(f"Detected language: {LANGUAGES[source_lang]}")
     
-    candidate1 = f"{source_lang}-{target_lang}"
-    candidate2 = f"{target_lang}-{source_lang}"
-    pair_code = None
-    if candidate1 in language_pair:
-        pair_code = candidate1
-    elif candidate2 in language_pair:
-        pair_code = candidate2
-
-    if pair_code:
-        try:
-            glossary_id = f"company_translation_glossary_{language_pair[pair_code]}"
-        except Exception as e:
-            logging.warning(f"Glossary lookup failed for pair {pair_code}: {e}")
-            glossary_id = None
-    else:
-        logging.warning(f"No glossary mapping for language pairs: {candidate1} or {candidate2}")
+    if source_lang == target_lang:
         glossary_id = None
+    else:
+        lang_a, lang_b = sorted([source_lang, target_lang])
+        safe_a = lang_a.replace("-", "_")
+        safe_b = lang_b.replace("-", "_")
+        glossary_id = f"company_glossary_{safe_a}_{safe_b}"
 
     # Build block metadata list (bbox + original text)
     block_infos = []

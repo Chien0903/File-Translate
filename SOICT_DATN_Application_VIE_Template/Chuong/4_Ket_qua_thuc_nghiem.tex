@@ -212,6 +212,8 @@ Hình~\ref{fig:module-document-translation} thể hiện thiết kế chi tiết
 
 Lớp được tổ chức theo từng luồng xử lý định dạng. Luồng DOCX phát hiện ngôn ngữ nguồn tự động, dịch theo phương pháp truyền thống và chuyển sang phương pháp strict khi gặp lỗi. Luồng PDF văn bản chuyển PDF sang DOCX để tái sử dụng luồng dịch DOCX chuẩn, sau đó chuyển ngược kết quả về PDF. Luồng PDF ảnh gọi Azure Document Intelligence để phân tích bố cục và trích xuất tọa độ nội dung, dịch từng đoạn văn bản rồi dựng lại PDF từ ảnh nền với textbox bản dịch. Luồng XLSX và PPTX phát hiện ngôn ngữ nguồn rồi gọi hàm xử lý chung cho file nén. Ngoài ra, lớp còn có ba phương thức hỗ trợ dùng chung: gộp các đoạn text bị phân mảnh thành nhiều run trong XML để bảo toàn ngữ nghĩa khi dịch, quét và dịch theo lô toàn bộ file XML bên trong tài liệu, và bọc lớp cache để giảm số lần gọi dịch với nội dung trùng lặp.
 
+\noindent\textbf{Agent: Cập nhật theo mã nguồn hiện tại.} Đối chiếu với \verb|WEB/multilanguage_transolator_be/api/views/translate.py| cho thấy luồng PDF văn bản không chuyển DOCX đã dịch ngược về PDF. Sau khi ConvertAPI tạo DOCX, backend dịch tệp DOCX, gán \verb|translated_docx_path| làm tệp kết quả và dùng phần mở rộng \verb|docx| khi upload lên S3. Như vậy, trong thiết kế thực thi hiện tại, PDF văn bản trả về DOCX; chỉ nhánh PDF ảnh/OCR tiếp tục dựng tệp kết quả dạng PDF.
+
 \textbf{c, Biểu đồ trình tự cho một số chức năng quan trọng}
 
 \textbf{Dịch tệp tài liệu}
@@ -388,6 +390,8 @@ updated\_\allowbreak at & DateTimeField & Thời điểm cập nhật đề xu�
 \end{tabular}
 \end{table}
 
+\noindent\textbf{Agent: Cập nhật theo mã nguồn hiện tại.} Model \verb|KeywordSuggestion| trong \verb|WEB/multilanguage_transolator_be/api/models/keyword.py| vẫn khai báo \verb|status| với ba lựa chọn \verb|pending|, \verb|approved| và \verb|rejected|. Tuy nhiên, model này không có trường lưu lý do từ chối. Luồng Reject đang dùng trong màn hình quản lý thư viện chung không cập nhật \verb|status = "rejected"| mà gọi endpoint xóa \verb|/api/keywords/<id>/delete/|; backend xử lý bằng \verb|suggestion.delete()| trong \verb|DeleteSuggestionView|. Vì vậy, khi mô tả dữ liệu thực tế, cần phân biệt giữa khả năng biểu diễn trạng thái \verb|rejected| trong schema và hành vi hiện tại của giao diện Reject: bản ghi bị xóa, không lưu lịch sử từ chối và không có lý do từ chối.
+
 \begin{table}[htbp]
 \centering
 \caption{Mô tả bảng KeywordQueue}
@@ -464,6 +468,32 @@ is\_\allowbreak default & BooleanField & Xác định ngôn ngữ mặc định 
 enabled\_\allowbreak at & DateTimeField & Thời điểm ngôn ngữ được bật. \\ \hline
 \end{tabular}
 \end{table}
+
+Agent:
+
+Theo đối chiếu lại mã nguồn hiện tại, nhóm bảng trong mục thiết kế cơ sở dữ liệu cần được đính chính như Bảng~\ref{table:db-current-correction}. Nội dung này không thay thế các bảng mô tả phía trên, mà ghi nhận trạng thái thực tế của schema sau các migration mới nhất.
+
+\begin{table}[htbp]
+\centering
+\caption{Đính chính trạng thái các thực thể cơ sở dữ liệu theo mã nguồn hiện tại}
+\label{table:db-current-correction}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|p{0.28\linewidth}|p{0.62\linewidth}|}
+\hline
+\textbf{Thực thể hoặc trường dữ liệu} & \textbf{Trạng thái theo source code hiện tại} \\ \hline
+Company & Không còn tồn tại trong model hiện hành. Model này đã bị xóa trong \verb|api/migrations/0040_remove_company_models.py|. \\ \hline
+CompanyLanguage & Không còn tồn tại trong model hiện hành. Model này cũng đã bị xóa trong \verb|api/migrations/0040_remove_company_models.py|. \\ \hline
+CustomUser.company & Không còn tồn tại. Trường khóa ngoại \verb|company| của \verb|CustomUser| đã bị loại bỏ trong \verb|api/migrations/0040_remove_company_models.py|. \\ \hline
+Language.is\_active và Language.is\_default & Không còn tồn tại. \verb|is_active| bị xóa trong \verb|api/migrations/0041_remove_language_is_active.py|, còn \verb|is_default| bị xóa trong \verb|api/migrations/0043_remove_language_is_default.py|. Migration \verb|0042_fixed_four_languages.py| thể hiện định hướng hệ thống cố định bốn ngôn ngữ. \\ \hline
+KeywordQueue & Class vẫn tồn tại trong \verb|api/models/keyword.py| với các trường \verb|user|, \verb|translations|, \verb|is_processed|, \verb|processed_at| và \verb|created_at|. Tuy nhiên, class này không được export trong \verb|api/models/__init__.py|, vì vậy không sử dụng được qua cú pháp \verb|from api.models import KeywordQueue|. Các module cần dùng class này phải import trực tiếp từ \verb|api.models.keyword|. \\ \hline
+RefreshToken & Tồn tại trong \verb|api/models/refresh_token.py| với các trường \verb|user|, \verb|token_hash|, \verb|expires_at| và \verb|created_at|. Model này đúng với mô tả về refresh token đã băm, nhưng cũng không được export trong \verb|api/models/__init__.py|. \\ \hline
+LibraryQueueSettings & Tồn tại trong \verb|api/models/keyword.py| nhưng chưa được mô tả trong phần cơ sở dữ liệu phía trên. Đây là bảng lưu cấu hình ngưỡng duyệt thuật ngữ thông qua trường \verb|min_suggesters_for_queue| và thời điểm cập nhật \verb|updated_at|. Migration tạo bảng là \verb|api/migrations/0025_libraryqueuesettings.py|. \\ \hline
+\end{tabular}
+\end{table}
+
+Từ bảng đính chính trên, mô tả cơ sở dữ liệu đúng với phiên bản hiện tại không nên xem ngưỡng đưa đề xuất vào hàng đợi là một thuộc tính của \verb|KeywordSuggestion|. \verb|KeywordSuggestion| chỉ lưu nội dung đề xuất, số lượt đề xuất, tần suất thống kê, trạng thái xét duyệt và người phê duyệt. Ngưỡng tối thiểu để một đề xuất được đưa vào quy trình xét duyệt được lưu tập trung trong \verb|LibraryQueueSettings.min_suggesters_for_queue|. Trong mã nguồn, phương thức \verb|LibraryQueueSettings.load()| bảo đảm hệ thống luôn làm việc với một bản ghi cấu hình duy nhất, còn các view xử lý hàng đợi đọc giá trị này khi kiểm tra điều kiện đạt ngưỡng.
 
 \section{Xây dựng ứng dụng}
 \subsection{Thư viện và công cụ sử dụng}
@@ -715,6 +745,62 @@ Tên miền & aitranslate.example.com \\ \hline
 \subsection{Kết quả triển khai}
 
 Sau triển khai, hệ thống khởi chạy thành công với đầy đủ ba thành phần theo mô hình container. Frontend phục vụ giao diện web qua HTTPS. Backend tiếp nhận yêu cầu API qua cổng nội bộ mà không cần mở trực tiếp ra ngoài. Reverse proxy xử lý SSL termination, chuyển hướng HTTP sang HTTPS và định tuyến yêu cầu đến đúng thành phần. Việc tách riêng các thành phần giúp quá trình bảo trì và mở rộng hệ thống thuận lợi hơn.
+
+
+Agent:
+
+Theo trạng thái mã nguồn hiện tại, phần thiết kế chi tiết trong chương này cần được hiệu chỉnh ở các điểm liên quan đến frontend quản lý ngôn ngữ, backend quản lý công ty và cơ sở dữ liệu đa công ty. Ở frontend, file \verb|src/components/Layouts/Sidebar/index.jsx| hiện chỉ khai báo nhóm Admin gồm \verb|Account Management| và \verb|Keyword Stats|; không còn mục quản lý ngôn ngữ. File \verb|src/routes/App.jsx| cũng không còn route tới trang \verb|LanguageManagement|. Trong lịch sử git hiện tại, \verb|src/pages/Admin/LanguageManagement.jsx| và component \verb|GcsStatusModal.jsx| đã bị xóa, còn hook \verb|useCompanyLanguages.js| đã được đổi thành \verb|useEnabledLanguages.js|. Điều này cho thấy thiết kế giao diện thực tế không còn màn hình cấu hình ngôn ngữ theo công ty.
+
+Ở backend, thiết kế dữ liệu thực tế không còn thực thể \verb|Company| và \verb|CompanyLanguage|. Migration \verb|api/migrations/0040_remove_company_models.py| đã xóa trường \verb|company| khỏi \verb|CustomUser|, đồng thời xóa hai model \verb|Company| và \verb|CompanyLanguage|. Các migration tiếp theo loại bỏ \verb|Language.is_active| và \verb|Language.is_default|, làm cho model \verb|Language| trở thành danh mục ngôn ngữ toàn hệ thống. Vì vậy, các mô tả trong chương này về quan hệ giữa người dùng, công ty và cấu hình ngôn ngữ theo công ty cần được hiểu là không còn đúng với bản cài đặt hiện hành.
+
+Sơ đồ dữ liệu khái quát phù hợp hơn với mã nguồn hiện tại có thể được mô tả như sau. Sơ đồ này chỉ phản ánh các model đang được import trong \verb|api/models/__init__.py| và các quan hệ trực tiếp còn tồn tại trong source code.
+
+Agent:
+
+\begin{verbatim}
+erDiagram
+    CUSTOM_USER ||--o{ TRANSLATED_FILE : owns
+    CUSTOM_USER ||--o{ PRIVATE_KEYWORD : owns
+    CUSTOM_USER ||--o{ KEYWORD_SUGGESTION : submits
+    CUSTOM_USER ||--o{ NOTIFICATION : receives
+    CUSTOM_USER ||--o{ REFRESH_TOKEN : has
+    KEYWORD_SUGGESTION ||--o{ PRIVATE_KEYWORD : linked_from
+    LANGUAGE {
+        string code
+        string name
+        string native_name
+        string flag_emoji
+        int sort_order
+    }
+    CUSTOM_USER {
+        string email
+        string first_name
+        string last_name
+        string department
+        string role
+        boolean is_active
+    }
+    PRIVATE_KEYWORD {
+        json translations
+        string note
+    }
+    KEYWORD_SUGGESTION {
+        json translations
+        int suggestion_count
+        float frequency_percentage
+        string status
+    }
+    TRANSLATED_FILE {
+        string original_file_url
+        string original_file_name
+        string translated_file_url
+        string original_language
+        string target_language
+        string file_type
+    }
+\end{verbatim}
+
+Từ góc nhìn thiết kế, phạm vi chức năng quản trị trong bản hiện tại nên được mô tả lại theo ba nhóm chính: quản lý tài khoản và vai trò người dùng, theo dõi thống kê đóng góp thuật ngữ, và quản lý thư viện thuật ngữ chung thông qua cơ chế đề xuất - xét duyệt - cập nhật glossary. Danh sách ngôn ngữ được dùng bởi các màn hình dịch và thư viện thuật ngữ là danh sách toàn hệ thống lấy từ endpoint \verb|/api/languages/|, không phải danh sách được cấu hình riêng cho từng công ty. Khi cập nhật các hình hoặc bảng thiết kế ở chương này, các thực thể \verb|Company|, \verb|CompanyLanguage|, màn hình \verb|LanguageManagement| và hook \verb|useCompanyLanguages| cần được loại khỏi bản mô tả chính thức của phiên bản hiện hành.
 
 
 \end{document}

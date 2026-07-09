@@ -105,20 +105,7 @@ def upload_csv(source_file_path: str):
     print(f"Đã upload {source_file_path} → gs://{bucket_name}/{destination_blob_name}")
 
 
-# Giữ backward compat với code cũ import language_pair
-language_pair = {
-    "vi-en": 1, "vi-ja": 2, "vi-zh-CN": 3, "vi-zh-TW": 4, "en-ja": 5,
-    "en-zh-CN": 6, "en-zh-TW": 7, "ja-zh-CN": 8, "ja-zh-TW": 9,
-    "vi-th": 10, "en-th": 11, "ja-th": 12,
-    "vi-bn": 13, "en-bn": 14, "ja-bn": 15, "th-bn": 16,
-    "vi-hi": 17, "en-hi": 18, "ja-hi": 19, "th-hi": 20, "bn-hi": 21,
-    "vi-id": 22, "en-id": 23, "ja-id": 24, "th-id": 25, "bn-id": 26, "hi-id": 27,
-    "th-zh-CN": 28, "bn-zh-CN": 29, "hi-zh-CN": 30, "id-zh-CN": 31,
-    "th-zh-TW": 32, "bn-zh-TW": 33, "hi-zh-TW": 34, "id-zh-TW": 35,
-    "vi-or": 36, "en-or": 37, "ja-or": 38, "th-or": 39, "bn-or": 40,
-    "hi-or": 41, "id-or": 42, "or-zh-CN": 43, "or-zh-TW": 44,
-}
-
 if __name__ == "__main__":
     # Cập nhật tất cả glossaries với file CSV mới (mode=1: UPDATE)
     manage_all_glossaries(CURRENT_LANGUAGES, mode=1)
+

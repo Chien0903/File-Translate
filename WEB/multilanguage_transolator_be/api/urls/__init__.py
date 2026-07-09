@@ -2,14 +2,6 @@ from django.urls import include, path
 from api.views.translate import TranslateFileView, TranslateTextView
 from api.services.upload_to_s3 import upload_file_to_s3
 from api.views.health import HealthCheckView
-from api.views.language import (
-    CompanyLanguageListView,
-    EnableLanguageView,
-    DisableLanguageView,
-    SetDefaultLanguageView,
-    LanguageAuditLogView,
-    AddLanguageView,
-)
 
 urlpatterns = [
     # Core functionality
@@ -27,17 +19,9 @@ urlpatterns = [
     path('', include('api.urls.keyword_stats')),
 
     # JWT authentication
-    path('auth/', include('api.urls.alb_auth')),
+    path('auth/', include('api.urls.auth')),
     path('health/', HealthCheckView.as_view(), name='health_check'),
 
-    # Language management — system level
+    # Language management
     path('languages/', include('api.urls.language')),
-
-    # Language management — company level
-    path('companies/<int:company_id>/languages/', CompanyLanguageListView.as_view(), name='company_language_list'),
-    path('companies/<int:company_id>/languages/audit-log/', LanguageAuditLogView.as_view(), name='language_audit_log'),
-    path('companies/<int:company_id>/languages/add/', AddLanguageView.as_view(), name='language_add'),
-    path('companies/<int:company_id>/languages/<int:lang_id>/enable/', EnableLanguageView.as_view(), name='language_enable'),
-    path('companies/<int:company_id>/languages/<int:lang_id>/disable/', DisableLanguageView.as_view(), name='language_disable'),
-    path('companies/<int:company_id>/languages/<int:lang_id>/set-default/', SetDefaultLanguageView.as_view(), name='language_set_default'),
 ]

@@ -33,7 +33,7 @@ const getPrefix = (code, flagEmoji) =>
   flagEmojiToCode(flagEmoji) || isoToPrefix(code);
 
 /**
- * Fetch ngôn ngữ enabled của company user đang đăng nhập.
+ * Fetch ngôn ngữ đang được admin bật cho toàn hệ thống.
  * Trả về:
  *   languages     — array [{ id, code, name, native_name, flag_emoji, sort_order }]
  *   codeByName    — map  { "Vietnamese": "vi", "Japanese": "ja", ... }
@@ -42,13 +42,13 @@ const getPrefix = (code, flagEmoji) =>
  *   prefixByCode  — map  { "vi": "VN", "fr": "FR", "zh-CN": "CN", ... }  (badge hiển thị theo ISO code)
  *   loading       — boolean
  */
-export const useCompanyLanguages = () => {
+export const useEnabledLanguages = () => {
   const [languages, setLanguages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     languageService
-      .getMyCompanyLanguages()
+      .getEnabledLanguages()
       .then(setLanguages)
       .catch(() => setLanguages([]))
       .finally(() => setLoading(false));

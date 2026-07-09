@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useCompanyLanguages } from "../../hooks/useCompanyLanguages";
+import { useEnabledLanguages } from "../../hooks/useEnabledLanguages";
 import { FiDownload, FiExternalLink, FiShare2, FiSearch } from "react-icons/fi";
 import { MdClose, MdDescription } from "react-icons/md";
 import Pagination from "../../components/Pagination";
@@ -31,7 +31,7 @@ const LangBadge = ({ code, prefixMap = {}, filled = false }) => (
 );
 
 const FileHistory = () => {
-  const { prefixByCode } = useCompanyLanguages();
+  const { prefixByCode } = useEnabledLanguages();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");

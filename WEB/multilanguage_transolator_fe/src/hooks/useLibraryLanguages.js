@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useCompanyLanguages } from "./useCompanyLanguages";
+import { useEnabledLanguages } from "./useEnabledLanguages";
 
 /**
  * Returns enabled company languages for use in keyword library tables.
@@ -10,7 +10,7 @@ import { useCompanyLanguages } from "./useCompanyLanguages";
  * Since keyword.translations uses ISO codes directly, no field-name mapping needed.
  */
 export const useLibraryLanguages = () => {
-  const { languages, loading } = useCompanyLanguages();
+  const { languages, loading } = useEnabledLanguages();
 
   const libraryLanguages = useMemo(
     () =>

@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import translationService from "../../../services/translationService";
 import { Spin } from "antd";
 import { toast } from "react-toastify";
-import { useCompanyLanguages } from "../../../hooks/useCompanyLanguages";
+import { useEnabledLanguages } from "../../../hooks/useEnabledLanguages";
 import { Document, Page, pdfjs } from "react-pdf";
 import {
   MdCloudUpload,
@@ -147,8 +147,8 @@ const LangDropdown = ({ label, value, options, onChange, multi = false, selected
 const ControlsBar = ({ nameList, originLang, onOriginChange, targetOptions, targetLangs, onTargetChange, libraryMode, onLibraryChange, prefixMap }) => (
   <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 mb-4">
     <div className="flex flex-wrap items-end gap-4">
-      <LangDropdown label="Origin Language" value={originLang} options={nameList} onChange={onOriginChange} prefixMap={prefixMap} />
-      <LangDropdown label="Target Languages" value="" options={targetOptions} onChange={onTargetChange} multi selected={targetLangs} prefixMap={prefixMap} />
+      <LangDropdown label="From" value={originLang} options={nameList} onChange={onOriginChange} prefixMap={prefixMap} />
+      <LangDropdown label="To" value="" options={targetOptions} onChange={onTargetChange} multi selected={targetLangs} prefixMap={prefixMap} />
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Glossary</p>
         <GlossaryToggle value={libraryMode} onChange={onLibraryChange} />
@@ -158,9 +158,11 @@ const ControlsBar = ({ nameList, originLang, onOriginChange, targetOptions, targ
 );
 
 const UploadFileNew = () => {
-  const { codeByName, nameList, prefixByName } = useCompanyLanguages();
+  const { codeByName, nameList, prefixByName } = useEnabledLanguages();
+  const allSourceLanguages = useMemo(() => ["Auto Detect", ...nameList], [nameList]);
+  const prefixMap = useMemo(() => ({ ...prefixByName, "Auto Detect": "AUTO" }), [prefixByName]);
   const [translating, setTranslating] = useState(false);
-  const [selectedOriginLanguage, setSelectedOriginLanguage] = useState("");
+  const [selectedOriginLanguage, setSelectedOriginLanguage] = useState("Auto Detect");
   const [selectedTargetLanguages, setSelectedTargetLanguages] = useState([]);
   const [availableTargetLanguages, setAvailableTargetLanguages] = useState([]);
   const [file, setFile] = useState(null);
@@ -181,10 +183,14 @@ const UploadFileNew = () => {
 
   const handleOriginChange = (lang) => {
     setSelectedOriginLanguage(lang);
-    let filtered = nameList.filter((l) => l !== lang);
-    if (lang === "Chinese (Traditional)") filtered = filtered.filter((l) => l !== "Chinese (Simplified)");
-    if (lang === "Chinese (Simplified)") filtered = filtered.filter((l) => l !== "Chinese (Traditional)");
-    setAvailableTargetLanguages(filtered);
+    if (lang === "Auto Detect") {
+      setAvailableTargetLanguages(nameList);
+    } else {
+      let filtered = nameList.filter((l) => l !== lang);
+      if (lang === "Chinese (Traditional)") filtered = filtered.filter((l) => l !== "Chinese (Simplified)");
+      if (lang === "Chinese (Simplified)") filtered = filtered.filter((l) => l !== "Chinese (Traditional)");
+      setAvailableTargetLanguages(filtered);
+    }
     setSelectedTargetLanguages([]);
   };
 
@@ -244,7 +250,7 @@ const UploadFileNew = () => {
     try {
       const payload = {
         file_url: file.uri,
-        origin_language: selectedOriginLanguage ? codeByName[selectedOriginLanguage] : null,
+        origin_language: selectedOriginLanguage !== "Auto Detect" ? codeByName[selectedOriginLanguage] : null,
         target_languages: selectedTargetLanguages.map((l) => codeByName[l]),
         original_file_name: file.originalFileName,
         library_mode: libraryMode,
@@ -254,7 +260,7 @@ const UploadFileNew = () => {
       navigate("/translation-results", {
         state: {
           originalFile: file,
-          originalLanguage: selectedOriginLanguage || detectedLang,
+          originalLanguage: selectedOriginLanguage !== "Auto Detect" ? selectedOriginLanguage : detectedLang,
           translatedFiles: response.data.translated_files,
         },
       });
@@ -275,7 +281,7 @@ const UploadFileNew = () => {
         <h1 className="text-2xl font-bold text-gray-900 mb-1">File Translation</h1>
         <p className="text-gray-400 text-sm mb-4">Upload a document to translate it into one or more languages.</p>
         <ControlsBar
-          nameList={nameList}
+          nameList={allSourceLanguages}
           originLang={selectedOriginLanguage}
           onOriginChange={handleOriginChange}
           targetOptions={availableTargetLanguages}
@@ -283,7 +289,7 @@ const UploadFileNew = () => {
           onTargetChange={setSelectedTargetLanguages}
           libraryMode={libraryMode}
           onLibraryChange={handleLibraryChange}
-          prefixMap={prefixByName}
+          prefixMap={prefixMap}
         />
 
         <div className="flex-1 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden flex flex-col">
@@ -334,7 +340,7 @@ const UploadFileNew = () => {
       <h1 className="text-2xl font-bold text-gray-900 mb-1">File Translation</h1>
       <p className="text-gray-400 text-sm mb-4">Upload a document to translate it into one or more languages.</p>
       <ControlsBar
-        nameList={nameList}
+        nameList={allSourceLanguages}
         originLang={selectedOriginLanguage}
         onOriginChange={handleOriginChange}
         targetOptions={availableTargetLanguages}
@@ -342,7 +348,7 @@ const UploadFileNew = () => {
         onTargetChange={setSelectedTargetLanguages}
         libraryMode={libraryMode}
         onLibraryChange={handleLibraryChange}
-        prefixMap={prefixByName}
+        prefixMap={prefixMap}
       />
 
       <input

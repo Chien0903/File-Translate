@@ -47,9 +47,9 @@ def _check_admin_or_keeper(user):
 
 
 def _get_active_language_codes():
-    """Return list of ISO codes for all active languages, sorted."""
+    """Return list of ISO codes for all languages in the system."""
     from ..models.language import Language
-    return list(Language.objects.filter(is_active=True).values_list('code', flat=True))
+    return list(Language.objects.all().values_list('code', flat=True))
 
 
 PRIVATE_DUP_PLACEHOLDERS = {"", "-", "—", "–", "null", "none", ".."}

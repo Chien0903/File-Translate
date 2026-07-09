@@ -1,7 +1,9 @@
-from django.contrib import admin
-from django.urls import path, include
-from api.views.auth import RegisterView
+from django.urls import path
+from api.views.alb_auth import LoginView, RefreshView, LogoutView, MeView
 
 urlpatterns = [
-    path("user/register/", RegisterView.as_view(), name="register"),
+    path('login/', LoginView.as_view(), name='auth_login'),
+    path('refresh/', RefreshView.as_view(), name='auth_refresh'),
+    path('logout/', LogoutView.as_view(), name='auth_logout'),
+    path('me/', MeView.as_view(), name='auth_me'),
 ]

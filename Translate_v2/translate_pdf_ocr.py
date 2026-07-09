@@ -8,7 +8,7 @@ import json
 import os
 import time
 import shutil
-from .detect_lang import detect_language, LANGUAGES, language_pair
+from .detect_lang import detect_language
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 
@@ -84,13 +84,12 @@ def translate_pdf_ocr(input_pdf, target_language=None, source_language=None):
     """
         
     glossary_id = None
-    if source_language in LANGUAGES:
-        print("Translate with glossary")
-        pair_code = f"{source_language}-{target_language}" if f"{source_language}-{target_language}" in language_pair.keys() else f"{target_language}-{source_language}"
-        if pair_code in language_pair:
-            glossary_id = f"company_translation_glossary_{language_pair[pair_code]}"
-        else:
-            print(f"ℹ No glossary for pair {source_language}->{target_language}. Translating without glossary.")
+    if source_language != target_language:
+        lang_a, lang_b = sorted([source_language, target_language])
+        safe_a = lang_a.replace("-", "_")
+        safe_b = lang_b.replace("-", "_")
+        glossary_id = f"company_glossary_{safe_a}_{safe_b}"
+        print(f"Translate with glossary: {glossary_id}")
     else:
         print("Translate without glossary")
     if source_language != target_language:
