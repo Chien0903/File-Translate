@@ -28,6 +28,13 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+/** Admin accounts are restricted to Account Management and Keyword Stats */
+function NonAdminRoute({ children }) {
+  const { role } = useAuth();
+  if (role === "Admin") return <Navigate to="/admin" replace />;
+  return children;
+}
+
 /** Calls authService logout then redirects */
 function Logout() {
   const { logout } = useAuth();
@@ -54,19 +61,19 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<HomePage />} />
-            <Route path="/text-translation" element={<TextTranslation />} />
+            <Route index element={<NonAdminRoute><HomePage /></NonAdminRoute>} />
+            <Route path="/text-translation" element={<NonAdminRoute><TextTranslation /></NonAdminRoute>} />
             <Route path="/logout" element={<Logout />} />
             <Route path="/my-profile" element={<MyProfile />} />
             <Route path="/admin/edit-user/:id" element={<EditUserRole />} />
             <Route path="/admin" element={<AccountManagement />} />
             <Route path="/admin/keyword-stats" element={<KeywordStatsAdmin />} />
-            <Route path="/translation-results" element={<TranslationResults />} />
-            <Route path="/file-format-conversion" element={<FormatConversionPage />} />
-            <Route path="/conversion-results" element={<ConversionResults />} />
-            <Route path="/common-library" element={<CommonLibraryManagement />} />
-            <Route path="/file-history" element={<FileHistory />} />
-            <Route path="/private-library" element={<PrivateLibrary />} />
+            <Route path="/translation-results" element={<NonAdminRoute><TranslationResults /></NonAdminRoute>} />
+            <Route path="/file-format-conversion" element={<NonAdminRoute><FormatConversionPage /></NonAdminRoute>} />
+            <Route path="/conversion-results" element={<NonAdminRoute><ConversionResults /></NonAdminRoute>} />
+            <Route path="/common-library" element={<NonAdminRoute><CommonLibraryManagement /></NonAdminRoute>} />
+            <Route path="/file-history" element={<NonAdminRoute><FileHistory /></NonAdminRoute>} />
+            <Route path="/private-library" element={<NonAdminRoute><PrivateLibrary /></NonAdminRoute>} />
             <Route
               path="/suggestion-review"
               element={<Navigate to="/common-library" replace />}

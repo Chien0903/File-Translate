@@ -1,7 +1,6 @@
 import re
 import pypdf as PyPDF2
 
-OCR_KEYWORDS = ("ocr", "tesseract", "abbyy", "ocrmypdf", "ocrengine", "ocropus", "adobe pdf output intent", "ocr.scanned")
 MIN_TEXT_CHARS = 20       # tối thiểu ký tự để coi là "có text có ý nghĩa"
 FULL_PAGE_RATIO = 2.0     # nếu image_pixels / page_points >= ratio => coi là full-page image
 
@@ -85,20 +84,6 @@ def _page_full_page_image(page, ratio_threshold=FULL_PAGE_RATIO):
     except Exception:
         return False
 
-def _metadata_indicates_ocr(reader):
-    try:
-        # PyPDF2 PdfReader.metadata returns a DocumentInformation-like mapping (e.g. '/Producer', '/Creator', '/Title', ...)
-        md = reader.metadata
-        if not md:
-            return False
-        joined = " ".join(str(v).lower() for v in md.values() if v)
-        for kw in OCR_KEYWORDS:
-            if kw in joined:
-                return True
-    except Exception:
-        pass
-    return False
-
 def is_pdf_truly_editable(pdf_path: str) -> bool:
     """
     Trả về True chỉ khi PDF có ít nhất 1 trang native text (text gốc, không phải OCR overlay).
@@ -133,11 +118,6 @@ def is_pdf_truly_editable(pdf_path: str) -> bool:
                 image_only_pages += 1
             else:
                 ambiguous_pages += 1
-
-        # Check metadata for OCR hints
-        meta_ocr = _metadata_indicates_ocr(reader)
-        if meta_ocr:
-            print("Metadata suggests OCR/ocr tool present.")
 
         # Decision:
         if native_text_pages > 0:

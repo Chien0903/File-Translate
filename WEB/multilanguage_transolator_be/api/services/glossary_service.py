@@ -25,20 +25,13 @@ INVALID_GLOSSARY_VALUES = {"", "-", "—", "–", "null", "none"}
 
 
 def normalize_glossary_value(value) -> str:
-    """
-    Normalize glossary cell value:
-    - Convert None to ""
-    - Strip leading/trailing whitespace
-    - Always return a string
-    """
+    """Làm sạch 1 ô dữ liệu trước khi đưa vào glossary: None -> chuỗi rỗng, bỏ khoảng trắng thừa hai đầu."""
     return str(value or "").strip()
 
 
 def is_valid_glossary_value(value: str) -> bool:
-    """
-    A normalized glossary value is considered invalid if it is empty
-    or matches known placeholders such as '-', '—', '–', 'null', 'None'.
-    """
+    """Kiểm tra 1 giá trị có dùng được cho glossary không — loại các ô rỗng hoặc chỉ chứa
+    placeholder rác như '-', '—', 'null', 'none' (những ô này không phải bản dịch thật)."""
     normalized = normalize_glossary_value(value)
     if normalized == "":
         return False
@@ -49,12 +42,8 @@ def is_valid_glossary_value(value: str) -> bool:
 
 
 def build_pair_rows(rows, source_lang_col: str, target_lang_col: str):
-    """
-    Build pair rows (source_text, target_text) from a multi-column vocabulary-like dataset.
-    - Drop rows with invalid/placeholder source or target.
-    - Deduplicate by (source_text, target_text).
-    - Return list of [source_text, target_text].
-    """
+    """Từ bảng từ vựng nhiều cột (nhiều ngôn ngữ), rút ra danh sách cặp (từ nguồn, từ đích)
+    cho đúng 2 cột được chọn — bỏ dòng thiếu/rác, bỏ dòng trùng lặp."""
     seen = set()
     results = []
 
@@ -113,11 +102,8 @@ def manage_glossary(
     timeout: int = 180,
     input_uri: str = None
 ) -> translate.Glossary:
-    """
-    Create or update a glossary.
-    - mode=0: create new glossary (CREATE)
-    - mode=1: update source file of existing glossary (UPDATE)
-    """
+    """Gọi Google Cloud Translation API để tạo mới (mode=0) hoặc cập nhật (mode=1)
+    1 glossary — tức là gắn file CSV thuật ngữ (input_uri) vào 1 cặp ngôn ngữ cụ thể."""
     project_id = os.getenv("PROJECT_ID")
     if input_uri is None:
         input_uri = os.getenv("INPUT_URI", "gs://company-buckets/glossary_term.csv")
@@ -163,20 +149,15 @@ def manage_glossary(
 
 
 def make_glossary_id(lang1: str, lang2: str) -> str:
-    """
-    Tạo glossary ID từ 2 language codes — luôn sort để đảm bảo commutative.
-    Ví dụ: make_glossary_id('vi', 'en') == make_glossary_id('en', 'vi') == 'company_glossary_en_vi'
-    """
+    """Sinh tên (ID) glossary từ 2 mã ngôn ngữ, luôn sắp xếp trước nên dịch chiều nào cũng
+    ra cùng 1 ID: make_glossary_id('vi','en') == make_glossary_id('en','vi') == 'company_glossary_en_vi'."""
     pair = sorted([lang1, lang2])
     return "company_glossary_" + "_".join(c.replace("-", "_") for c in pair)
 
 
 def generate_pairs_from_db():
-    """
-    Tạo tất cả cặp (lang1, lang2) từ Language records trong DB.
-    Dùng itertools.combinations để đảm bảo không trùng và đúng thứ tự.
-    Trả về list of tuple: [('bn', 'en'), ('bn', 'hi'), ...]
-    """
+    """Lấy danh sách ngôn ngữ đang bật trong DB rồi ghép thành mọi cặp 2 ngôn ngữ có thể
+    (không trùng, không đảo chiều) — mỗi cặp sẽ cần 1 glossary riêng."""
     import itertools
     try:
         from ..models.language import Language
@@ -250,10 +231,8 @@ LANGUAGE_PAIRS = {
 
 
 def delete_glossary(glossary_id: str, location: str = "us-central1", timeout: int = 180):
-    """
-    Delete a glossary from Google Cloud Translation.
-    Returns True if deleted, False if it didn't exist.
-    """
+    """Xóa 1 glossary trên Google Cloud (dùng khi 1 cặp ngôn ngữ không còn từ vựng nào,
+    để tránh glossary cũ còn sót lại làm sai kết quả dịch). Trả về False nếu vốn đã không tồn tại."""
     project_id = os.getenv("PROJECT_ID")
     client = translate.TranslationServiceClient()
     name = client.glossary_path(project_id, location, glossary_id)
@@ -269,14 +248,20 @@ def delete_glossary(glossary_id: str, location: str = "us-central1", timeout: in
         raise
 
 
-def manage_all_glossaries(mode=1):
-    """
-    Manage all glossaries for all language pairs (dynamic from DB).
-    - If a pair has valid keywords: create/update glossary.
-    - If a pair has NO keywords: delete the glossary so stale entries don't affect translation.
-    """
+def manage_all_glossaries():
+    """Đồng bộ lại TOÀN BỘ glossary chung cho mọi cặp ngôn ngữ đang có trong DB:
+    cặp nào có từ vựng thì tạo/cập nhật glossary, cặp nào hết từ vựng thì xóa glossary cũ đi.
+
+    Mode được xác định RIÊNG cho từng cặp ngôn ngữ bằng cách kiểm tra glossary đã tồn tại
+    trên Google Cloud hay chưa (giống hệt cách _manage_user_glossaries_bg làm cho glossary
+    cá nhân) — không dùng mù quáng tham số `mode` cho mọi cặp, vì gọi update_glossary() lên
+    một glossary chưa từng tồn tại sẽ trả lỗi NOT_FOUND và bị nuốt bởi try/except bên dưới,
+    khiến glossary chung không bao giờ được tạo."""
     results = []
     errors = []
+
+    project_id = os.getenv("PROJECT_ID")
+    client = translate.TranslationServiceClient()
 
     for source_lang_code, target_lang_code in generate_pairs_from_db():
         glossary_id = make_glossary_id(source_lang_code, target_lang_code)
@@ -315,11 +300,22 @@ def manage_all_glossaries(mode=1):
             custom_blob_name = f"glossary_pair_{source_lang_code}_{target_lang_code}.csv"
             try:
                 input_uri = upload_csv_to_gcs(tsv_path, custom_blob_name=custom_blob_name)
+
+                # Probe whether this pair's glossary already exists on GCP to pick the
+                # correct mode — create (0) if missing, update (1) if it's already there.
+                name = client.glossary_path(project_id, "us-central1", glossary_id)
+                pair_mode = 0
+                try:
+                    client.get_glossary(name=name)
+                    pair_mode = 1
+                except Exception:
+                    pass
+
                 result = manage_glossary(
                     glossary_id,
                     source_lang_code,
                     target_lang_code,
-                    mode=mode,
+                    mode=pair_mode,
                     input_uri=input_uri,
                 )
                 results.append({
@@ -349,7 +345,7 @@ def manage_all_glossaries(mode=1):
 
 
 def _get_active_language_codes():
-    """Return sorted ISO codes of all languages in the system."""
+    """Lấy danh sách mã ngôn ngữ đang được bật trong hệ thống (dùng làm cột cho file CSV)."""
     try:
         from ..models.language import Language
         return list(Language.objects.all().order_by('sort_order').values_list('code', flat=True))
@@ -358,7 +354,8 @@ def _get_active_language_codes():
 
 
 def create_glossary_csv_file():
-    """Extract approved keywords -> CSV with columns = active language codes."""
+    """Xuất toàn bộ từ khóa ĐÃ ĐƯỢC DUYỆT ra 1 file CSV, mỗi cột là 1 ngôn ngữ —
+    file này sau đó được upload lên GCS để Google Translate dùng làm glossary chung."""
     try:
         approved_keywords = list(KeywordSuggestion.objects.filter(status='approved'))
         if not approved_keywords:
@@ -390,7 +387,8 @@ def create_glossary_csv_file():
 
 
 def create_pair_csv_file(user, source_lang, target_lang):
-    """Extract approved AND private keywords for a SPECIFIC language pair."""
+    """Xuất file CSV chỉ 2 cột (nguồn - đích) cho ĐÚNG 1 cặp ngôn ngữ, gồm cả từ khóa
+    chung đã duyệt và từ khóa riêng của user (nếu có) — dùng để build glossary cho riêng cặp đó."""
     approved_keywords = list(KeywordSuggestion.objects.filter(status='approved'))
     private_keywords = list(PrivateKeyword.objects.filter(user=user)) if user is not None else []
     all_keywords = approved_keywords + private_keywords
@@ -450,7 +448,8 @@ def create_pair_csv_file(user, source_lang, target_lang):
         raise e
 
 def upload_csv_to_gcs(source_file_path: str, custom_blob_name: str = None):
-    """Upload CSV file to GCS, reading config from INPUT_URI/BUCKET_NAME."""
+    """Đẩy 1 file CSV từ máy chủ backend lên Google Cloud Storage — bắt buộc phải làm bước
+    này vì Google Translate chỉ đọc glossary từ file nằm trên GCS, không nhận file local."""
     try:
         # Parse INPUT_URI format gs://bucket/object
         input_uri = os.getenv("INPUT_URI")
@@ -488,6 +487,8 @@ def upload_csv_to_gcs(source_file_path: str, custom_blob_name: str = None):
 import threading
 
 def _manage_user_glossaries_bg(user_id):
+    """Chạy trong luồng nền: build lại glossary RIÊNG của 1 user — mỗi cặp ngôn ngữ mà
+    user đó có từ vựng sẽ có 1 glossary riêng (tên có hậu tố _user_<id>), tách biệt với glossary chung."""
     from django.contrib.auth import get_user_model
     User = get_user_model()
     print(f"\n[BACKGROUND THREAD] BẮT ĐẦU CẬP NHẬT TỪ ĐIỂN CÁ NHÂN CHO USER ID: {user_id}", flush=True)
@@ -576,16 +577,18 @@ def _manage_user_glossaries_bg(user_id):
         logger.error(f"Background user glossary failed: {e}")
 
 def async_manage_user_glossaries(user):
-    """Trigger background thread to update glossaries for a given user"""
+    """Khởi chạy 1 luồng nền để cập nhật glossary riêng của user — chạy ngầm nên
+    request HTTP (vd. sau khi user lưu 1 từ mới) trả về ngay, không phải chờ Google xử lý xong."""
     thread = threading.Thread(target=_manage_user_glossaries_bg, args=(user.id,))
     thread.start()
 
 
 def _manage_common_glossaries_bg():
-    """Background thread: rebuild all common glossaries from current approved keywords."""
+    """Chạy trong luồng nền: build lại toàn bộ glossary CHUNG dựa trên các từ khóa
+    vừa được duyệt/sửa/xóa — gọi manage_all_glossaries() và log lại kết quả thành công/lỗi."""
     print("\n[BACKGROUND THREAD] BẮT ĐẦU CẬP NHẬT GLOSSARY CHUNG (common)...", flush=True)
     try:
-        results, errors = manage_all_glossaries(mode=1)
+        results, errors = manage_all_glossaries()
         print(
             f"[BACKGROUND THREAD] Glossary chung: thành công={len(results)}, lỗi={len(errors)}",
             flush=True,
@@ -599,7 +602,8 @@ def _manage_common_glossaries_bg():
 
 
 def async_manage_common_glossaries():
-    """Trigger background thread to rebuild all common glossaries."""
+    """Khởi chạy 1 luồng nền để build lại glossary chung — gọi ngay sau khi admin
+    duyệt/sửa/xóa 1 từ khóa, để glossary trên Google luôn đồng bộ với dữ liệu mới nhất."""
     thread = threading.Thread(target=_manage_common_glossaries_bg)
     thread.daemon = True
     thread.start()

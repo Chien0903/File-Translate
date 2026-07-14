@@ -2,18 +2,28 @@ import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import userService from "../../../services/userService";
 import { toast } from "react-toastify";
+import { MdLock, MdVisibility, MdVisibilityOff } from "react-icons/md";
 
 const EditUserRole = ({ isOpen, onClose, userId, onUserUpdated }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("User");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     if (isOpen && userId) {
+      setNewPassword("");
+      setConfirmPassword("");
+      setShowPassword(false);
+      setError("");
+      setLoadError("");
       fetchUser();
     }
   }, [isOpen, userId]);
@@ -28,7 +38,7 @@ const EditUserRole = ({ isOpen, onClose, userId, onUserUpdated }) => {
       setRole(response.data.role);
     } catch (error) {
       console.error("Error fetching user info:", error);
-      setError("Profile not available. Please try again.");
+      setLoadError("Profile not available. Please try again.");
     } finally {
       setDataLoading(false);
     }
@@ -37,10 +47,25 @@ const EditUserRole = ({ isOpen, onClose, userId, onUserUpdated }) => {
   const handleUpdateRole = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (newPassword || confirmPassword) {
+      if (newPassword.length < 8) {
+        setError("Password must be at least 8 characters.");
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setError("Passwords do not match.");
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
       await userService.updateUserRole(userId, role);
+      if (newPassword) {
+        await userService.setUserPassword(userId, newPassword);
+      }
       toast.success("Updated successfully");
 
       const currentUserEmail = localStorage.getItem("email");
@@ -57,7 +82,7 @@ const EditUserRole = ({ isOpen, onClose, userId, onUserUpdated }) => {
       onClose();
     } catch (error) {
       console.error("Error updating role:", error);
-      toast.error("Unable to update role");
+      toast.error(error.response?.data?.detail || "Unable to update user");
     } finally {
       setLoading(false);
     }
@@ -103,8 +128,8 @@ const EditUserRole = ({ isOpen, onClose, userId, onUserUpdated }) => {
 
         {dataLoading ? (
           <p className="text-center text-blue-600">Loading data...</p>
-        ) : error ? (
-          <p className="text-red-500 text-center">{error}</p>
+        ) : loadError ? (
+          <p className="text-red-500 text-center">{loadError}</p>
         ) : (
           <form onSubmit={handleUpdateRole} className="space-y-5">
             {/* Name Fields */}
@@ -223,6 +248,48 @@ const EditUserRole = ({ isOpen, onClose, userId, onUserUpdated }) => {
                 ))}
               </div>
             </div>
+
+            {/* Reset Password */}
+            <div className="space-y-2">
+              <label className="block text-gray-700 text-sm font-semibold">
+                Reset Password
+              </label>
+              <p className="text-xs text-gray-400">Leave blank to keep the current password.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                  <MdLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="New password"
+                    autoComplete="new-password"
+                    className="w-full p-3 pl-10 pr-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    tabIndex={-1}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <MdVisibilityOff size={18} /> : <MdVisibility size={18} />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <MdLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    autoComplete="new-password"
+                    className="w-full p-3 pl-10 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
             {/* Action Buttons */}
             <div className="flex justify-center gap-4 pt-6">

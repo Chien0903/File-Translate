@@ -72,7 +72,6 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware', 
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    # 'api.middleware.alb_auth.ALBAuthenticationMiddleware',  # ALB Authentication
     # 'api.middleware.debug.DebugHeadersMiddleware',  # Debug headers
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

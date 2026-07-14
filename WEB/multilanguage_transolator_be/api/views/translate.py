@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 import tempfile
 import uuid
 import requests
-from ..models.translated_file import TranslatedFile
+from ..models.translated_file import TranslatedFile, Folder
 from ..models.keyword import PrivateKeyword
 from ..services.upload_to_s3 import upload_file_path_to_s3
 import logging
@@ -56,23 +56,8 @@ PROJECT_ID = os.getenv("PROJECT_ID")
 GOOGLE_CREDENTIALS_PATH = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_CREDENTIALS_PATH
 
-OCR_KEYWORDS = ("ocr", "tesseract", "abbyy", "ocrmypdf", "ocrengine", "ocropus", "adobe pdf output intent", "ocr.scanned")
 MIN_TEXT_CHARS = 20       # tối thiểu ký tự để coi là "có text có ý nghĩa"
 FULL_PAGE_RATIO = 2.0     # nếu image_pixels / page_points >= ratio => coi là full-page image
-
-def _metadata_indicates_ocr(reader):
-    try:
-        # PyPDF2 PdfReader.metadata returns a DocumentInformation-like mapping (e.g. '/Producer', '/Creator', '/Title', ...)
-        md = reader.metadata
-        if not md:
-            return False
-        joined = " ".join(str(v).lower() for v in md.values() if v)
-        for kw in OCR_KEYWORDS:
-            if kw in joined:
-                return True
-    except Exception:
-        pass
-    return False
 
 def _resolve(obj):
     """Resolve a pypdf IndirectObject to its concrete value."""
@@ -186,11 +171,6 @@ def is_pdf_truly_editable(pdf_path: str) -> bool:
                 image_only_pages += 1
             else:
                 ambiguous_pages += 1
-
-        # Check metadata for OCR hints
-        meta_ocr = _metadata_indicates_ocr(reader)
-        if meta_ocr:
-            print("Metadata suggests OCR/ocr tool present.")
 
         # Decision:
         if native_text_pages > 0:
@@ -439,6 +419,7 @@ class TranslateFileView(APIView):
         target_languages = request.data.get("target_languages") or []
         original_file_name = request.data.get("original_file_name")
         origin_language = request.data.get("origin_language")  # Nhận ngôn ngữ gốc từ frontend
+        folder = (request.data.get("folder") or "").strip()
 
         library_mode = request.data.get("library_mode", "common")
 
@@ -477,6 +458,9 @@ class TranslateFileView(APIView):
             )
             logger.info(f"🔧 Translation context: Mode={library_mode}, User ID={request.user.id}")
 
+            if folder:
+                Folder.objects.get_or_create(user=request.user, name=folder)
+
             results = []
             for lang in target_languages:
                 try:
@@ -489,6 +473,7 @@ class TranslateFileView(APIView):
                         original_language=result["original_language"],
                         target_language=lang,
                         file_type=result["file_type"],
+                        folder_name=folder,
                     )
                     # Tạo tên file download với extension phù hợp  
                     base_name = os.path.splitext(file_name)[0]

@@ -81,6 +81,28 @@ class UpdateUserRoleView(APIView):
 
         return Response({"detail": "Role updated successfully."}, status=200)
 
+class AdminSetPasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, user_id):
+        if not (request.user.is_staff or request.user.role == "Admin"):
+            return Response({"detail": "You do not have permission to change passwords."}, status=403)
+
+        try:
+            user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({"detail": "User not found."}, status=404)
+
+        new_password = request.data.get("password") or ""
+        if len(new_password) < 8:
+            return Response({"detail": "Password must be at least 8 characters."}, status=400)
+
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+
+        return Response({"detail": "Password updated successfully."}, status=200)
+
+
 class DeleteUserView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -95,4 +117,27 @@ class DeleteUserView(APIView):
 
         user.delete()
         return Response({"detail": "User deleted successfully."}, status=200)
-    
+
+
+class ToggleUserActiveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, user_id):
+        if request.user.role != "Admin":
+            return Response({"detail": "You do not have permission to disable users."}, status=403)
+
+        try:
+            user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({"detail": "User not found."}, status=404)
+
+        if user.id == request.user.id:
+            return Response({"detail": "You cannot disable your own account."}, status=400)
+
+        user.is_active = not user.is_active
+        user.save(update_fields=["is_active"])
+
+        return Response(
+            {"detail": "User status updated successfully.", "is_active": user.is_active},
+            status=200,
+        )

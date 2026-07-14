@@ -10,9 +10,10 @@ class TranslatedFileSerializer(serializers.ModelSerializer):
             'original_file_name',
             'translated_file_url', 
             'original_language', 
-            'target_language', 
-            'file_type', 
-            'created_at', 
+            'target_language',
+            'file_type',
+            'folder_name',
+            'created_at',
             'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at'] 

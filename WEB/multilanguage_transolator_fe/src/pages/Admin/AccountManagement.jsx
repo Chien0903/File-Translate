@@ -6,6 +6,8 @@ import {
   FiArrowUp,
   FiArrowDown,
   FiDownload,
+  FiUserX,
+  FiUserCheck,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import userService from "../../services/userService";
@@ -70,7 +72,7 @@ function AccountManagement() {
   }, []);
 
 
-  const { role: userRole } = useAuth();
+  const { role: userRole, user: currentUser } = useAuth();
 
   useEffect(() => {
     if (userRole !== "Admin") {
@@ -109,16 +111,24 @@ function AccountManagement() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this account?"))
-      return;
+  const handleToggleActive = async (account) => {
+    const willDisable = account.is_active !== false;
+    const confirmMessage = willDisable
+      ? "Are you sure you want to disable this account?"
+      : "Are you sure you want to enable this account?";
+    if (!window.confirm(confirmMessage)) return;
+
     try {
-      await userService.deleteUser(id);
-      toast.success("Account deleted");
+      const response = await userService.toggleUserActive(account.id);
+      toast.success(
+        response.data.is_active ? "Account enabled" : "Account disabled"
+      );
       fetchUsers();
     } catch (error) {
       console.error(error);
-      toast.error("Unable to delete account");
+      toast.error(
+        error.response?.data?.detail || "Unable to update account status"
+      );
     }
   };
 
@@ -581,9 +591,16 @@ function AccountManagement() {
                     </span>
                   </td>
                   <td className="p-[0.75rem] border-b border-gray-200 text-center w-[18%]">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
-                      {account.role}
-                    </span>
+                    <div className="flex flex-col items-center gap-[0.25rem]">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                        {account.role}
+                      </span>
+                      {account.is_active === false && (
+                        <span className="px-2 py-1 bg-gray-200 text-gray-600 rounded-full text-xs font-semibold">
+                          Disabled
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="p-[0.75rem] border-b border-gray-200 text-center w-[28%]">
                     {account.email}
@@ -618,25 +635,26 @@ function AccountManagement() {
                         </svg>
                       </button>
                       <button
-                        className="p-[0.5rem] bg-red-100 rounded-md hover:bg-red-200 flex items-center justify-center transition-colors"
-                        title="Delete Account"
-                        onClick={() => handleDelete(account.id)}
+                        className={`p-[0.5rem] rounded-md flex items-center justify-center transition-colors ${
+                          account.is_active === false
+                            ? "bg-green-100 hover:bg-green-200"
+                            : "bg-red-100 hover:bg-red-200"
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        title={
+                          account.id === currentUser?.id
+                            ? "You cannot disable your own account"
+                            : account.is_active === false
+                              ? "Enable Account"
+                              : "Disable Account"
+                        }
+                        disabled={account.id === currentUser?.id}
+                        onClick={() => handleToggleActive(account)}
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-red-600 w-[1.25rem] h-[1.25rem]"
-                        >
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          <line x1="10" y1="11" x2="10" y2="17" />
-                          <line x1="14" y1="11" x2="14" y2="17" />
-                        </svg>
+                        {account.is_active === false ? (
+                          <FiUserCheck className="text-green-600 w-[1.25rem] h-[1.25rem]" />
+                        ) : (
+                          <FiUserX className="text-red-600 w-[1.25rem] h-[1.25rem]" />
+                        )}
                       </button>
                     </div>
                   </td>

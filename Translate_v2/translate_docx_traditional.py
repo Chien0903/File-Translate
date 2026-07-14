@@ -3,10 +3,16 @@ from lxml import etree as ET
 import html
 from translate_text import translate_text_with_glossary, translate_file, translate_texts_batch
 from functools import lru_cache
+# Không thuộc pipeline chính bên dưới, và hiện không được gọi ở đâu trong file này
+# (dịch thật dùng translate_texts_batch để dịch theo lô, không dịch từng câu qua cache).
 @lru_cache(maxsize=10000)
 def cached_translate_text(text, glossary_id, source_lang, target_lang):
     return translate_text_with_glossary(text, glossary_id, source_lang, target_lang)
 
+
+# Bước "Dọn dẹp và ghép các đoạn chữ bị chia nhỏ":
+# Word hay tự tách 1 câu thành nhiều mảnh <w:r> (do gõ ngắt quãng, định dạng khác nhau...).
+# Hàm này gộp lại các mảnh cùng định dạng thành 1 câu hoàn chỉnh, để dịch không bị vụn/mất ngữ cảnh.
 def clean_and_merge_runs(xml_file_path):
     namespaces = {
         'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
@@ -125,6 +131,10 @@ def clean_and_merge_runs(xml_file_path):
     tree.write(xml_file_path, pretty_print=True, xml_declaration=True, encoding='UTF-8')
     print(f"🧹 Đã clean & merge: {xml_file_path}")
 
+# Bước "Chọn những XML có chứa nội dung văn bản":
+# 1 file .docx giải nén ra có rất nhiều file XML, nhưng chỉ vài file thật sự chứa
+# text hiển thị (document/header/footer...), còn lại là file cấu hình (style, font, theme...).
+# Hàm này lọc ra đúng những file cần dịch, bỏ qua phần còn lại.
 def _is_docx_content_xml(folder_path, xml_file_path):
     """Check if an XML file contains translatable document content."""
     rel_path = os.path.relpath(xml_file_path, folder_path).replace("\\", "/")
@@ -140,6 +150,8 @@ def _is_docx_content_xml(folder_path, xml_file_path):
         return True
     return False
 
+# Hàm điều phối chính — gộp 4 bước của pipeline: thu thập nội dung, loại câu trùng,
+# dịch theo lô, rồi ghi bản dịch trở lại đúng file XML tương ứng.
 def translate_all_xml_in_folder(folder_path, glossary_id, source_lang, target_lang):
     all_xml_tasks = []
     texts_to_translate = set()
@@ -199,12 +211,15 @@ def translate_all_xml_in_folder(folder_path, glossary_id, source_lang, target_la
                             if sz_elem is not None:
                                 sz_elem.set("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val", "10")
 
-                # 3. Thu thập text
+                # Bước "Thu thập toàn bộ nội dung cần dịch":
+                # gom mọi đoạn text (<w:t>) trong file XML này lại để dịch.
                 text_elements = []
                 for elem in root.iter():
                     if elem.tag.endswith("}t") and elem.text and elem.text.strip():
                         text_val = elem.text.strip()
                         text_elements.append(elem)
+                        # Bước "Loại bỏ các câu bị trùng": texts_to_translate là set() nên
+                        # 1 câu xuất hiện nhiều lần trong tài liệu chỉ được thêm/dịch đúng 1 lần.
                         texts_to_translate.add(text_val)
                 
                 if text_elements:
@@ -216,7 +231,9 @@ def translate_all_xml_in_folder(folder_path, glossary_id, source_lang, target_la
     if not texts_to_translate:
         return
 
-    # 4. Dịch batch toàn bộ các chuỗi văn bản duy nhất
+    # Bước "Gửi tất cả câu sang dịch theo lô":
+    # dịch 1 lần cho toàn bộ danh sách câu duy nhất, thay vì gọi API riêng lẻ từng câu
+    # (nhanh hơn và tốn ít lần gọi API hơn).
     unique_texts_list = list(texts_to_translate)
     print(f"🔵 Đang dịch batch {len(unique_texts_list)} chuỗi văn bản từ DOCX (Traditional)...")
     translated_list = translate_texts_batch(unique_texts_list, glossary_id, source_lang, target_lang)
@@ -226,7 +243,8 @@ def translate_all_xml_in_folder(folder_path, glossary_id, source_lang, target_la
         if translated:
             translation_map[original] = html.unescape(translated)
 
-    # 5. Cập nhật và lưu lại các file XML
+    # Bước "Ghi bản dịch trở lại XML":
+    # tra translation_map để thay text gốc bằng bản dịch, đúng vị trí, đúng file XML gốc.
     for xml_file_path, tree, elements in all_xml_tasks:
         try:
             for elem in elements:
@@ -239,6 +257,9 @@ def translate_all_xml_in_folder(folder_path, glossary_id, source_lang, target_la
         except Exception as e:
             print(f"❌ Lỗi khi ghi file {xml_file_path} — {e}")
 
+# Entry point công khai của file. Bản thân hàm này chỉ gọi translate_file() (ở translate_text.py),
+# hàm đó mới thực hiện 2 bước đầu/cuối của pipeline: "Giải nén DOCX thành XML" trước khi gọi
+# translate_all_xml_in_folder() ở trên, và "Đóng gói lại thành DOCX" sau khi dịch xong.
 def translate_docx_traditional(docx_file, source_lang, target_lang):
     translate_file(file_path=docx_file, source_lang=source_lang, target_lang=target_lang, translate_func=translate_all_xml_in_folder, file_type='docx')
  

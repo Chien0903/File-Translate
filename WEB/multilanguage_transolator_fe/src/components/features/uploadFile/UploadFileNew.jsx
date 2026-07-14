@@ -144,7 +144,7 @@ const LangDropdown = ({ label, value, options, onChange, multi = false, selected
   );
 };
 
-const ControlsBar = ({ nameList, originLang, onOriginChange, targetOptions, targetLangs, onTargetChange, libraryMode, onLibraryChange, prefixMap }) => (
+const ControlsBar = ({ nameList, originLang, onOriginChange, targetOptions, targetLangs, onTargetChange, libraryMode, onLibraryChange, prefixMap, folders, folderName, onFolderChange }) => (
   <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 mb-4">
     <div className="flex flex-wrap items-end gap-4">
       <LangDropdown label="From" value={originLang} options={nameList} onChange={onOriginChange} prefixMap={prefixMap} />
@@ -152,6 +152,22 @@ const ControlsBar = ({ nameList, originLang, onOriginChange, targetOptions, targ
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Glossary</p>
         <GlossaryToggle value={libraryMode} onChange={onLibraryChange} />
+      </div>
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Save to folder</p>
+        <input
+          type="text"
+          list="upload-folder-suggestions"
+          value={folderName}
+          onChange={(e) => onFolderChange(e.target.value)}
+          placeholder="No folder"
+          className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-gray-300 transition-colors min-w-[160px] focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+        />
+        <datalist id="upload-folder-suggestions">
+          {folders.map((f) => (
+            <option key={f} value={f} />
+          ))}
+        </datalist>
       </div>
     </div>
   </div>
@@ -174,12 +190,18 @@ const UploadFileNew = () => {
     if (m === "thk") m = "common";
     return m || "common";
   });
+  const [folders, setFolders] = useState([]);
+  const [folderName, setFolderName] = useState("");
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (nameList.length > 0) setAvailableTargetLanguages(nameList);
   }, [nameList]);
+
+  useEffect(() => {
+    translationService.getFolders().then((res) => setFolders(res.data)).catch(() => {});
+  }, []);
 
   const handleOriginChange = (lang) => {
     setSelectedOriginLanguage(lang);
@@ -254,6 +276,7 @@ const UploadFileNew = () => {
         target_languages: selectedTargetLanguages.map((l) => codeByName[l]),
         original_file_name: file.originalFileName,
         library_mode: libraryMode,
+        folder: folderName.trim(),
       };
       const response = await translationService.translateFile(payload);
       const detectedLang = response.data.source_language;
@@ -293,6 +316,9 @@ const UploadFileNew = () => {
           libraryMode={libraryMode}
           onLibraryChange={handleLibraryChange}
           prefixMap={prefixMap}
+          folders={folders}
+          folderName={folderName}
+          onFolderChange={setFolderName}
         />
 
         <div className="flex-1 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden flex flex-col">
@@ -352,6 +378,9 @@ const UploadFileNew = () => {
         libraryMode={libraryMode}
         onLibraryChange={handleLibraryChange}
         prefixMap={prefixMap}
+        folders={folders}
+        folderName={folderName}
+        onFolderChange={setFolderName}
       />
 
       <input

@@ -17,8 +17,13 @@ const userService = {
 
   deleteUser: (id) => api.delete(`/api/user/${id}/delete/`),
 
+  toggleUserActive: (id) => api.patch(`/api/user/${id}/toggle-active/`),
+
   updateUserRole: (id, role) =>
     api.patch(`/api/user/${id}/update-role/`, { role }),
+
+  setUserPassword: (id, password) =>
+    api.patch(`/api/user/${id}/set-password/`, { password }),
 
   // ─── Profile ───────────────────────────────────────────────────────────────
 

@@ -86,14 +86,18 @@ const SideBar = ({ isMobile = false, onMobileClose }) => {
 
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-        {NAV_MAIN.map((item) => (
-          <NavItem key={item.path} {...item} expanded={expanded} isMobile={isMobile} onMobileClose={onMobileClose} />
-        ))}
+        {role !== "Admin" && (
+          <>
+            {NAV_MAIN.map((item) => (
+              <NavItem key={item.path} {...item} expanded={expanded} isMobile={isMobile} onMobileClose={onMobileClose} />
+            ))}
 
-        <SectionLabel label="Libraries" expanded={expanded} isMobile={isMobile} />
-        {NAV_LIBRARIES.map((item) => (
-          <NavItem key={item.path} {...item} expanded={expanded} isMobile={isMobile} onMobileClose={onMobileClose} />
-        ))}
+            <SectionLabel label="Libraries" expanded={expanded} isMobile={isMobile} />
+            {NAV_LIBRARIES.map((item) => (
+              <NavItem key={item.path} {...item} expanded={expanded} isMobile={isMobile} onMobileClose={onMobileClose} />
+            ))}
+          </>
+        )}
 
         {role === "Admin" && (
           <>

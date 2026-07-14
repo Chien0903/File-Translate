@@ -21,18 +21,6 @@ if google_credentials_path:
 # without modifying every function signature throughout the call chain.
 _translation_context = threading.local()
 
-LANG_CODE_TO_FIELD = {
-    'ja': 'ja',
-    'en': 'en',
-    'vi': 'vi',
-    'zh-TW': 'zh-TW',
-    'zh-CN': 'zh-CN',
-    'th': 'th',
-    'bn': 'bn',
-    'hi': 'hi',
-    'id': 'id',
-    'or': 'or',
-}
 
 def set_translation_context(library_mode="common", user_id=None):
     """

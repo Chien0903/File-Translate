@@ -26,6 +26,16 @@ const translationService = {
 
   deleteFileHistory: (fileId) =>
     api.delete(`/api/translated-file/history/${fileId}/`),
+
+  moveFileToFolder: (originalFileUrl, folder) =>
+    api.patch("/api/translated-file/history/move/", {
+      original_file_url: originalFileUrl,
+      folder,
+    }),
+
+  getFolders: () => api.get("/api/translated-file/folders/"),
+
+  createFolder: (name) => api.post("/api/translated-file/folders/", { name }),
 };
 
 export default translationService;

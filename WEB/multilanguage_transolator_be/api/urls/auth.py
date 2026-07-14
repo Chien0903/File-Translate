@@ -1,5 +1,5 @@
 from django.urls import path
-from api.views.alb_auth import LoginView, RefreshView, LogoutView, MeView
+from api.views.auth import LoginView, RefreshView, LogoutView, MeView
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name='auth_login'),

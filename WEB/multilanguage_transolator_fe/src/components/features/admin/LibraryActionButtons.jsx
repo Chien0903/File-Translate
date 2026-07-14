@@ -110,7 +110,10 @@ const LibraryActionButtons = ({
         Export
       </button>
 
-      {(role === "Library Keeper" || role === "Admin") && (
+      {/* Hidden from the UI: glossary sync now runs automatically after every
+          approve/edit/delete (see async_manage_common_glossaries on the backend).
+          Handler kept below in case manual re-sync needs to be re-exposed later. */}
+      {false && (role === "Library Keeper" || role === "Admin") && (
         <button
           className={`flex items-center gap-1.5 px-4 py-2 text-white rounded-full text-sm font-medium transition-colors shadow-sm ${
             isUploading

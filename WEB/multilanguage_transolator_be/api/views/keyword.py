@@ -33,6 +33,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
+# Chỉ cho phép Admin/Library Keeper (hoặc staff) truy cập view.
 class IsAdminOrLibraryKeeper(BasePermission):
     def has_permission(self, request, view):
         return (
@@ -199,7 +200,7 @@ def _group_pending_by_threshold(pending):
     Group a list of pending KeywordSuggestion rows by matching (language pair,
     normalized value) across every pair of active languages, keeping only the
     groups whose number of distinct suggesters reaches the configured
-    min_suggesters_for_queue threshold.
+    min_suggesters_for_queue threshold.tóm 
 
     Returns {representative_suggestion_id: group_list}, where the
     representative is the lowest-id suggestion in that group.
@@ -263,6 +264,7 @@ def _try_auto_approve_on_threshold():
 
 # ======= Keyword CRUD Views =======
 
+# Cho phép sửa nội dung một đề xuất từ khoá khi còn đang "pending".
 class ReviewSuggestionView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -280,6 +282,8 @@ class ReviewSuggestionView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# Duyệt một đề xuất vào thư viện chung; nếu trùng với keyword đã duyệt thì trả về
+# xung đột (409) để client chọn cách xử lý qua `duplicate_resolution`.
 class ApproveSuggestionView(APIView):
     permission_classes = [IsAdminOrLibraryKeeper]
 
@@ -365,6 +369,7 @@ class ApproveSuggestionView(APIView):
         return Response({"message": "Suggestion approved!"})
 
 
+# Xoá một đề xuất từ khoá (chủ sở hữu hoặc Admin/Library Keeper mới được xoá).
 @method_decorator(csrf_exempt, name='dispatch')
 class DeleteSuggestionView(APIView):
     permission_classes = [IsAuthenticated]
@@ -386,6 +391,7 @@ class DeleteSuggestionView(APIView):
         return Response({"message": "Suggestion deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
+# Cập nhật nội dung một KeywordSuggestion đã tồn tại (kiểm tra trùng lặp nếu đã duyệt).
 class UpdateKeywordView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -418,6 +424,7 @@ class UpdateKeywordView(APIView):
 
 # ======= Keyword List/Create =======
 
+# Liệt kê (lọc/tìm kiếm/phân trang) và tạo mới đề xuất từ khoá (mặc định 'pending').
 class KeywordSuggestionListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -484,6 +491,7 @@ class KeywordSuggestionListCreateView(APIView):
 
 # ======= GCS Upload Endpoints =======
 
+# Xuất các keyword đã duyệt thành CSV, tải lên GCS và cập nhật lại glossary dịch thuật.
 class UploadKeywordsToGCSView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -498,7 +506,7 @@ class UploadKeywordsToGCSView(APIView):
                 return Response({'error': 'No approved keywords found to upload'}, status=400)
 
             gcs_url = upload_csv_to_gcs(csv_file_path)
-            results, errors = manage_all_glossaries(mode=1)
+            results, errors = manage_all_glossaries()
             approved_count = KeywordSuggestion.objects.filter(status='approved').count()
 
             return Response({
@@ -526,6 +534,7 @@ class UploadKeywordsToGCSView(APIView):
 THRESHOLD_REACHED_TITLE = "Keyword Ready for Review"
 
 
+# Trả về thống kê keyword và trạng thái file glossary trên GCS.
 class GCSUploadStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -558,6 +567,7 @@ class GCSUploadStatusView(APIView):
             return Response({'error': str(e)}, status=500)
 
 
+# Đọc/ghi ngưỡng `min_suggesters_for_queue` (số người đề xuất trùng cần để vào hàng chờ duyệt).
 class SuggestionQueueSettingsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -588,6 +598,7 @@ class SuggestionQueueSettingsView(APIView):
         })
 
 
+# Danh sách đề xuất đã đạt ngưỡng số người đề xuất, chờ Admin/Library Keeper duyệt.
 class SuggestionQueueListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -705,6 +716,7 @@ class SuggestionQueueListView(APIView):
 
 # ===== Private Library Views =====
 
+# Liệt kê và tạo từ khoá trong Thư viện riêng (Private Library) của user hiện tại.
 class PrivateKeywordListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -733,6 +745,7 @@ class PrivateKeywordListCreateView(APIView):
         return Response(serializer.errors, status=400)
 
 
+# Xem/sửa/xoá một từ khoá riêng tư cụ thể, chỉ chủ sở hữu mới thao tác được.
 class PrivateKeywordDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -790,6 +803,7 @@ class PrivateKeywordDetailView(APIView):
         return Response(status=204)
 
 
+# Đẩy các từ khoá riêng tư đã chọn lên thành đề xuất công khai ('pending').
 class PrivateKeywordSuggestView(APIView):
     permission_classes = [IsAuthenticated]
 

@@ -57,11 +57,18 @@ def compress_folder(folder_path,file_path,  output_path):
                 # Bỏ qua file đã biến mất hoặc không thể truy cập
                 if not os.path.exists(file_path):
                     continue
-                arcname = os.path.relpath(file_path, folder_path)  # tên tương đối bên trong zip
+                # ZIP (và OOXML mà Word/Excel/PowerPoint đọc) luôn dùng '/' làm dấu phân cách
+                # bên trong archive. os.path.relpath() trên Windows trả về '\\', nếu ghi thẳng
+                # vào zip thì Office không nhận diện được cấu trúc thư mục (word/document.xml
+                # bị hiểu nhầm thành 1 file tên "word\document.xml" nằm ở gốc) -> file dịch ra
+                # bị báo "corrupted, cannot be opened" dù nội dung text đã dịch đúng.
+                arcname = os.path.relpath(file_path, folder_path).replace(os.sep, '/')
                 try:
                     zipf.write(file_path, arcname)
-                except FileNotFoundError:
-                    # Tránh vỡ quy trình do file thiếu (ví dụ fonts .odttf)
+                except (FileNotFoundError, PermissionError, OSError) as e:
+                    # Tránh vỡ quy trình do file thiếu/bị khóa tạm thời (ví dụ fonts .odttf,
+                    # hoặc antivirus đang quét file giữa chừng)
+                    print(f"⚠️ Bỏ qua file khi nén (không đọc được): {file_path} — {e}")
                     continue
 
     # Kiểm tra file zip đã được tạo chưa    

@@ -4,7 +4,8 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import translationService from "../../services/translationService";
 
-const FORMAT_OPTIONS = ["PDF", "Word (DOCX)", "Excel (XLSX)", "PowerPoint (PPTX)"];
+const FROM_FORMAT_OPTIONS = ["PDF"];
+const TO_FORMAT_OPTIONS = ["Word (DOCX)", "Excel (XLSX)", "PowerPoint (PPTX)"];
 
 const FORMAT_EXT_MAP = {
   "PDF": "pdf",
@@ -13,7 +14,7 @@ const FORMAT_EXT_MAP = {
   "PowerPoint (PPTX)": "pptx",
 };
 
-const FormatDropdown = ({ label, value, options, onChange }) => {
+const FormatDropdown = ({ label, value, options, onChange, disabled }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -27,13 +28,18 @@ const FormatDropdown = ({ label, value, options, onChange }) => {
     <div className="relative" ref={ref}>
       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{label}</p>
       <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-gray-300 transition-colors min-w-[160px]"
+        onClick={() => !disabled && setOpen(!open)}
+        disabled={disabled}
+        className={`flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 min-w-[160px] transition-colors ${
+          disabled ? "opacity-60 cursor-not-allowed" : "hover:border-gray-300"
+        }`}
       >
         <span className="flex-1 text-left">{value}</span>
-        <MdKeyboardArrowDown size={16} className={`text-gray-400 transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`} />
+        {!disabled && (
+          <MdKeyboardArrowDown size={16} className={`text-gray-400 transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`} />
+        )}
       </button>
-      {open && (
+      {open && !disabled && (
         <div className="absolute top-full mt-1 left-0 bg-white border border-gray-100 rounded-xl shadow-lg z-20 min-w-[160px]">
           {options.map((opt) => (
             <button
@@ -51,27 +57,21 @@ const FormatDropdown = ({ label, value, options, onChange }) => {
   );
 };
 
-const ControlsBar = ({ fromFormat, toFormat, onFromChange, onToChange, onSwap }) => (
+const ControlsBar = ({ fromFormat, toFormat, onToChange }) => (
   <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 mb-4">
     <div className="flex flex-wrap items-end gap-4">
-      <FormatDropdown label="From" value={fromFormat} options={FORMAT_OPTIONS} onChange={onFromChange} />
-      <div className="flex items-center pt-5">
-        <button
-          onClick={onSwap}
-          className="p-2 rounded-full border border-gray-200 text-gray-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
-          title="Swap formats"
-        >
-          <MdSyncAlt size={16} />
-        </button>
+      <FormatDropdown label="From" value={fromFormat} options={FROM_FORMAT_OPTIONS} disabled />
+      <div className="flex items-center pt-5 text-gray-300">
+        <MdSyncAlt size={16} />
       </div>
-      <FormatDropdown label="To" value={toFormat} options={FORMAT_OPTIONS} onChange={onToChange} />
+      <FormatDropdown label="To" value={toFormat} options={TO_FORMAT_OPTIONS} onChange={onToChange} />
     </div>
   </div>
 );
 
 const FormatConversionPage = () => {
   const navigate = useNavigate();
-  const [fromFormat, setFromFormat] = useState("PDF");
+  const fromFormat = "PDF";
   const [toFormat, setToFormat] = useState("Word (DOCX)");
   const [dragging, setDragging] = useState(false);
   const [file, setFile] = useState(null);
@@ -79,11 +79,6 @@ const FormatConversionPage = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [converting, setConverting] = useState(false);
   const fileInputRef = useRef(null);
-
-  const swapFormats = () => {
-    setFromFormat(toFormat);
-    setToFormat(fromFormat);
-  };
 
   const handleFileSelect = async (f) => {
     if (!f) return;
@@ -160,7 +155,7 @@ const FormatConversionPage = () => {
       <div className="p-6 flex flex-col h-full">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Format Conversion</h1>
         <p className="text-gray-400 text-sm mb-4">Convert documents between common office formats.</p>
-        <ControlsBar fromFormat={fromFormat} toFormat={toFormat} onFromChange={setFromFormat} onToChange={setToFormat} onSwap={swapFormats} />
+        <ControlsBar fromFormat={fromFormat} toFormat={toFormat} onToChange={setToFormat} />
 
         <div className="flex-1 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -192,7 +187,7 @@ const FormatConversionPage = () => {
     <div className="p-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-1">Format Conversion</h1>
       <p className="text-gray-400 text-sm mb-4">Convert documents between common office formats.</p>
-      <ControlsBar fromFormat={fromFormat} toFormat={toFormat} onFromChange={setFromFormat} onToChange={setToFormat} onSwap={swapFormats} />
+      <ControlsBar fromFormat={fromFormat} toFormat={toFormat} onToChange={setToFormat} />
 
       {uploading ? (
         <div className="border-2 border-dashed border-gray-200 bg-white rounded-2xl p-16 text-center">
